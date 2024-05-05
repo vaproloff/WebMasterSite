@@ -1,0 +1,26 @@
+* {
+    /*color: red;*/
+}
+
+
+.darkblock {
+    background-color: #fff;
+}
+
+.textblock {
+    color: black;
+}
+
+
+.blackbackground {
+    background-color: #F6F9FF;
+}
+
+.mutedtext {
+    color: #334155;
+}
+
+
+.header-logo-blue {
+    color: #012970;
+}

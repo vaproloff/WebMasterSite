@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Urls-Info</title>
+    <link href="https://cdn.datatables.net/2.0.6/css/dataTables.dataTables.css">
+    <link href="https://cdn.datatables.net/buttons/3.0.2/css/buttons.dataTables.css">
+</head>
+<body>
+<style>
+    /* CSS стили для DataTables */
+    table.dataTable {
+        border-collapse: collapse;
+        border-spacing: 0;
+        width: 100%;
+    }
+
+    table.dataTable thead th {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+
+    table.dataTable tfoot th {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+
+    table.dataTable tbody td {
+        border: 1px solid #ddd;
+        padding: 8px;
+    }
+
+    table.dataTable tbody tr:hover {
+        background-color: #f5f5f5;
+    }
+</style>
+<table id="example" class="display nowrap" style="width:100%">
+    <thead>
+    <tr>
+        <th>Url</th>
+        <th>Position</th>
+        <th>Office</th>
+
+    </tr>
+    </thead>
+    <tbody>
+
+    </tbody>
+    <tfoot>
+    <tr>
+        <th>Url</th>
+        <th>Position</th>
+        <th>Office</th>
+
+    </tr>
+    </tfoot>
+</table>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+<script src="https://cdn.datatables.net/2.0.6/js/dataTables.js"></script>
+<script src="https://cdn.datatables.net/buttons/3.0.2/js/dataTables.buttons.js"></script>
+<script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.dataTables.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+<script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.print.min.js"></script>
+
+
+<!--<script src="/static/assets/vendor/jquery/jquery-3.3.1.min.js"></script>-->
+
+<script>
+    function SetDataTable() {
+        let table = new DataTable('#example', {
+            layout: {
+                topStart: {
+                    buttons: ['copy', 'csv', 'excel', 'pdf', 'print']
+                }
+            },
+            "serverSide": true,
+            "processing": true,
+            "ajax": {
+                "url": "/admin/get",
+                "type": "POST",
+                "data": function (d) {
+                    d.length = d.length || 10; // количество отображаемых элементов
+                    d.start = d.start || 0; // номер страницы
+                },
+                success: function (data) {
+                    let products = data.data.data
+                    console.log(products.length)
+                    table.clear()
+                    for (var i = 0; i < 5; ++i) {
+                        table.row.add([
+                            products[i]["url"],
+                            products[i]["statistic"][0]["position"],
+                            products[i]["statistic"][1]["position"],
+                        ]).draw()
+                    }
+                },
+            },
+
+        });
+        // fetch('http://0.0.0.0:8888/admin/get')
+        //     .then((response) => {
+        //         return response.json();
+        //     })
+        //     .then((data) => {
+        //             var products = data.data
+        //             console.log(products.length)
+        //             let table = new DataTable('#example', {
+        //                 layout: {
+        //                     topStart: {
+        //                         buttons: ['copy', 'csv', 'excel', 'pdf', 'print']
+        //                     }
+        //                 },
+        //                 "serverSide": true,
+        //                 "processing": true,
+        //                 "ajax": {
+        //                     "url": "/admin/get",
+        //                     "type": "POST",
+        //                     "data": function (d) {
+        //                         d.length = d.length || 10; // количество отображаемых элементов
+        //                         d.start = d.start || 0; // номер страницы
+        //                     }
+        //                 },
+        //             });
+        //             for (var i = 0; i < products.length; ++i) {
+        //                 table.row.add([
+        //                     products[i]["url"],
+        //                     products[i]["statistic"][0]["position"],
+        //                     products[i]["statistic"][1]["position"],
+        //                 ]).draw(false)
+        //             }
+        //         }
+        //     )
+        // ;
+    }
+
+    $(document).ready(SetDataTable())
+</script>
+
+</body>
+</html>

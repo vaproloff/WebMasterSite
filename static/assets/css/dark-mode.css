@@ -1,0 +1,51 @@
+* {
+    color: #E6E7EC;
+    /*background-color:  #202020;*/
+}
+
+.header-logo {
+    /*color: #E6E7EC;*/
+    color: white;
+}
+
+
+.header-logo-blue {
+    color: #012970;
+    color: #5F76E8;
+}
+
+
+.darkblock {
+    background-color: #212529;
+    border-color: #212529;
+    border-width: 1px;
+    border-style: solid;
+}
+
+.navb {
+    background-color: #202020;
+}
+
+.blackbackground {
+    background-color: #191919;
+}
+
+.textblock {
+    color: white;
+}
+
+.mutedtext {
+    color: white;
+}
+
+#sidebar {
+    background-color: #202020;
+}
+
+#header {
+    background-color: #202020;
+}
+
+#main {
+    background-color: #191919;
+}
