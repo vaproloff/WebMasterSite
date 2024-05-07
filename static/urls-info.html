@@ -78,6 +78,18 @@
         return twoWeeksAgoDate
     }
 
+    function IncrementDate(date, minus_day) {
+        var today = new Date(date);
+        var twoWeeksAgo = new Date(today.getTime() + (minus_day * 24 * 60 * 60 * 1000));
+        var ddTwoWeeksAgo = String(twoWeeksAgo.getDate()).padStart(2, '0');
+        var mmTwoWeeksAgo = String(twoWeeksAgo.getMonth() + 1).padStart(2, '0');
+        var yyyyTwoWeeksAgo = twoWeeksAgo.getFullYear();
+
+        var twoWeeksAgoDate = yyyyTwoWeeksAgo + '-' + mmTwoWeeksAgo + '-' + ddTwoWeeksAgo;
+        return twoWeeksAgoDate
+    }
+
+
     function calculateDays() {
         var start_date = new Date(document.getElementById('start_date').value);
         var end_date = new Date(document.getElementById('end_date').value);
@@ -88,12 +100,25 @@
         return diffDays;
     }
 
-    function SetDataTable() {
+    function SetDatePage() {
         // Set today date in the input for start date
         document.getElementById('end_date').value = getDate(0);
 
         // Set the default value of the second input to two weeks ago
         document.getElementById('start_date').value = getDate(14);
+    }
+
+    function SetDataTable() {
+
+        columns = [
+            {"title": "url"},
+        ]
+
+        amount = calculateDays();
+
+        for (i = 0; i < amount; i++) {
+            columns.push({"title": IncrementDate(document.getElementById('start_date').value, i)})
+        }
 
         let table = new DataTable('#example', {
             layout: {
@@ -104,13 +129,7 @@
             "serverSide": true,
             "processing": true,
             "pageLength": 50,
-            "columns": [
-                {"title": "url"},
-                {"title": "url"},
-                {"title": "url"},
-                {"title": "url"}
-                // остальные поля
-            ],
+            "columns": columns,
             deferRender: true,
             "ajax": {
                 "url": "/admin/get",
@@ -120,12 +139,14 @@
                     d.start = d.start || 0; // номер страницы
                     d.start_date = document.getElementById('start_date').value; // Дата начала поиска
                     d.end_date = document.getElementById('end_date').value; // Дата окончания поиска
+                    d.amount = calculateDays();
                 }
             },
 
         });
     }
 
+    $(document).ready(SetDatePage())
     $(document).ready(SetDataTable())
 </script>
 

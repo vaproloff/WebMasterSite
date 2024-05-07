@@ -15,9 +15,16 @@ admin_router = APIRouter()
 templates = Jinja2Templates(directory="static")
 
 
+def pad_list_with_zeros(lst, amount):
+    if len(lst) < amount:
+        padding = [0] * (amount - len(lst))
+        lst.extend(padding)
+    return lst
+
+
 @admin_router.post("/get")
 async def get_urls(request: Request, length: int = Form(), start: int = Form(), start_date: datetime = Form(default=""),
-                   end_date: datetime = Form(default="")):
+                   end_date: datetime = Form(default=""), amount: int = Form()):
     print(start_date)
     print(end_date)
     limit = length
@@ -43,6 +50,13 @@ async def get_urls(request: Request, length: int = Form(), start: int = Form(), 
     }
         for el in grouped_data]}
     data = [[el[0], *[stat[1] for stat in el[1]]] for el in grouped_data]
+    data = []
+    for el in grouped_data:
+        res = [el[0]]
+        for stat in el[1]:
+            res.append(stat[1])
+        res = pad_list_with_zeros(res, amount + 1)
+        data.append(res)
     json_data = jsonable_encoder(data)
 
     return JSONResponse({"data": json_data, "recordsTotal": limit, "recordsFiltered": 50000})
