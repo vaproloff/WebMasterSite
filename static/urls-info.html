@@ -36,26 +36,20 @@
         background-color: #f5f5f5;
     }
 </style>
+<input type="date" id="start_date">
+<input type="date" id="end_date">
+<input type="button" value="Показать" onclick="calculateDays();">
 <table id="example" class="display nowrap" style="width:100%">
     <thead>
     <tr>
         <th>Url</th>
-        <th>Position</th>
-        <th>Office</th>
 
     </tr>
     </thead>
     <tbody>
 
     </tbody>
-    <tfoot>
-    <tr>
-        <th>Url</th>
-        <th>Position</th>
-        <th>Office</th>
 
-    </tr>
-    </tfoot>
 </table>
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
@@ -73,7 +67,34 @@
 <!--<script src="/static/assets/vendor/jquery/jquery-3.3.1.min.js"></script>-->
 
 <script>
+    function getDate(minus_day) {
+        var today = new Date();
+        var twoWeeksAgo = new Date(today.getTime() - (minus_day * 24 * 60 * 60 * 1000));
+        var ddTwoWeeksAgo = String(twoWeeksAgo.getDate()).padStart(2, '0');
+        var mmTwoWeeksAgo = String(twoWeeksAgo.getMonth() + 1).padStart(2, '0');
+        var yyyyTwoWeeksAgo = twoWeeksAgo.getFullYear();
+
+        var twoWeeksAgoDate = yyyyTwoWeeksAgo + '-' + mmTwoWeeksAgo + '-' + ddTwoWeeksAgo;
+        return twoWeeksAgoDate
+    }
+
+    function calculateDays() {
+        var start_date = new Date(document.getElementById('start_date').value);
+        var end_date = new Date(document.getElementById('end_date').value);
+
+        var diffTime = Math.abs(end_date - start_date);
+        var diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        return diffDays;
+    }
+
     function SetDataTable() {
+        // Set today date in the input for start date
+        document.getElementById('end_date').value = getDate(0);
+
+        // Set the default value of the second input to two weeks ago
+        document.getElementById('start_date').value = getDate(14);
+
         let table = new DataTable('#example', {
             layout: {
                 topStart: {
@@ -82,62 +103,27 @@
             },
             "serverSide": true,
             "processing": true,
+            "pageLength": 50,
+            "columns": [
+                {"title": "url"},
+                {"title": "url"},
+                {"title": "url"},
+                {"title": "url"}
+                // остальные поля
+            ],
+            deferRender: true,
             "ajax": {
                 "url": "/admin/get",
                 "type": "POST",
                 "data": function (d) {
                     d.length = d.length || 10; // количество отображаемых элементов
                     d.start = d.start || 0; // номер страницы
-                },
-                success: function (data) {
-                    let products = data.data.data
-                    console.log(products.length)
-                    table.clear()
-                    for (var i = 0; i < 5; ++i) {
-                        table.row.add([
-                            products[i]["url"],
-                            products[i]["statistic"][0]["position"],
-                            products[i]["statistic"][1]["position"],
-                        ]).draw()
-                    }
-                },
+                    d.start_date = document.getElementById('start_date').value; // Дата начала поиска
+                    d.end_date = document.getElementById('end_date').value; // Дата окончания поиска
+                }
             },
 
         });
-        // fetch('http://0.0.0.0:8888/admin/get')
-        //     .then((response) => {
-        //         return response.json();
-        //     })
-        //     .then((data) => {
-        //             var products = data.data
-        //             console.log(products.length)
-        //             let table = new DataTable('#example', {
-        //                 layout: {
-        //                     topStart: {
-        //                         buttons: ['copy', 'csv', 'excel', 'pdf', 'print']
-        //                     }
-        //                 },
-        //                 "serverSide": true,
-        //                 "processing": true,
-        //                 "ajax": {
-        //                     "url": "/admin/get",
-        //                     "type": "POST",
-        //                     "data": function (d) {
-        //                         d.length = d.length || 10; // количество отображаемых элементов
-        //                         d.start = d.start || 0; // номер страницы
-        //                     }
-        //                 },
-        //             });
-        //             for (var i = 0; i < products.length; ++i) {
-        //                 table.row.add([
-        //                     products[i]["url"],
-        //                     products[i]["statistic"][0]["position"],
-        //                     products[i]["statistic"][1]["position"],
-        //                 ]).draw(false)
-        //             }
-        //         }
-        //     )
-        // ;
     }
 
     $(document).ready(SetDataTable())

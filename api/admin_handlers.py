@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from fastapi import Request
+from fastapi import Form
 from fastapi.encoders import jsonable_encoder
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import JSONResponse
@@ -15,14 +16,19 @@ templates = Jinja2Templates(directory="static")
 
 
 @admin_router.post("/get")
-async def get_urls(request: Request):
-    limit = int(request.query_params.get('length', 10))  # количество отображаемых элементов
-    offset = int(request.query_params.get('start', 1))  # номер страницы
-    start = datetime.now()
+async def get_urls(request: Request, length: int = Form(), start: int = Form(), start_date: datetime = Form(default=""),
+                   end_date: datetime = Form(default="")):
+    print(start_date)
+    print(end_date)
+    limit = length
+    offset = start + 1
     urls = await _get_urls_with_pagination(offset, limit, async_session)
-    grouped_data = [(key, sorted(list(group)[:14], key=lambda x: x[0])) for key, group in
-                    groupby(urls, key=lambda x: x[-1])]
-    print(datetime.now() - start)
+    try:
+        grouped_data = [(key, sorted(list(group)[:14], key=lambda x: x[0])) for key, group in
+                        groupby(urls, key=lambda x: x[-1])]
+    except TypeError as e:
+        print(urls)
+        return
     if len(grouped_data) == 0:
         return {"data": []}
     data = {"data": [{
@@ -36,10 +42,10 @@ async def get_urls(request: Request):
         } for stat in el[1]]
     }
         for el in grouped_data]}
+    data = [[el[0], *[stat[1] for stat in el[1]]] for el in grouped_data]
     json_data = jsonable_encoder(data)
 
-    # return JSONResponse(content=json_data)
-    return JSONResponse({"data": json_data, "recordsTotal": 10, "recordsFiltered": 50000})
+    return JSONResponse({"data": json_data, "recordsTotal": limit, "recordsFiltered": 50000})
 
 
 @admin_router.get("/info-urls")
