@@ -38,7 +38,7 @@
 </style>
 <input type="date" id="start_date">
 <input type="date" id="end_date">
-<input type="button" value="Показать" onclick="calculateDays();">
+<input type="button" value="Показать" onclick="UpdateTable();">
 <table id="example" class="display nowrap" style="width:100%">
     <thead>
     <tr>
@@ -123,7 +123,7 @@
         let table = new DataTable('#example', {
             layout: {
                 topStart: {
-                    buttons: ['copy', 'csv', 'excel', 'pdf', 'print']
+                    buttons: ['csv', 'excel']
                 }
             },
             "serverSide": true,
@@ -144,6 +144,10 @@
             },
 
         });
+    }
+
+    function UpdateTable() {
+        $('#example').DataTable().ajax.reload();
     }
 
     $(document).ready(SetDatePage())

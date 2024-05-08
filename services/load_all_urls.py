@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import requests
 import asyncio
 from db.session import async_session
@@ -12,6 +14,8 @@ USER_ID = "1130000065018497"
 HOST_ID = "https:dn.ru:443"
 
 url = f"https://api.webmaster.yandex.net/v4/user/{USER_ID}/hosts/{HOST_ID}/query-analytics/list"
+
+date_format = "%Y-%m-%d"
 
 
 # TODO: Change date add: now - datetime.now, must be date from json data
@@ -31,6 +35,11 @@ async def add_data(data):
                 add_impression = metric_date[0]["value"]
             except IndexError:
                 add_impression = 0
+
+            try:
+                date = datetime.strptime(metric_date[0]["date"], date_format)
+            except IndexError:
+                date = datetime.now()
 
             try:
                 add_position = metric_date[1]["value"]
@@ -53,6 +62,7 @@ async def add_data(data):
                 position=add_position,
                 clicks=add_clicks,
                 ctr=add_ctr,
+                date=date
             )
             )
         try:
@@ -96,14 +106,13 @@ async def get_all_data():
 
     print(response.text[:100])
     data = response.json()
+    print(response.text, flush=True)
     count = data["count"]
     await add_data(data)
     functions = []
     for offset in range(500, count, 500):
         print(f"[INFO] PAGE{offset} DONE!")
         await get_data_by_page(offset)
-
-    # await asyncio.gather(*functions)
 
 
 if __name__ == '__main__':

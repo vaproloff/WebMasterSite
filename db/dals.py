@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy import and_
 
 from db.models import Url
 from db.models import Metrics
@@ -24,7 +25,7 @@ class UrlDAL:
         await self.db_session.flush()
         return
 
-    async def get_urls_with_pagination(self, page, per_page):
+    async def get_urls_with_pagination(self, page, per_page, date_start, date_end):
         sub = select(Url).limit(per_page).offset(page - 1 if page == 1 else (page - 1) * per_page).subquery()
         query = select(Metrics.date, Metrics.position, Metrics.clicks, Metrics.impression, Metrics.ctr, sub).join(sub,
                                                                                                                   Metrics.url == sub.c.url).group_by(
@@ -34,7 +35,7 @@ class UrlDAL:
             Metrics.clicks,
             Metrics.impression,
             Metrics.ctr,
-        )
+        ).having(and_(Metrics.date <= date_end, Metrics.date >= date_start))
         res = await self.db_session.execute(query)
         product_row = res.fetchall()
         if len(product_row) != 0:

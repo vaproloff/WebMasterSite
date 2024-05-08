@@ -17,7 +17,7 @@ templates = Jinja2Templates(directory="static")
 
 def pad_list_with_zeros(lst, amount):
     if len(lst) < amount:
-        padding = [0] * (amount - len(lst))
+        padding = [f"<div style='height: 55px; width: 100px'>0</div>"] * (amount - len(lst))
         lst.extend(padding)
     return lst
 
@@ -29,7 +29,7 @@ async def get_urls(request: Request, length: int = Form(), start: int = Form(), 
     print(end_date)
     limit = length
     offset = start + 1
-    urls = await _get_urls_with_pagination(offset, limit, async_session)
+    urls = await _get_urls_with_pagination(offset, limit, start_date, end_date, async_session)
     try:
         grouped_data = [(key, sorted(list(group)[:14], key=lambda x: x[0])) for key, group in
                         groupby(urls, key=lambda x: x[-1])]
@@ -38,23 +38,16 @@ async def get_urls(request: Request, length: int = Form(), start: int = Form(), 
         return
     if len(grouped_data) == 0:
         return {"data": []}
-    data = {"data": [{
-        "url": el[0],
-        "statistic": [{
-            "date": stat[0],
-            "position": stat[1],
-            "clicks": stat[2],
-            "impression": stat[3],
-            "ctr": stat[4],
-        } for stat in el[1]]
-    }
-        for el in grouped_data]}
-    data = [[el[0], *[stat[1] for stat in el[1]]] for el in grouped_data]
     data = []
     for el in grouped_data:
-        res = [el[0]]
+        res = [
+            f"<div style='width:355px; height: 55px; overflow: auto; white-space: nowrap;'><span>{el[0]}</span></div>"]
         for stat in el[1]:
-            res.append(stat[1])
+            res.append(f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px'>
+            <span style='font-size: 18px'>{stat[1]}</span><br>
+            <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 20px'>CTR {stat[4]}%</span><br>
+            <span style='font-size: 10px'>{stat[2]}</span> <span style='font-size: 10px; margin-left: 45px'>R {stat[3]}%</span>
+            </div>""")
         res = pad_list_with_zeros(res, amount + 1)
         data.append(res)
     json_data = jsonable_encoder(data)
