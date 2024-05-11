@@ -17,7 +17,11 @@ templates = Jinja2Templates(directory="static")
 
 def pad_list_with_zeros(lst, amount):
     if len(lst) < amount:
-        padding = [f"<div style='height: 55px; width: 100px'>0</div>"] * (amount - len(lst))
+        padding = [f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #B9BDBC'>
+            <span style='font-size: 18px'><span style='color:red'>NAN</span></span><br>
+            <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 20px'>CTR <span style='color:red'>NAN%</span></span><br>
+            <span style='font-size: 10px'><span style='color:red'>NAN</span></span> <span style='font-size: 10px; margin-left: 30px'>R <span style='color:red'>NAN%</span></span>
+            </div>"""] * (amount - len(lst))
         lst.extend(padding)
     return lst
 
@@ -25,8 +29,6 @@ def pad_list_with_zeros(lst, amount):
 @admin_router.post("/get")
 async def get_urls(request: Request, length: int = Form(), start: int = Form(), start_date: datetime = Form(default=""),
                    end_date: datetime = Form(default=""), amount: int = Form()):
-    print(start_date)
-    print(end_date)
     limit = length
     offset = start + 1
     urls = await _get_urls_with_pagination(offset, limit, start_date, end_date, async_session)
@@ -42,9 +44,18 @@ async def get_urls(request: Request, length: int = Form(), start: int = Form(), 
     for el in grouped_data:
         res = [
             f"<div style='width:355px; height: 55px; overflow: auto; white-space: nowrap;'><span>{el[0]}</span></div>"]
-        for stat in el[1]:
-            res.append(f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px'>
-            <span style='font-size: 18px'>{stat[1]}</span><br>
+        for k, stat in enumerate(el[1]):
+            up = 0
+            if k + 1 < len(el[1]):
+                up = round(el[1][k + 1][1] - el[1][k][1], 2)
+            if up > 0:
+                color = "#9DE8BD"
+            elif up < 0:
+                color = "#FDC4BD"
+            else:
+                color = "#B4D7ED"
+            res.append(f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: {color}'>
+            <span style='font-size: 18px'>{stat[1]} {up}</span><br>
             <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 20px'>CTR {stat[4]}%</span><br>
             <span style='font-size: 10px'>{stat[2]}</span> <span style='font-size: 10px; margin-left: 45px'>R {stat[3]}%</span>
             </div>""")
