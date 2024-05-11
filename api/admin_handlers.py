@@ -9,6 +9,7 @@ from itertools import groupby
 
 from db.session import async_session
 from api.actions.urls import _get_urls_with_pagination
+from api.actions.urls import _get_urls_with_pagination_and_like
 
 admin_router = APIRouter()
 
@@ -27,11 +28,15 @@ def pad_list_with_zeros(lst, amount):
 
 
 @admin_router.post("/get")
-async def get_urls(request: Request, length: int = Form(), start: int = Form(), start_date: datetime = Form(default=""),
-                   end_date: datetime = Form(default=""), amount: int = Form()):
+async def get_urls(request: Request, length: int = Form(), start: int = Form(), start_date: datetime = Form(),
+                   end_date: datetime = Form(), amount: int = Form(), search_text: str = Form(default="")):
+    print("Search text: ", search_text)
     limit = length
     offset = start + 1
-    urls = await _get_urls_with_pagination(offset, limit, start_date, end_date, async_session)
+    if search_text == "":
+        urls = await _get_urls_with_pagination(offset, limit, start_date, end_date, async_session)
+    else:
+        urls = await _get_urls_with_pagination_and_like(offset, limit, start_date, end_date, search_text, async_session)
     try:
         grouped_data = [(key, sorted(list(group)[:14], key=lambda x: x[0])) for key, group in
                         groupby(urls, key=lambda x: x[-1])]
@@ -55,7 +60,7 @@ async def get_urls(request: Request, length: int = Form(), start: int = Form(), 
             else:
                 color = "#B4D7ED"
             res.append(f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: {color}'>
-            <span style='font-size: 18px'>{stat[1]} {up}</span><br>
+            <span style='font-size: 18px'>{stat[1]} {abs(up)}</span><br>
             <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 20px'>CTR {stat[4]}%</span><br>
             <span style='font-size: 10px'>{stat[2]}</span> <span style='font-size: 10px; margin-left: 45px'>R {stat[3]}%</span>
             </div>""")

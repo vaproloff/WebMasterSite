@@ -17,3 +17,12 @@ async def _get_urls_with_pagination(page, per_page, date_start, date_end, sessio
             page, per_page, date_start, date_end
         )
         return urls
+
+
+async def _get_urls_with_pagination_and_like(page, per_page, date_start, date_end, search_text, session):
+    async with session() as s:
+        url_dal = UrlDAL(s)
+        urls = await url_dal.get_urls_with_pagination_and_like(
+            page, per_page, date_start, date_end, search_text
+        )
+        return urls

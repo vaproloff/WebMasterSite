@@ -38,7 +38,8 @@
 </style>
 <input type="date" id="start_date">
 <input type="date" id="end_date">
-<input type="button" value="Показать" onclick="UpdateTable();">
+<input type="text" id="search_field" style="width: 250px">
+<input type="button" value="Отфильтровать" onclick="UpdateTable();">
 <table id="example" class="display nowrap" style="width:100%;">
     <thead>
     <tr>
@@ -120,12 +121,20 @@
             columns.push({"title": IncrementDate(document.getElementById('start_date').value, i)})
         }
 
-        let table = new DataTable('#example', {
+
+        let table = $('#example').DataTable();
+
+
+        // TODO: Check work or not
+        table.destroy();
+
+        table = new DataTable('#example', {
             layout: {
                 topStart: {
                     buttons: ['csv', 'excel']
                 }
             },
+            "dom": '<"wrapper"lrtip>',
             "serverSide": true,
             "processing": true,
             "pageLength": 50,
@@ -140,6 +149,7 @@
                     d.start_date = document.getElementById('start_date').value; // Дата начала поиска
                     d.end_date = document.getElementById('end_date').value; // Дата окончания поиска
                     d.amount = calculateDays();
+                    d.search_text = document.getElementById("search_field").value;
                 }
             },
 
@@ -147,7 +157,8 @@
     }
 
     function UpdateTable() {
-        $('#example').DataTable().ajax.reload();
+        // $('#example').DataTable().ajax.reload();
+        SetDataTable();
     }
 
     $(document).ready(SetDatePage())
