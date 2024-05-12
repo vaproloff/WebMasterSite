@@ -139,8 +139,8 @@ class QueryDAL:
             per_page).subquery()
         query = select(MetricsQuery.date, MetricsQuery.position, MetricsQuery.clicks, MetricsQuery.impression,
                        MetricsQuery.ctr, sub).join(sub,
-                                                   MetricsQuery.url == sub.c.url).group_by(
-            sub.c.url,
+                                                   MetricsQuery.query == sub.c.query).group_by(
+            sub.c.query,
             MetricsQuery.date,
             MetricsQuery.position,
             MetricsQuery.clicks,

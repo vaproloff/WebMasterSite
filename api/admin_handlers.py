@@ -13,10 +13,10 @@ from api.actions.urls import _get_urls_with_pagination_and_like
 from api.actions.urls import _get_urls_with_pagination_sort
 from api.actions.urls import _get_urls_with_pagination_and_like_sort
 
-from api.actions.queries import _get_urls_with_pagination
-from api.actions.queries import _get_urls_with_pagination_and_like
-from api.actions.queries import _get_urls_with_pagination_sort
-from api.actions.queries import _get_urls_with_pagination_and_like_sort
+from api.actions.queries import _get_urls_with_pagination as _get_urls_with_pagination_query
+from api.actions.queries import _get_urls_with_pagination_and_like as _get_urls_with_pagination_and_like_query
+from api.actions.queries import _get_urls_with_pagination_sort as _get_urls_with_pagination_sort_query
+from api.actions.queries import _get_urls_with_pagination_and_like_sort as _get_urls_with_pagination_and_like_sort_query
 
 admin_router = APIRouter()
 
@@ -109,17 +109,18 @@ async def get_urls(request: Request, length: int = Form(), start: int = Form(), 
     offset = start + 1
     if sort_result:
         if search_text == "":
-            urls = await _get_urls_with_pagination_sort(offset, limit, start_date, end_date, sort_desc, async_session)
+            urls = await _get_urls_with_pagination_sort_query(offset, limit, start_date, end_date, sort_desc,
+                                                              async_session)
         else:
-            urls = await _get_urls_with_pagination_and_like_sort(offset, limit, start_date, end_date, search_text,
-                                                                 sort_desc,
-                                                                 async_session)
+            urls = await _get_urls_with_pagination_and_like_sort_query(offset, limit, start_date, end_date, search_text,
+                                                                       sort_desc,
+                                                                       async_session)
     else:
         if search_text == "":
-            urls = await _get_urls_with_pagination(offset, limit, start_date, end_date, async_session)
+            urls = await _get_urls_with_pagination_query(offset, limit, start_date, end_date, async_session)
         else:
-            urls = await _get_urls_with_pagination_and_like(offset, limit, start_date, end_date, search_text,
-                                                            async_session)
+            urls = await _get_urls_with_pagination_and_like_query(offset, limit, start_date, end_date, search_text,
+                                                                  async_session)
     try:
         grouped_data = [(key, sorted(list(group)[:14], key=lambda x: x[0])) for key, group in
                         groupby(urls, key=lambda x: x[-1])]

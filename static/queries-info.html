@@ -129,12 +129,16 @@
         table.destroy();
 
         table = new DataTable('#example', {
-            layout: {
-                topStart: {
-                    buttons: ['csv', 'excel']
-                }
-            },
-            "dom": '<"wrapper"lrtip>',
+            // layout: {
+            //     topStart: {
+            //         buttons: ['csv', 'excel']
+            //     }
+            // },
+            // "dom": '<"wrapper"lrtip>',
+            dom: 'Brtip',
+            buttons: [
+                'csv', 'excel'
+            ],
             "serverSide": true,
             "processing": true,
             "pageLength": 50,
