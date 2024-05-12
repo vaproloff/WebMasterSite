@@ -28,6 +28,7 @@ class Metrics(Base):
     position = Column(Float, nullable=False)
     ctr = Column(Float, nullable=False)
     impression = Column(Float, nullable=False)
+    demand = Column(Float, nullable=False)
     clicks = Column(Float, nullable=False)
 
 
