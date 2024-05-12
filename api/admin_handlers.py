@@ -10,6 +10,8 @@ from itertools import groupby
 from db.session import async_session
 from api.actions.urls import _get_urls_with_pagination
 from api.actions.urls import _get_urls_with_pagination_and_like
+from api.actions.urls import _get_urls_with_pagination_sort
+from api.actions.urls import _get_urls_with_pagination_and_like_sort
 
 admin_router = APIRouter()
 
@@ -34,10 +36,19 @@ async def get_urls(request: Request, length: int = Form(), start: int = Form(), 
     print(sort_result, sort_desc)
     limit = length
     offset = start + 1
-    if search_text == "":
-        urls = await _get_urls_with_pagination(offset, limit, start_date, end_date, async_session)
+    if sort_result:
+        if search_text == "":
+            urls = await _get_urls_with_pagination_sort(offset, limit, start_date, end_date, sort_desc, async_session)
+        else:
+            urls = await _get_urls_with_pagination_and_like_sort(offset, limit, start_date, end_date, search_text,
+                                                                 sort_desc,
+                                                                 async_session)
     else:
-        urls = await _get_urls_with_pagination_and_like(offset, limit, start_date, end_date, search_text, async_session)
+        if search_text == "":
+            urls = await _get_urls_with_pagination(offset, limit, start_date, end_date, async_session)
+        else:
+            urls = await _get_urls_with_pagination_and_like(offset, limit, start_date, end_date, search_text,
+                                                            async_session)
     try:
         grouped_data = [(key, sorted(list(group)[:14], key=lambda x: x[0])) for key, group in
                         groupby(urls, key=lambda x: x[-1])]

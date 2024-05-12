@@ -1,6 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy import and_
+from sqlalchemy import desc
 
 from db.models import Url
 from db.models import Metrics
@@ -44,6 +45,49 @@ class UrlDAL:
 
     async def get_urls_with_pagination_and_like(self, page, per_page, date_start, date_end, search_text):
         sub = select(Url).filter(Url.url.like(f"%{search_text.strip()}%")).offset(page).limit(per_page).subquery()
+        query = select(Metrics.date, Metrics.position, Metrics.clicks, Metrics.impression, Metrics.ctr, sub).join(sub,
+                                                                                                                  Metrics.url == sub.c.url).group_by(
+            sub.c.url,
+            Metrics.date,
+            Metrics.position,
+            Metrics.clicks,
+            Metrics.impression,
+            Metrics.ctr,
+        ).having(and_(Metrics.date <= date_end, Metrics.date >= date_start))
+        res = await self.db_session.execute(query)
+        product_row = res.fetchall()
+        if len(product_row) != 0:
+            return product_row
+
+    async def get_urls_with_pagination_sort(self, page, per_page, date_start, date_end, sort_desc):
+        if sort_desc:
+            sub = select(Url).order_by(desc(Url.url)).offset(page).limit(
+                per_page).subquery()
+        else:
+            sub = select(Url).order_by(Url.url).offset(page).limit(
+                per_page).subquery()
+        query = select(Metrics.date, Metrics.position, Metrics.clicks, Metrics.impression, Metrics.ctr, sub).join(sub,
+                                                                                                                  Metrics.url == sub.c.url).group_by(
+            sub.c.url,
+            Metrics.date,
+            Metrics.position,
+            Metrics.clicks,
+            Metrics.impression,
+            Metrics.ctr,
+        ).having(and_(Metrics.date <= date_end, Metrics.date >= date_start))
+        res = await self.db_session.execute(query)
+        product_row = res.fetchall()
+        if len(product_row) != 0:
+            return product_row
+
+    async def get_urls_with_pagination_and_like_sort(self, page, per_page, date_start, date_end, search_text,
+                                                     sort_desc):
+        if sort_desc:
+            sub = select(Url).filter(Url.url.like(f"%{search_text.strip()}%")).order_by(desc(Url.url)).offset(
+                page).limit(per_page).subquery()
+        else:
+            sub = select(Url).filter(Url.url.like(f"%{search_text.strip()}%")).order_by(Url.url).offset(page).limit(
+                per_page).subquery()
         query = select(Metrics.date, Metrics.position, Metrics.clicks, Metrics.impression, Metrics.ctr, sub).join(sub,
                                                                                                                   Metrics.url == sub.c.url).group_by(
             sub.c.url,
