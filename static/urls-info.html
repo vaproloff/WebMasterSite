@@ -39,6 +39,10 @@
 <input type="date" id="start_date">
 <input type="date" id="end_date">
 <input type="text" id="search_field" style="width: 250px">
+<label for="input_sort">Отсортировать?</label>
+<input type="checkbox" id="input_sort">
+<label for="input_desc">По убыванию?</label>
+<input type="checkbox" id="input_desc">
 <input type="button" value="Отфильтровать" onclick="UpdateTable();">
 <table id="example" class="display nowrap" style="width:100%;">
 
@@ -122,10 +126,7 @@
         let table = $('#example').DataTable();
 
 
-        // TODO: Check work or not
         table.destroy();
-
-        console.log("hey");
 
         table = new DataTable('#example', {
             layout: {
@@ -149,6 +150,8 @@
                     d.end_date = document.getElementById('end_date').value; // Дата окончания поиска
                     d.amount = calculateDays();
                     d.search_text = document.getElementById("search_field").value;
+                    d.sort_result = document.getElementById("input_sort").checked;
+                    d.sort_desc = document.getElementById("input_desc").checked;
                 }
             },
 
@@ -156,7 +159,6 @@
     }
 
     function UpdateTable() {
-        // $('#example').DataTable().ajax.reload();
         SetDataTable();
     }
 

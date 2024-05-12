@@ -29,12 +29,11 @@ def pad_list_with_zeros(lst, amount):
 
 @admin_router.post("/get")
 async def get_urls(request: Request, length: int = Form(), start: int = Form(), start_date: datetime = Form(),
-                   end_date: datetime = Form(), amount: int = Form(default=14), search_text: str = Form(default="")):
-    print("Search text: ", search_text)
-    print("Amount : ", amount)
+                   end_date: datetime = Form(), amount: int = Form(default=14), search_text: str = Form(default=""), \
+                   sort_result: bool = Form(default=False), sort_desc: bool = Form(default=False)):
+    print(sort_result, sort_desc)
     limit = length
     offset = start + 1
-    print(f"{limit = }, {offset = }")
     if search_text == "":
         urls = await _get_urls_with_pagination(offset, limit, start_date, end_date, async_session)
     else:
