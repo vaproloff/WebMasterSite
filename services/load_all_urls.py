@@ -6,7 +6,7 @@ from db.session import async_session
 from db.models import Url
 from db.models import Metrics
 from api.actions.urls import _add_new_urls
-from api.actions.metrics_query import _add_new_metrics
+from api.actions.metrics_url import _add_new_metrics
 from sqlalchemy.exc import IntegrityError
 
 ACCESS_TOKEN = "y0_AgAEA7qkeLqBAAuw7AAAAAEDGzynAABr7pqZPg9NEb5O0OacK2wWzfFG2A"
