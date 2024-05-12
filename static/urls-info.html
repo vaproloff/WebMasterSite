@@ -41,11 +41,9 @@
 <input type="text" id="search_field" style="width: 250px">
 <input type="button" value="Отфильтровать" onclick="UpdateTable();">
 <table id="example" class="display nowrap" style="width:100%;">
-    <thead>
-    <tr>
-        <th>Url</th>
 
-    </tr>
+    <thead>
+
     </thead>
     <tbody>
 
@@ -121,12 +119,13 @@
             columns.push({"title": IncrementDate(document.getElementById('start_date').value, i)})
         }
 
-
         let table = $('#example').DataTable();
 
 
         // TODO: Check work or not
         table.destroy();
+
+        console.log("hey");
 
         table = new DataTable('#example', {
             layout: {

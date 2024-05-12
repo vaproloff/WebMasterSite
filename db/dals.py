@@ -26,7 +26,8 @@ class UrlDAL:
         return
 
     async def get_urls_with_pagination(self, page, per_page, date_start, date_end):
-        sub = select(Url).limit(per_page).offset(page - 1 if page == 1 else (page - 1) * per_page).subquery()
+        sub = select(Url).offset(page).limit(
+            per_page).subquery()
         query = select(Metrics.date, Metrics.position, Metrics.clicks, Metrics.impression, Metrics.ctr, sub).join(sub,
                                                                                                                   Metrics.url == sub.c.url).group_by(
             sub.c.url,
