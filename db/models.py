@@ -34,14 +34,14 @@ class Metrics(Base):
 class Query(Base):
     __tablename__ = "query"
 
-    url = Column(String, nullable=False, unique=True, primary_key=True)
+    query = Column(String, nullable=False, unique=True, primary_key=True)
 
 
 class MetricsQuery(Base):
     __tablename__ = "metrics_query"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    url = Column(String, nullable=False)
+    query = Column(String, nullable=False)
     date = Column(DateTime, nullable=False, default=datetime.now)
     position = Column(Float, nullable=False)
     ctr = Column(Float, nullable=False)
