@@ -1,7 +1,8 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from fastapi import Request
 from fastapi import Form
 from fastapi.encoders import jsonable_encoder
+from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import JSONResponse
 from datetime import datetime
@@ -13,10 +14,10 @@ from api.actions.urls import _get_urls_with_pagination_and_like
 from api.actions.urls import _get_urls_with_pagination_sort
 from api.actions.urls import _get_urls_with_pagination_and_like_sort
 
-from api.actions.queries import _get_urls_with_pagination as _get_urls_with_pagination_query
-from api.actions.queries import _get_urls_with_pagination_and_like as _get_urls_with_pagination_and_like_query
-from api.actions.queries import _get_urls_with_pagination_sort as _get_urls_with_pagination_sort_query
-from api.actions.queries import _get_urls_with_pagination_and_like_sort as _get_urls_with_pagination_and_like_sort_query
+from api.actions.queries import _get_urls_with_pagination_query
+from api.actions.queries import _get_urls_with_pagination_and_like_query
+from api.actions.queries import _get_urls_with_pagination_sort_query
+from api.actions.queries import _get_urls_with_pagination_and_like_sort_query
 
 admin_router = APIRouter()
 
@@ -32,6 +33,21 @@ def pad_list_with_zeros(lst, amount):
             </div>"""] * (amount - len(lst))
         lst.extend(padding)
     return lst
+
+
+@admin_router.get("/")
+async def login(request: Request):
+    return templates.TemplateResponse("login.html", {"request": request})
+
+
+@admin_router.post("/")
+async def login(request: Request, username: str = Form(), password: str = Form()):
+    with open('users.txt', 'r') as file:
+        for line in file:
+            stored_username, stored_password = line.strip().split(':')
+            if username == stored_username and password == stored_password:
+                return RedirectResponse("/admin/info-urls", status_code=302)
+    return HTTPException(status_code=401, detail="Incorrect username or password")
 
 
 @admin_router.post("/get-urls")
@@ -52,6 +68,7 @@ async def get_urls(request: Request, length: int = Form(), start: int = Form(), 
         if search_text == "":
             urls = await _get_urls_with_pagination(offset, limit, start_date, end_date, async_session)
         else:
+            print(search_text, "-------------")
             urls = await _get_urls_with_pagination_and_like(offset, limit, start_date, end_date, search_text,
                                                             async_session)
     try:

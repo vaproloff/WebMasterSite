@@ -10,7 +10,7 @@ async def _add_new_urls(urls, session):
         return order_id
 
 
-async def _get_urls_with_pagination(page, per_page, date_start, date_end, session):
+async def _get_urls_with_pagination_query(page, per_page, date_start, date_end, session):
     async with session() as s:
         url_dal = QueryDAL(s)
         urls = await url_dal.get_urls_with_pagination(
@@ -19,7 +19,7 @@ async def _get_urls_with_pagination(page, per_page, date_start, date_end, sessio
         return urls
 
 
-async def _get_urls_with_pagination_and_like(page, per_page, date_start, date_end, search_text, session):
+async def _get_urls_with_pagination_and_like_query(page, per_page, date_start, date_end, search_text, session):
     async with session() as s:
         url_dal = QueryDAL(s)
         urls = await url_dal.get_urls_with_pagination_and_like(
@@ -28,7 +28,7 @@ async def _get_urls_with_pagination_and_like(page, per_page, date_start, date_en
         return urls
 
 
-async def _get_urls_with_pagination_sort(page, per_page, date_start, date_end, sort_desc, session):
+async def _get_urls_with_pagination_sort_query(page, per_page, date_start, date_end, sort_desc, session):
     async with session() as s:
         url_dal = QueryDAL(s)
         urls = await url_dal.get_urls_with_pagination_sort(
@@ -37,7 +37,7 @@ async def _get_urls_with_pagination_sort(page, per_page, date_start, date_end, s
         return urls
 
 
-async def _get_urls_with_pagination_and_like_sort(page, per_page, date_start, date_end, search_text, sort_desc,
+async def _get_urls_with_pagination_and_like_sort_query(page, per_page, date_start, date_end, search_text, sort_desc,
                                                   session):
     async with session() as s:
         url_dal = QueryDAL(s)
