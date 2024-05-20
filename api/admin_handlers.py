@@ -54,7 +54,6 @@ async def login(request: Request, username: str = Form(), password: str = Form()
 async def get_urls(request: Request, length: int = Form(), start: int = Form(), start_date: datetime = Form(),
                    end_date: datetime = Form(), amount: int = Form(default=14), search_text: str = Form(default=""), \
                    sort_result: bool = Form(default=False), sort_desc: bool = Form(default=False)):
-    print(sort_result, sort_desc)
     limit = length
     offset = start + 1
     if sort_result:
@@ -68,7 +67,6 @@ async def get_urls(request: Request, length: int = Form(), start: int = Form(), 
         if search_text == "":
             urls = await _get_urls_with_pagination(offset, limit, start_date, end_date, async_session)
         else:
-            print(search_text, "-------------")
             urls = await _get_urls_with_pagination_and_like(offset, limit, start_date, end_date, search_text,
                                                             async_session)
     try:
@@ -106,9 +104,6 @@ async def get_urls(request: Request, length: int = Form(), start: int = Form(), 
         test.insert(0,
                     f"<div style='width:355px; height: 55px; overflow: auto; white-space: nowrap;'><span>{el[0]}</span></div>")
         data.append(test)
-    print("Amount: ", amount)
-    print("Amount columns: ", len(data[0]))
-    print(data)
     json_data = jsonable_encoder(data)
 
     # return JSONResponse({"data": json_data, "recordsTotal": limit, "recordsFiltered": 50000})
@@ -125,7 +120,6 @@ async def get_urls(request: Request):
 async def get_urls(request: Request, length: int = Form(), start: int = Form(), start_date: datetime = Form(),
                    end_date: datetime = Form(), amount: int = Form(default=14), search_text: str = Form(default=""), \
                    sort_result: bool = Form(default=False), sort_desc: bool = Form(default=False)):
-    print(sort_result, sort_desc)
     limit = length
     offset = start + 1
     if sort_result:
@@ -177,8 +171,7 @@ async def get_urls(request: Request, length: int = Form(), start: int = Form(), 
         test.insert(0,
                     f"<div style='width:355px; height: 55px; overflow: auto; white-space: nowrap;'><span>{el[0]}</span></div>")
         data.append(test)
-    print("Amount: ", amount)
-    print("Amount columns: ", len(data[0]))
+
     json_data = jsonable_encoder(data)
 
     # return JSONResponse({"data": json_data, "recordsTotal": limit, "recordsFiltered": 50000})
