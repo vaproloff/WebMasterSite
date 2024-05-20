@@ -102,9 +102,13 @@ async def get_urls(request: Request, length: int = Form(), start: int = Form(), 
             <span style='font-size: 10px'>{stat[2]}</span> <span style='font-size: 10px; margin-left: 45px'>R {stat[3]}%</span>
             </div>""")
         res = pad_list_with_zeros(res, amount + 1)
-        data.append(res)
+        test = res[::-1]
+        test.insert(0,
+                    f"<div style='width:355px; height: 55px; overflow: auto; white-space: nowrap;'><span>{el[0]}</span></div>")
+        data.append(test)
     print("Amount: ", amount)
     print("Amount columns: ", len(data[0]))
+    print(data)
     json_data = jsonable_encoder(data)
 
     # return JSONResponse({"data": json_data, "recordsTotal": limit, "recordsFiltered": 50000})
@@ -169,13 +173,16 @@ async def get_urls(request: Request, length: int = Form(), start: int = Form(), 
             <span style='font-size: 10px'>{stat[2]}</span> <span style='font-size: 10px; margin-left: 45px'>R {stat[3]}%</span>
             </div>""")
         res = pad_list_with_zeros(res, amount + 1)
-        data.append(res)
+        test = res[::-1]
+        test.insert(0,
+                    f"<div style='width:355px; height: 55px; overflow: auto; white-space: nowrap;'><span>{el[0]}</span></div>")
+        data.append(test)
     print("Amount: ", amount)
     print("Amount columns: ", len(data[0]))
     json_data = jsonable_encoder(data)
 
     # return JSONResponse({"data": json_data, "recordsTotal": limit, "recordsFiltered": 50000})
-    return JSONResponse({"data": json_data, "recordsTotal": limit})
+    return JSONResponse({"data": json_data[::-1], "recordsTotal": limit})
 
 
 @admin_router.get("/info-queries")
