@@ -6,6 +6,7 @@ from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import JSONResponse
 from datetime import datetime
+from datetime import timedelta
 from itertools import groupby
 
 from db.session import async_session
@@ -19,9 +20,90 @@ from api.actions.queries import _get_urls_with_pagination_and_like_query
 from api.actions.queries import _get_urls_with_pagination_sort_query
 from api.actions.queries import _get_urls_with_pagination_and_like_sort_query
 
+from fastapi.responses import FileResponse
+from fastapi.responses import StreamingResponse
+from openpyxl import Workbook
+import io
+
 admin_router = APIRouter()
 
 templates = Jinja2Templates(directory="static")
+
+date_format_2 = "%Y-%m-%d"
+
+
+def pad_list_with_zeros_excel(lst, amount):
+    if len(lst) < amount:
+        padding = [0] * (amount - len(lst))
+        lst.extend(padding)
+    return lst
+
+
+@admin_router.post("/generate_excel_url/")
+async def generate_excel(request: Request, data_request: dict):
+    wb = Workbook()
+    ws = wb.active
+    start_date = datetime.strptime(data_request["start_date"], date_format_2)
+    end_date = datetime.strptime(data_request["end_date"], date_format_2)
+    main_header = []
+    for i in range(int(data_request["amount"]) + 1):
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_2))
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_2))
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_2))
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_2))
+    main_header = main_header[::-1]
+    main_header.insert(0, "Url")
+    ws.append(main_header)
+    header = ["Position", "Click", "R", "CTR"] * (int(data_request["amount"]) + 1)
+    header.insert(0, "")
+    ws.append(header)
+    if data_request["sort_result"]:
+        if data_request["search_text"] == "":
+            urls = await _get_urls_with_pagination_sort(data_request["start"], data_request["length"],
+                                                        start_date, end_date,
+                                                        data_request["sort_desc"], async_session)
+        else:
+            urls = await _get_urls_with_pagination_and_like_sort(data_request["start"], data_request["length"],
+                                                                 start_date, end_date,
+                                                                 data_request["search_text"],
+                                                                 data_request["sort_desc"],
+                                                                 async_session)
+    else:
+        if data_request["search_text"] == "":
+            urls = await _get_urls_with_pagination(data_request["start"], data_request["length"],
+                                                   start_date, end_date, async_session)
+        else:
+            urls = await _get_urls_with_pagination_and_like(data_request["start"], data_request["length"],
+                                                            start_date, end_date,
+                                                            data_request["search_text"],
+                                                            async_session)
+    try:
+        grouped_data = [(key, sorted(list(group)[:14], key=lambda x: x[0])) for key, group in
+                        groupby(urls, key=lambda x: x[-1])]
+    except TypeError as e:
+        print(urls)
+        return
+    if len(grouped_data) == 0:
+        return {"data": []}
+    for el in grouped_data:
+        res = []
+        for k, stat in enumerate(el[1]):
+            res.append(stat[1])
+            res.append(stat[2])
+            res.append(stat[3])
+            res.append(stat[4])
+        res = pad_list_with_zeros_excel(res, 4 * (int(data_request["amount"]) + 1))
+        test = res[::-1]
+        test.insert(0, el[0])
+        ws.append(test)
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    return StreamingResponse(io.BytesIO(output.getvalue()),
+                             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                             headers={"Content-Disposition": "attachment;filename='data.xlsx'"})
 
 
 def pad_list_with_zeros(lst, amount):

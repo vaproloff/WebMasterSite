@@ -46,6 +46,7 @@
 <label for="input_desc">По убыванию?</label>
 <input type="checkbox" id="input_desc">
 <input type="button" value="Отфильтровать" onclick="UpdateTable();">
+<input type="button" value="ExcelDownload" onclick="generateExcel();">
 <table id="example" class="display nowrap" style="width:100%;">
 
     <thead>
@@ -165,6 +166,42 @@
     $(document).ready(SetDatePage())
     $(document).ready(SetDataTable())
 </script>
+<script>
+    function generateExcel() {
+        let table = $('#example').DataTable();
 
+        var curPage = table.page();
+
+        const data = {
+            "start": (curPage * 50) + 1,
+            "length": 50,
+            "start_date": document.getElementById('start_date').value, // Дата начала поиска
+            "end_date": document.getElementById('end_date').value, // Дата окончания поиска
+            "amount": calculateDays(),
+            "search_text": document.getElementById("search_field").value,
+            "sort_result": document.getElementById("input_sort").checked,
+            "sort_desc": document.getElementById("input_desc").checked,
+        };
+        fetch('/admin/generate_excel_url/', {
+            method: 'POST',
+            headers: {
+                "Content-Type": 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+            .then(response => {
+                return response.blob();
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'example.xlsx';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+            });
+    }
+</script>
 </body>
 </html>
