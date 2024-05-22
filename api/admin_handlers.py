@@ -96,7 +96,7 @@ async def generate_excel(request: Request, data_request: dict):
             res.append(stat[2])
             res.append(stat[3])
             res.append(stat[4])
-        res = pad_list_with_zeros_excel(res, 4 * (int(data_request["amount"]) + 1))
+        res = pad_list_with_zeros_excel(res, 4 * (int(data_request["amount"])))
         test = res[::-1]
         test.insert(0, el[0])
         ws.append(test)
@@ -147,6 +147,129 @@ async def generate_excel(request: Request, data_request: dict):
                                                             start_date, end_date,
                                                             data_request["search_text"],
                                                             async_session)
+    try:
+        grouped_data = [(key, sorted(list(group)[:14], key=lambda x: x[0])) for key, group in
+                        groupby(urls, key=lambda x: x[-1])]
+    except TypeError as e:
+        print(urls)
+        return
+    if len(grouped_data) == 0:
+        return {"data": []}
+    for el in grouped_data:
+        res = []
+        for k, stat in enumerate(el[1]):
+            res.append(stat[1])
+            res.append(stat[2])
+            res.append(stat[3])
+            res.append(stat[4])
+        res = pad_list_with_zeros_excel(res, 4 * (int(data_request["amount"])))
+        test = res[::-1]
+        test.insert(0, el[0])
+        ws.append(test)
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerows(ws)
+    output.seek(0)
+
+    return StreamingResponse(content=output.getvalue(),
+                             headers={"Content-Disposition": "attachment;filename='data.csv'"})
+
+
+
+
+@admin_router.post("/generate_excel_queries/")
+async def generate_excel(request: Request, data_request: dict):
+    wb = Workbook()
+    ws = wb.active
+    start_date = datetime.strptime(data_request["start_date"], date_format_2)
+    end_date = datetime.strptime(data_request["end_date"], date_format_2)
+    main_header = []
+    for i in range(int(data_request["amount"])):
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+    main_header = main_header[::-1]
+    main_header.insert(0, "Url")
+    ws.append(main_header)
+    header = ["Position", "Click", "R", "CTR"] * (int(data_request["amount"]))
+    header.insert(0, "")
+    ws.append(header)
+    if data_request["sort_result"]:
+        if data_request["search_text"] == "":
+            urls = await _get_urls_with_pagination_sort_query(data_request["start"], data_request["length"], start_date, end_date, data_request["sort_desc"],
+                                                              async_session)
+        else:
+            urls = await _get_urls_with_pagination_and_like_sort_query(data_request["start"], data_request["length"], start_date, end_date, data_request["search_text"],
+                                                                       data_request["sort_desc"],
+                                                                       async_session)
+    else:
+        if data_request["search_text"] == "":
+            urls = await _get_urls_with_pagination_query(data_request["start"], data_request["length"], start_date, end_date, async_session)
+        else:
+            urls = await _get_urls_with_pagination_and_like_query(data_request["start"], data_request["length"], start_date, end_date, data_request["search_text"],
+                                                                  async_session)
+    try:
+        grouped_data = [(key, sorted(list(group)[:14], key=lambda x: x[0])) for key, group in
+                        groupby(urls, key=lambda x: x[-1])]
+    except TypeError as e:
+        print(urls)
+        return
+    if len(grouped_data) == 0:
+        return {"data": []}
+    for el in grouped_data:
+        res = []
+        for k, stat in enumerate(el[1]):
+            res.append(stat[1])
+            res.append(stat[2])
+            res.append(stat[3])
+            res.append(stat[4])
+        res = pad_list_with_zeros_excel(res, 4 * (int(data_request["amount"])))
+        test = res[::-1]
+        test.insert(0, el[0])
+        ws.append(test)
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    return StreamingResponse(io.BytesIO(output.getvalue()),
+                             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                             headers={"Content-Disposition": "attachment;filename='data.xlsx'"})
+
+
+@admin_router.post("/generate_csv_queries/")
+async def generate_excel(request: Request, data_request: dict):
+    ws = []
+    start_date = datetime.strptime(data_request["start_date"], date_format_2)
+    end_date = datetime.strptime(data_request["end_date"], date_format_2)
+    main_header = []
+    for i in range(int(data_request["amount"])):
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+    main_header = main_header[::-1]
+    main_header.insert(0, "Url")
+    ws.append(main_header)
+    header = ["Position", "Click", "R", "CTR"] * (int(data_request["amount"]))
+    header.insert(0, "")
+    ws.append(header)
+    if data_request["sort_result"]:
+        if data_request["search_text"] == "":
+            urls = await _get_urls_with_pagination_sort_query(data_request["start"], data_request["length"], start_date, end_date, data_request["sort_desc"],
+                                                              async_session)
+        else:
+            urls = await _get_urls_with_pagination_and_like_sort_query(data_request["start"], data_request["length"], start_date, end_date, data_request["search_text"],
+                                                                       data_request["sort_desc"],
+                                                                       async_session)
+    else:
+        if data_request["search_text"] == "":
+            urls = await _get_urls_with_pagination_query(data_request["start"], data_request["length"], start_date, end_date, async_session)
+        else:
+            urls = await _get_urls_with_pagination_and_like_query(data_request["start"], data_request["length"], start_date, end_date, data_request["search_text"],
+                                                                  async_session)
     try:
         grouped_data = [(key, sorted(list(group)[:14], key=lambda x: x[0])) for key, group in
                         groupby(urls, key=lambda x: x[-1])]

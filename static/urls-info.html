@@ -197,7 +197,7 @@
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'example.csv';
+                a.download = 'data.xlsx';
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(url);
@@ -233,7 +233,7 @@
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'example.csv';
+                a.download = 'data.csv';
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(url);
