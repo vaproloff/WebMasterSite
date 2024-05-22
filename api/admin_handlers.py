@@ -50,7 +50,7 @@ async def generate_excel(request: Request, data_request: dict):
     start_date = datetime.strptime(data_request["start_date"], date_format_2)
     end_date = datetime.strptime(data_request["end_date"], date_format_2)
     main_header = []
-    for i in range(int(data_request["amount"]) + 1):
+    for i in range(int(data_request["amount"])):
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
@@ -58,7 +58,7 @@ async def generate_excel(request: Request, data_request: dict):
     main_header = main_header[::-1]
     main_header.insert(0, "Url")
     ws.append(main_header)
-    header = ["Position", "Click", "R", "CTR"] * (int(data_request["amount"]) + 1)
+    header = ["Position", "Click", "R", "CTR"] * (int(data_request["amount"]))
     header.insert(0, "")
     ws.append(header)
     if data_request["sort_result"]:
