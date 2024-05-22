@@ -182,7 +182,7 @@
             "sort_result": document.getElementById("input_sort").checked,
             "sort_desc": document.getElementById("input_desc").checked,
         };
-        fetch('/admin/generate_excel_url/', {
+        fetch('/admin/generate_csv_urls/', {
             method: 'POST',
             headers: {
                 "Content-Type": 'application/json'
@@ -196,7 +196,7 @@
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'example.xlsx';
+                a.download = 'example.csv';
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(url);
