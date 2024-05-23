@@ -127,9 +127,10 @@
             columns.push({"title": IncrementDate(document.getElementById('start_date').value, i)})
         }
 
-        let table = $('#example').DataTable();
-
-
+        let table = $('#example').DataTable().clear().rows().remove().draw();
+        // let table = $('#example').DataTable();
+        //
+        //
         table.destroy();
 
         table = new DataTable('#example', {
