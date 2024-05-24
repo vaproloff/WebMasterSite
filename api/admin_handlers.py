@@ -359,7 +359,7 @@ async def get_urls(request: Request, length: int = Form(), start: int = Form(), 
         for k, stat in enumerate(el[1]):
             up = 0
             if k + 1 < len(el[1]):
-                up = round(el[1][k + 1][1] - el[1][k][1], 2)
+                up = round(el[1][k][1] - el[1][k - 1][1], 2)
             if up > 0:
                 color = "#9DE8BD"
                 color_text = "green"
@@ -372,7 +372,7 @@ async def get_urls(request: Request, length: int = Form(), start: int = Form(), 
             res.append(f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: {color}'>
             <span style='font-size: 18px'>{stat[1]}</span><span style="margin-left: 5px; font-size: 10px; color: {color_text}">{abs(up)}</span><br>
             <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 20px'>CTR {stat[4]}%</span><br>
-            <span style='font-size: 10px'>{stat[2]}</span> <span style='font-size: 10px; margin-left: 45px'>R {stat[3]}%</span>
+            <span style='font-size: 10px'>{stat[2]}</span> <span style='font-size: 10px; margin-left: 35px'>R {stat[3]}%</span>
             </div>""")
         res = pad_list_with_zeros(res, amount + 1)
         test = res[::-1]
@@ -426,7 +426,7 @@ async def get_urls(request: Request, length: int = Form(), start: int = Form(), 
         for k, stat in enumerate(el[1]):
             up = 0
             if k + 1 < len(el[1]):
-                up = round(el[1][k + 1][1] - el[1][k][1], 2)
+                up = round(el[1][k][1] - el[1][k - 1][1], 2)
             if up > 0:
                 color = "#9DE8BD"
                 color_text = "green"
@@ -439,7 +439,7 @@ async def get_urls(request: Request, length: int = Form(), start: int = Form(), 
             res.append(f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: {color}'>
             <span style='font-size: 18px'>{stat[1]}</span><span style="margin-left: 5px; font-size: 10px; color: {color_text}">{abs(up)}</span><br>
             <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 20px'>CTR {stat[4]}%</span><br>
-            <span style='font-size: 10px'>{stat[2]}</span> <span style='font-size: 10px; margin-left: 45px'>R {stat[3]}%</span>
+            <span style='font-size: 10px'>{stat[2]}</span> <span style='font-size: 10px; margin-left: 35px'>R {stat[3]}%</span>
             </div>""")
         res = pad_list_with_zeros(res, amount + 1)
         test = res[::-1]

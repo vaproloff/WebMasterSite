@@ -114,6 +114,14 @@
         // Set the default value of the second input to two weeks ago
         document.getElementById('start_date').value = getDate(14);
     }
+    function changeColumns(){
+        var table = $("#example").DataTable();
+
+        table.columns().header().to$().each(function (index) {
+            $
+        });
+        table.draw();
+    }
 
     function SetDataTable() {
 
