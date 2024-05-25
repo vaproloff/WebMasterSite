@@ -176,8 +176,6 @@ async def generate_excel(request: Request, data_request: dict):
                              headers={"Content-Disposition": "attachment;filename='data.csv'"})
 
 
-
-
 @admin_router.post("/generate_excel_queries/")
 async def generate_excel(request: Request, data_request: dict):
     wb = Workbook()
@@ -198,17 +196,22 @@ async def generate_excel(request: Request, data_request: dict):
     ws.append(header)
     if data_request["sort_result"]:
         if data_request["search_text"] == "":
-            urls = await _get_urls_with_pagination_sort_query(data_request["start"], data_request["length"], start_date, end_date, data_request["sort_desc"],
+            urls = await _get_urls_with_pagination_sort_query(data_request["start"], data_request["length"], start_date,
+                                                              end_date, data_request["sort_desc"],
                                                               async_session)
         else:
-            urls = await _get_urls_with_pagination_and_like_sort_query(data_request["start"], data_request["length"], start_date, end_date, data_request["search_text"],
+            urls = await _get_urls_with_pagination_and_like_sort_query(data_request["start"], data_request["length"],
+                                                                       start_date, end_date,
+                                                                       data_request["search_text"],
                                                                        data_request["sort_desc"],
                                                                        async_session)
     else:
         if data_request["search_text"] == "":
-            urls = await _get_urls_with_pagination_query(data_request["start"], data_request["length"], start_date, end_date, async_session)
+            urls = await _get_urls_with_pagination_query(data_request["start"], data_request["length"], start_date,
+                                                         end_date, async_session)
         else:
-            urls = await _get_urls_with_pagination_and_like_query(data_request["start"], data_request["length"], start_date, end_date, data_request["search_text"],
+            urls = await _get_urls_with_pagination_and_like_query(data_request["start"], data_request["length"],
+                                                                  start_date, end_date, data_request["search_text"],
                                                                   async_session)
     try:
         grouped_data = [(key, sorted(list(group)[:14], key=lambda x: x[0])) for key, group in
@@ -258,17 +261,22 @@ async def generate_excel(request: Request, data_request: dict):
     ws.append(header)
     if data_request["sort_result"]:
         if data_request["search_text"] == "":
-            urls = await _get_urls_with_pagination_sort_query(data_request["start"], data_request["length"], start_date, end_date, data_request["sort_desc"],
+            urls = await _get_urls_with_pagination_sort_query(data_request["start"], data_request["length"], start_date,
+                                                              end_date, data_request["sort_desc"],
                                                               async_session)
         else:
-            urls = await _get_urls_with_pagination_and_like_sort_query(data_request["start"], data_request["length"], start_date, end_date, data_request["search_text"],
+            urls = await _get_urls_with_pagination_and_like_sort_query(data_request["start"], data_request["length"],
+                                                                       start_date, end_date,
+                                                                       data_request["search_text"],
                                                                        data_request["sort_desc"],
                                                                        async_session)
     else:
         if data_request["search_text"] == "":
-            urls = await _get_urls_with_pagination_query(data_request["start"], data_request["length"], start_date, end_date, async_session)
+            urls = await _get_urls_with_pagination_query(data_request["start"], data_request["length"], start_date,
+                                                         end_date, async_session)
         else:
-            urls = await _get_urls_with_pagination_and_like_query(data_request["start"], data_request["length"], start_date, end_date, data_request["search_text"],
+            urls = await _get_urls_with_pagination_and_like_query(data_request["start"], data_request["length"],
+                                                                  start_date, end_date, data_request["search_text"],
                                                                   async_session)
     try:
         grouped_data = [(key, sorted(list(group)[:14], key=lambda x: x[0])) for key, group in
@@ -378,7 +386,9 @@ async def get_urls(request: Request, length: int = Form(), start: int = Form(), 
         test = res[::-1]
         test.insert(0,
                     f"<div style='width:355px; height: 55px; overflow: auto; white-space: nowrap;'><span>{el[0]}</span></div>")
-        data.append(test)
+        data.append(test[:-1])
+    print(len(data[0]))
+    print(data[0])
     json_data = jsonable_encoder(data)
 
     # return JSONResponse({"data": json_data, "recordsTotal": limit, "recordsFiltered": 50000})
@@ -450,7 +460,7 @@ async def get_urls(request: Request, length: int = Form(), start: int = Form(), 
     json_data = jsonable_encoder(data)
 
     # return JSONResponse({"data": json_data, "recordsTotal": limit, "recordsFiltered": 50000})
-    return JSONResponse({"data": json_data[::-1], "recordsTotal": limit})
+    return JSONResponse({"data": json_data, "recordsTotal": limit})
 
 
 @admin_router.get("/info-queries")

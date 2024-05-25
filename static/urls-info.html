@@ -51,7 +51,9 @@
 <table id="example" class="display nowrap" style="width:100%;">
 
     <thead>
+    <tr id="head_t">
 
+    </tr>
     </thead>
     <tbody>
 
@@ -114,16 +116,15 @@
         // Set the default value of the second input to two weeks ago
         document.getElementById('start_date').value = getDate(14);
     }
-    function changeColumns(){
-        var table = $("#example").DataTable();
 
-        table.columns().header().to$().each(function (index) {
-            $
-        });
-        table.draw();
-    }
 
     function SetDataTable() {
+
+        let row = document.getElementById("head_t");
+
+        var nameCell = document.createElement('td');
+        nameCell.textContent = "url";
+        row.appendChild(nameCell);
 
         columns = [
             {"title": "url"},
@@ -133,13 +134,45 @@
 
         for (i = amount - 1; i >= 0; i--) {
             columns.push({"title": IncrementDate(document.getElementById('start_date').value, i)})
+            var nameCell = document.createElement('td');
+            nameCell.textContent = IncrementDate(document.getElementById('start_date').value, i);
+            row.appendChild(nameCell);
         }
 
-        let table = $('#example').DataTable().clear().rows().remove().draw();
+        // let table = $('#example').DataTable().clear().rows().remove().draw();
         // let table = $('#example').DataTable();
         //
         //
-        table.destroy();
+        // table.destroy();
+
+        $.ajax({
+            url: "/admin/get-urls",
+            method: "POST",
+            data: function (d) {
+                // d.length = d.length || 10; // количество отображаемых элементов
+                d.length = 50; // количество отображаемых элементов
+                // d.start = d.start || 0; // номер страницы
+                d.start = 0 // номер страницы
+                d.start_date = document.getElementById('start_date').value; // Дата начала поиска
+                d.end_date = document.getElementById('end_date').value; // Дата окончания поиска
+                d.amount = calculateDays();
+                d.search_text = document.getElementById("search_field").value;
+                d.sort_result = document.getElementById("input_sort").checked;
+                d.sort_desc = document.getElementById("input_desc").checked;
+            },
+            dataType: 'json',
+            success: function (data) {
+                var table = $('#example');
+                $.each(data, function (index, row) {
+                    var newRow = '<tr>';
+                    $.each(row, function (index, cell) {
+                        newRow += '<td>' + cell + '</td>';
+                    });
+                    newRow += '</tr>';
+                    table.append(newRow);
+                });
+            }
+        });
 
         table = new DataTable('#example', {
             dom: 'Brtip',
@@ -149,7 +182,7 @@
             "serverSide": true,
             "processing": true,
             "pageLength": 50,
-            "columns": columns,
+            // "columns": columns,
             deferRender: true,
             "ajax": {
                 "url": "/admin/get-urls",
@@ -170,7 +203,59 @@
     }
 
     function UpdateTable() {
-        SetDataTable();
+
+        let row = document.getElementById("head_t");
+        row.innerHTML = "";
+        var nameCell = document.createElement('td');
+        nameCell.textContent = "url";
+        row.appendChild(nameCell);
+
+        columns = [
+            {"title": "url"},
+        ]
+
+        amount = calculateDays();
+
+        for (i = amount - 1; i >= 0; i--) {
+            columns.push({"title": IncrementDate(document.getElementById('start_date').value, i)})
+            var nameCell = document.createElement('td');
+            nameCell.textContent = IncrementDate(document.getElementById('start_date').value, i);
+            row.appendChild(nameCell);
+        }
+        console.log(columns.length);
+        var table = $('#example').DataTable();
+
+        console.log(table.columns.length);
+
+        table.destroy();
+        console.log(table.columns.length);
+
+        table = new DataTable('#example', {
+            dom: 'Brtip',
+            // buttons: [
+            //     'csv', 'excel'
+            // ],
+            "serverSide": true,
+            "processing": true,
+            "pageLength": 50,
+            // "columns": columns,
+            deferRender: true,
+            "ajax": {
+                "url": "/admin/get-urls",
+                "type": "POST",
+                "data": function (d) {
+                    d.length = d.length || 10; // количество отображаемых элементов
+                    d.start = d.start || 0; // номер страницы
+                    d.start_date = document.getElementById('start_date').value; // Дата начала поиска
+                    d.end_date = document.getElementById('end_date').value; // Дата окончания поиска
+                    d.amount = calculateDays();
+                    d.search_text = document.getElementById("search_field").value;
+                    d.sort_result = document.getElementById("input_sort").checked;
+                    d.sort_desc = document.getElementById("input_desc").checked;
+                }
+            },
+
+        });
     }
 
     $(document).ready(SetDatePage())
