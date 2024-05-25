@@ -13,6 +13,7 @@
         border-collapse: collapse;
         border-spacing: 0;
         width: 100%;
+        overflow-x: auto;
     }
 
     table.dataTable thead th {
@@ -55,7 +56,7 @@
 
     </tr>
     </thead>
-    <tbody>
+    <tbody id="body_t">
 
     </tbody>
 
@@ -139,30 +140,33 @@
             row.appendChild(nameCell);
         }
 
-        // let table = $('#example').DataTable().clear().rows().remove().draw();
-        // let table = $('#example').DataTable();
-        //
-        //
-        // table.destroy();
+        var url = "/admin/get-urls";
+        var params = {
+            length: 50, // количество отображаемых элементов
+            start: 0, // номер страницы
+            start_date: document.getElementById('start_date').value, // Дата начала поиска
+            end_date: document.getElementById('end_date').value, // Дата окончания поиска
+            amount: calculateDays(),
+            search_text: document.getElementById("search_field").value,
+            sort_result: document.getElementById("input_sort").checked,
+            sort_desc: document.getElementById("input_desc").checked,
+        };
+        console.log(params);
 
-        $.ajax({
-            url: "/admin/get-urls",
+        fetch(url, {
             method: "POST",
-            data: function (d) {
-                // d.length = d.length || 10; // количество отображаемых элементов
-                d.length = 50; // количество отображаемых элементов
-                // d.start = d.start || 0; // номер страницы
-                d.start = 0 // номер страницы
-                d.start_date = document.getElementById('start_date').value; // Дата начала поиска
-                d.end_date = document.getElementById('end_date').value; // Дата окончания поиска
-                d.amount = calculateDays();
-                d.search_text = document.getElementById("search_field").value;
-                d.sort_result = document.getElementById("input_sort").checked;
-                d.sort_desc = document.getElementById("input_desc").checked;
+            headers: {
+                "Content-type": "application/json"
             },
-            dataType: 'json',
-            success: function (data) {
-                var table = $('#example');
+            body: JSON.stringify(params)
+            // body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                // Обработка ответа
+                data = data.data;
+                var table = $('#body_t');
+
                 $.each(data, function (index, row) {
                     var newRow = '<tr>';
                     $.each(row, function (index, cell) {
@@ -171,35 +175,13 @@
                     newRow += '</tr>';
                     table.append(newRow);
                 });
-            }
-        });
 
-        table = new DataTable('#example', {
-            dom: 'Brtip',
-            // buttons: [
-            //     'csv', 'excel'
-            // ],
-            "serverSide": true,
-            "processing": true,
-            "pageLength": 50,
-            // "columns": columns,
-            deferRender: true,
-            "ajax": {
-                "url": "/admin/get-urls",
-                "type": "POST",
-                "data": function (d) {
-                    d.length = d.length || 10; // количество отображаемых элементов
-                    d.start = d.start || 0; // номер страницы
-                    d.start_date = document.getElementById('start_date').value; // Дата начала поиска
-                    d.end_date = document.getElementById('end_date').value; // Дата окончания поиска
-                    d.amount = calculateDays();
-                    d.search_text = document.getElementById("search_field").value;
-                    d.sort_result = document.getElementById("input_sort").checked;
-                    d.sort_desc = document.getElementById("input_desc").checked;
-                }
-            },
+            })
+            .catch(error => {
+                // Обработка ошибки
+                console.error("Error:", error);
+            });
 
-        });
     }
 
     function UpdateTable() {

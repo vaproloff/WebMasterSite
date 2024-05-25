@@ -334,23 +334,24 @@ async def login(request: Request, username: str = Form(), password: str = Form()
 
 
 @admin_router.post("/get-urls")
-async def get_urls(request: Request, length: int = Form(), start: int = Form(), start_date: datetime = Form(),
-                   end_date: datetime = Form(), amount: int = Form(default=14), search_text: str = Form(default=""), \
-                   sort_result: bool = Form(default=False), sort_desc: bool = Form(default=False)):
-    limit = length
-    offset = start + 1
-    if sort_result:
-        if search_text == "":
-            urls = await _get_urls_with_pagination_sort(offset, limit, start_date, end_date, sort_desc, async_session)
+# async def get_urls(request: Request, length: int = Form(), start: int = Form(), start_date: datetime = Form(),
+#                    end_date: datetime = Form(), amount: int = Form(default=14), search_text: str = Form(default=""), \
+#                    sort_result: bool = Form(default=False), sort_desc: bool = Form(default=False)):
+async def get_urls(request: Request, data_request: dict):
+    start_date = datetime.strptime(data_request["start_date"], date_format_2)
+    end_date = datetime.strptime(data_request["end_date"], date_format_2)
+    if data_request["sort_result"]:
+        if data_request["search_text"] == "":
+            urls = await _get_urls_with_pagination_sort(data_request["start"], data_request["length"], start_date, end_date, data_request["sort_desc"], async_session)
         else:
-            urls = await _get_urls_with_pagination_and_like_sort(offset, limit, start_date, end_date, search_text,
-                                                                 sort_desc,
+            urls = await _get_urls_with_pagination_and_like_sort(data_request["start"], data_request["length"], start_date, end_date, data_request["search_text"],
+                                                                 data_request["sort_desc"],
                                                                  async_session)
     else:
-        if search_text == "":
-            urls = await _get_urls_with_pagination(offset, limit, start_date, end_date, async_session)
+        if data_request["search_text"] == "":
+            urls = await _get_urls_with_pagination(data_request["start"], data_request["length"], start_date, end_date, async_session)
         else:
-            urls = await _get_urls_with_pagination_and_like(offset, limit, start_date, end_date, search_text,
+            urls = await _get_urls_with_pagination_and_like(data_request["start"], data_request["length"], start_date, end_date, data_request["search_text"],
                                                             async_session)
     try:
         grouped_data = [(key, sorted(list(group)[:14], key=lambda x: x[0])) for key, group in
@@ -382,7 +383,7 @@ async def get_urls(request: Request, length: int = Form(), start: int = Form(), 
             <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 20px'>CTR {stat[4]}%</span><br>
             <span style='font-size: 10px'>{stat[2]}</span> <span style='font-size: 10px; margin-left: 35px'>R {stat[3]}%</span>
             </div>""")
-        res = pad_list_with_zeros(res, amount + 1)
+        res = pad_list_with_zeros(res, data_request["amount"] + 1)
         test = res[::-1]
         test.insert(0,
                     f"<div style='width:355px; height: 55px; overflow: auto; white-space: nowrap;'><span>{el[0]}</span></div>")
@@ -392,7 +393,7 @@ async def get_urls(request: Request, length: int = Form(), start: int = Form(), 
     json_data = jsonable_encoder(data)
 
     # return JSONResponse({"data": json_data, "recordsTotal": limit, "recordsFiltered": 50000})
-    return JSONResponse({"data": json_data, "recordsTotal": limit})
+    return JSONResponse({"data": json_data})
 
 
 @admin_router.get("/info-urls")
