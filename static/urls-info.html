@@ -61,7 +61,11 @@
     </tbody>
 
 </table>
-
+<div class="pagination">
+    <button id="prev" onclick="PrevPage()"></button>
+    <button id="cur" disabled></button>
+    <button id="next" onclick="NextPage()"></button>
+</div>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 
 <script src="https://cdn.datatables.net/2.0.6/js/dataTables.js"></script>
@@ -130,6 +134,11 @@
         columns = [
             {"title": "url"},
         ]
+
+        document.getElementById("prev").innerHTML = 0;
+        document.getElementById("prev").disabled = true;
+        document.getElementById("cur").innerHTML = 1;
+        document.getElementById("next").innerHTML = 2;
 
         amount = calculateDays();
 
@@ -204,6 +213,12 @@
             {"title": "url"},
         ]
 
+        document.getElementById("prev").innerHTML = 0;
+        document.getElementById("prev").disabled = true;
+        document.getElementById("cur").innerHTML = 1;
+        document.getElementById("next").innerHTML = 2;
+
+
         amount = calculateDays();
 
         for (i = amount - 1; i >= 0; i--) {
@@ -246,8 +261,196 @@
                 for (var x = rowCount - 1; x >= 0; x--) {
                     elmtTable.removeChild(tableRows[x]);
                 }
-                if (data.length == 0){
-                    return ;
+                if (data.length == 0) {
+                    return;
+                }
+                empty = `<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #B9BDBC'>
+            <span style='font-size: 18px'><span style='color:red'>NAN</span></span><br>
+            <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 20px'>CTR <span style='color:red'>NAN%</span></span><br>
+            <span style='font-size: 10px'><span style='color:red'>NAN</span></span> <span style='font-size: 10px; margin-left: 30px'>R <span style='color:red'>NAN%</span></span>
+            </div>`
+                for (i = 0; i < 50; i++) {
+                    var newRow = '<tr>';
+                    $.each(columns, function (index_c, cell) {
+                        if (data[i][columns[index_c]["title"]]) {
+                            newRow += '<td>' + data[i][columns[index_c]["title"]] + '</td>';
+                        } else {
+                            newRow += '<td>' + empty + '</td>';
+                        }
+                    });
+                    newRow += '</tr>';
+                    table.append(newRow);
+                }
+
+            })
+            .catch(error => {
+                // Обработка ошибки
+                console.error("Error:", error);
+            });
+
+    }
+
+
+    function PrevPage() {
+
+        let row = document.getElementById("head_t");
+        row.innerHTML = "";
+        var nameCell = document.createElement('td');
+        nameCell.textContent = "url";
+        row.appendChild(nameCell);
+
+        columns = [
+            {"title": "url"},
+        ]
+
+        amount = calculateDays();
+
+        for (i = amount - 1; i >= 0; i--) {
+            columns.push({"title": IncrementDate(document.getElementById('start_date').value, i)})
+            var nameCell = document.createElement('td');
+            nameCell.textContent = IncrementDate(document.getElementById('start_date').value, i);
+            row.appendChild(nameCell);
+        }
+        var CurPage = document.getElementById("cur").innerHTML;
+        CurPage = Number.parseInt(CurPage, 10)
+
+        document.getElementById("prev").innerHTML = CurPage - 2;
+        if (CurPage <= 2) {
+            document.getElementById("prev").disabled = true;
+        } else {
+            document.getElementById("prev").disabled = false;
+        }
+        document.getElementById("cur").innerHTML = CurPage - 1;
+        document.getElementById("next").innerHTML = CurPage;
+
+
+        var url = "/admin/get-urls";
+        var params = {
+            length: 50, // количество отображаемых элементов
+            start: ((CurPage - 2) * 50) + 1, // номер страницы
+            start_date: document.getElementById('start_date').value, // Дата начала поиска
+            end_date: document.getElementById('end_date').value, // Дата окончания поиска
+            amount: calculateDays(),
+            search_text: document.getElementById("search_field").value,
+            sort_result: document.getElementById("input_sort").checked,
+            sort_desc: document.getElementById("input_desc").checked,
+        };
+
+        fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-type": "application/json"
+            },
+            body: JSON.stringify(params)
+            // body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                data = data.data;
+                var table = $('#body_t');
+
+                var elmtTable = document.getElementById('body_t');
+                var tableRows = elmtTable.getElementsByTagName('tr');
+                var rowCount = tableRows.length;
+
+                for (var x = rowCount - 1; x >= 0; x--) {
+                    elmtTable.removeChild(tableRows[x]);
+                }
+                if (data.length == 0) {
+                    return;
+                }
+                empty = `<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #B9BDBC'>
+            <span style='font-size: 18px'><span style='color:red'>NAN</span></span><br>
+            <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 20px'>CTR <span style='color:red'>NAN%</span></span><br>
+            <span style='font-size: 10px'><span style='color:red'>NAN</span></span> <span style='font-size: 10px; margin-left: 30px'>R <span style='color:red'>NAN%</span></span>
+            </div>`
+                for (i = 0; i < 50; i++) {
+                    var newRow = '<tr>';
+                    $.each(columns, function (index_c, cell) {
+                        if (data[i][columns[index_c]["title"]]) {
+                            newRow += '<td>' + data[i][columns[index_c]["title"]] + '</td>';
+                        } else {
+                            newRow += '<td>' + empty + '</td>';
+                        }
+                    });
+                    newRow += '</tr>';
+                    table.append(newRow);
+                }
+
+            })
+            .catch(error => {
+                // Обработка ошибки
+                console.error("Error:", error);
+            });
+
+    }
+
+
+    function NextPage() {
+
+        let row = document.getElementById("head_t");
+        row.innerHTML = "";
+        var nameCell = document.createElement('td');
+        nameCell.textContent = "url";
+        row.appendChild(nameCell);
+
+        columns = [
+            {"title": "url"},
+        ]
+
+        amount = calculateDays();
+
+        for (i = amount - 1; i >= 0; i--) {
+            columns.push({"title": IncrementDate(document.getElementById('start_date').value, i)})
+            var nameCell = document.createElement('td');
+            nameCell.textContent = IncrementDate(document.getElementById('start_date').value, i);
+            row.appendChild(nameCell);
+        }
+        var CurPage = document.getElementById("cur").innerHTML;
+        CurPage = Number.parseInt(CurPage, 10)
+        var url = "/admin/get-urls";
+
+        document.getElementById("prev").innerHTML = CurPage;
+        document.getElementById("prev").disabled = false;
+        document.getElementById("cur").innerHTML = CurPage + 1;
+        document.getElementById("next").innerHTML = CurPage + 2;
+
+
+        var params = {
+            length: 50, // количество отображаемых элементов
+            start: (CurPage * 50) + 1, // номер страницы
+            start_date: document.getElementById('start_date').value, // Дата начала поиска
+            end_date: document.getElementById('end_date').value, // Дата окончания поиска
+            amount: calculateDays(),
+            search_text: document.getElementById("search_field").value,
+            sort_result: document.getElementById("input_sort").checked,
+            sort_desc: document.getElementById("input_desc").checked,
+        };
+
+        fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-type": "application/json"
+            },
+            body: JSON.stringify(params)
+            // body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                data = data.data;
+                var table = $('#body_t');
+
+                var elmtTable = document.getElementById('body_t');
+                var tableRows = elmtTable.getElementsByTagName('tr');
+                var rowCount = tableRows.length;
+
+                for (var x = rowCount - 1; x >= 0; x--) {
+                    elmtTable.removeChild(tableRows[x]);
+                }
+                if (data.length == 0) {
+                    return;
                 }
                 empty = `<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #B9BDBC'>
             <span style='font-size: 18px'><span style='color:red'>NAN</span></span><br>
@@ -280,12 +483,8 @@
 </script>
 <script>
     function generateExcel() {
-        let table = $('#example').DataTable();
-
-        var curPage = table.page();
-
         const data = {
-            "start": (curPage * 50) + 1,
+            "start": 0,
             "length": 50,
             "start_date": document.getElementById('start_date').value, // Дата начала поиска
             "end_date": document.getElementById('end_date').value, // Дата окончания поиска
@@ -316,12 +515,8 @@
     }
 
     function generateCsv() {
-        let table = $('#example').DataTable();
-
-        var curPage = table.page();
-
         const data = {
-            "start": (curPage * 50) + 1,
+            "start": 0,
             "length": 50,
             "start_date": document.getElementById('start_date').value, // Дата начала поиска
             "end_date": document.getElementById('end_date').value, // Дата окончания поиска
