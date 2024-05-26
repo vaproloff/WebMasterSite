@@ -51,9 +51,12 @@
 <table id="example" class="display nowrap" style="width:100%;">
 
     <thead>
+    <tr id="head_t">
+
+    </tr>
 
     </thead>
-    <tbody>
+    <tbody id="body_t">
 
     </tbody>
 
@@ -70,8 +73,6 @@
 <script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.html5.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.print.min.js"></script>
 
-
-<!--<script src="/static/assets/vendor/jquery/jquery-3.3.1.min.js"></script>-->
 
 <script>
     function getDate(minus_day) {
@@ -115,65 +116,166 @@
         document.getElementById('start_date').value = getDate(14);
     }
 
+
     function SetDataTable() {
 
+        let row = document.getElementById("head_t");
+
+        var nameCell = document.createElement('td');
+        nameCell.textContent = "url";
+        row.appendChild(nameCell);
+
         columns = [
-            {"title": "url"},
+            {"title": "query"},
         ]
 
         amount = calculateDays();
 
         for (i = amount - 1; i >= 0; i--) {
             columns.push({"title": IncrementDate(document.getElementById('start_date').value, i)})
+            var nameCell = document.createElement('td');
+            nameCell.textContent = IncrementDate(document.getElementById('start_date').value, i);
+            row.appendChild(nameCell);
         }
 
-        let table = $('#example').DataTable();
+        var url = "/admin/get-queries";
+        var params = {
+            length: 50, // количество отображаемых элементов
+            start: 0, // номер страницы
+            start_date: document.getElementById('start_date').value, // Дата начала поиска
+            end_date: document.getElementById('end_date').value, // Дата окончания поиска
+            amount: calculateDays(),
+            search_text: document.getElementById("search_field").value,
+            sort_result: document.getElementById("input_sort").checked,
+            sort_desc: document.getElementById("input_desc").checked,
+        };
+        console.log(params);
 
-
-        table.destroy();
-
-        table = new DataTable('#example', {
-            // layout: {
-            //     topStart: {
-            //         buttons: ['csv', 'excel']
-            //     }
-            // },
-            // "dom": '<"wrapper"lrtip>',
-            dom: 'Brtip',
-            buttons: [
-                'csv', 'excel'
-            ],
-            "serverSide": true,
-            "processing": true,
-            "pageLength": 50,
-            "columns": columns,
-            deferRender: true,
-            "ajax": {
-                "url": "/admin/get-queries",
-                "type": "POST",
-                "data": function (d) {
-                    d.length = d.length || 10; // количество отображаемых элементов
-                    d.start = d.start || 0; // номер страницы
-                    d.start_date = document.getElementById('start_date').value; // Дата начала поиска
-                    d.end_date = document.getElementById('end_date').value; // Дата окончания поиска
-                    d.amount = calculateDays();
-                    d.search_text = document.getElementById("search_field").value;
-                    d.sort_result = document.getElementById("input_sort").checked;
-                    d.sort_desc = document.getElementById("input_desc").checked;
-                }
+        fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-type": "application/json"
             },
+            body: JSON.stringify(params)
+            // body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                // Обработка ответа
+                data = data.data;
+                var table = $('#body_t');
+                empty = `<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #B9BDBC'>
+            <span style='font-size: 18px'><span style='color:red'>NAN</span></span><br>
+            <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 20px'>CTR <span style='color:red'>NAN%</span></span><br>
+            <span style='font-size: 10px'><span style='color:red'>NAN</span></span> <span style='font-size: 10px; margin-left: 30px'>R <span style='color:red'>NAN%</span></span>
+            </div>`
+                for (i = 0; i < 50; i++) {
+                    var newRow = '<tr>';
+                    $.each(columns, function (index_c, cell) {
+                        if (data[i][columns[index_c]["title"]]) {
+                            newRow += '<td>' + data[i][columns[index_c]["title"]] + '</td>';
+                        } else {
+                            newRow += '<td>' + empty + '</td>';
+                        }
+                    });
+                    newRow += '</tr>';
+                    table.append(newRow);
+                }
 
-        });
+            })
+            .catch(error => {
+                // Обработка ошибки
+                console.error("Error:", error);
+            });
+
     }
 
     function UpdateTable() {
-        SetDataTable();
+
+        let row = document.getElementById("head_t");
+        row.innerHTML = "";
+        var nameCell = document.createElement('td');
+        nameCell.textContent = "url";
+        row.appendChild(nameCell);
+
+        columns = [
+            {"title": "query"},
+        ]
+
+        amount = calculateDays();
+
+        for (i = amount - 1; i >= 0; i--) {
+            columns.push({"title": IncrementDate(document.getElementById('start_date').value, i)})
+            var nameCell = document.createElement('td');
+            nameCell.textContent = IncrementDate(document.getElementById('start_date').value, i);
+            row.appendChild(nameCell);
+        }
+
+        var url = "/admin/get-queries";
+        var params = {
+            length: 50, // количество отображаемых элементов
+            start: 0, // номер страницы
+            start_date: document.getElementById('start_date').value, // Дата начала поиска
+            end_date: document.getElementById('end_date').value, // Дата окончания поиска
+            amount: calculateDays(),
+            search_text: document.getElementById("search_field").value,
+            sort_result: document.getElementById("input_sort").checked,
+            sort_desc: document.getElementById("input_desc").checked,
+        };
+
+        fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-type": "application/json"
+            },
+            body: JSON.stringify(params)
+            // body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                data = data.data;
+                var table = $('#body_t');
+
+                var elmtTable = document.getElementById('body_t');
+                var tableRows = elmtTable.getElementsByTagName('tr');
+                var rowCount = tableRows.length;
+
+                for (var x = rowCount - 1; x >= 0; x--) {
+                    elmtTable.removeChild(tableRows[x]);
+                }
+                if (data.length == 0) {
+                    return;
+                }
+                empty = `<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #B9BDBC'>
+            <span style='font-size: 18px'><span style='color:red'>NAN</span></span><br>
+            <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 20px'>CTR <span style='color:red'>NAN%</span></span><br>
+            <span style='font-size: 10px'><span style='color:red'>NAN</span></span> <span style='font-size: 10px; margin-left: 30px'>R <span style='color:red'>NAN%</span></span>
+            </div>`
+                for (i = 0; i < 50; i++) {
+                    var newRow = '<tr>';
+                    $.each(columns, function (index_c, cell) {
+                        if (data[i][columns[index_c]["title"]]) {
+                            newRow += '<td>' + data[i][columns[index_c]["title"]] + '</td>';
+                        } else {
+                            newRow += '<td>' + empty + '</td>';
+                        }
+                    });
+                    newRow += '</tr>';
+                    table.append(newRow);
+                }
+
+            })
+            .catch(error => {
+                // Обработка ошибки
+                console.error("Error:", error);
+            });
+
     }
 
     $(document).ready(SetDatePage())
     $(document).ready(SetDataTable())
 </script>
-
 <script>
     function generateExcel() {
         let table = $('#example').DataTable();
@@ -204,7 +306,7 @@
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'data.xlsx';
+                a.download = 'query.xlsx';
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(url);
@@ -240,12 +342,13 @@
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'data.csv';
+                a.download = 'query.csv';
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(url);
             });
     }
 </script>
+
 </body>
 </html>
