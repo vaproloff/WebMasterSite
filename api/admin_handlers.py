@@ -342,16 +342,20 @@ async def get_urls(request: Request, data_request: dict):
     end_date = datetime.strptime(data_request["end_date"], date_format_2)
     if data_request["sort_result"]:
         if data_request["search_text"] == "":
-            urls = await _get_urls_with_pagination_sort(data_request["start"], data_request["length"], start_date, end_date, data_request["sort_desc"], async_session)
+            urls = await _get_urls_with_pagination_sort(data_request["start"], data_request["length"], start_date,
+                                                        end_date, data_request["sort_desc"], async_session)
         else:
-            urls = await _get_urls_with_pagination_and_like_sort(data_request["start"], data_request["length"], start_date, end_date, data_request["search_text"],
+            urls = await _get_urls_with_pagination_and_like_sort(data_request["start"], data_request["length"],
+                                                                 start_date, end_date, data_request["search_text"],
                                                                  data_request["sort_desc"],
                                                                  async_session)
     else:
         if data_request["search_text"] == "":
-            urls = await _get_urls_with_pagination(data_request["start"], data_request["length"], start_date, end_date, async_session)
+            urls = await _get_urls_with_pagination(data_request["start"], data_request["length"], start_date, end_date,
+                                                   async_session)
         else:
-            urls = await _get_urls_with_pagination_and_like(data_request["start"], data_request["length"], start_date, end_date, data_request["search_text"],
+            urls = await _get_urls_with_pagination_and_like(data_request["start"], data_request["length"], start_date,
+                                                            end_date, data_request["search_text"],
                                                             async_session)
     try:
         grouped_data = [(key, sorted(list(group)[:14], key=lambda x: x[0])) for key, group in
@@ -363,8 +367,8 @@ async def get_urls(request: Request, data_request: dict):
         return {"data": []}
     data = []
     for el in grouped_data:
-        res = [
-            f"<div style='width:355px; height: 55px; overflow: auto; white-space: nowrap;'><span>{el[0]}</span></div>"]
+        res = {"Url":
+                   f"<div style='width:355px; height: 55px; overflow: auto; white-space: nowrap;'><span>{el[0]}</span></div>"}
         for k, stat in enumerate(el[1]):
             up = 0
             if k + 1 < len(el[1]):
@@ -378,18 +382,12 @@ async def get_urls(request: Request, data_request: dict):
             else:
                 color = "#B4D7ED"
                 color_text = "black"
-            res.append(f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: {color}'>
+            res[stat[0].strftime(date_format_out)] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: {color}'>
             <span style='font-size: 18px'>{stat[1]}</span><span style="margin-left: 5px; font-size: 10px; color: {color_text}">{abs(up)}</span><br>
             <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 20px'>CTR {stat[4]}%</span><br>
-            <span style='font-size: 10px'>{stat[2]}</span> <span style='font-size: 10px; margin-left: 35px'>R {stat[3]}%</span>
-            </div>""")
-        res = pad_list_with_zeros(res, data_request["amount"] + 1)
-        test = res[::-1]
-        test.insert(0,
-                    f"<div style='width:355px; height: 55px; overflow: auto; white-space: nowrap;'><span>{el[0]}</span></div>")
-        data.append(test[:-1])
-    print(len(data[0]))
-    print(data[0])
+            <span style='font-size: 10px'>{stat[2]}</span> <span style='font-size: 10px; margin-left: 20px'>R {stat[3]}%</span>
+            </div>"""
+        data.append(res)
     json_data = jsonable_encoder(data)
 
     # return JSONResponse({"data": json_data, "recordsTotal": limit, "recordsFiltered": 50000})
