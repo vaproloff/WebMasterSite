@@ -165,17 +165,24 @@
             .then(data => {
                 // Обработка ответа
                 data = data.data;
-                console.log(data);
                 var table = $('#body_t');
-
-                $.each(data, function (index, row) {
+                empty = `<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #B9BDBC'>
+            <span style='font-size: 18px'><span style='color:red'>NAN</span></span><br>
+            <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 20px'>CTR <span style='color:red'>NAN%</span></span><br>
+            <span style='font-size: 10px'><span style='color:red'>NAN</span></span> <span style='font-size: 10px; margin-left: 30px'>R <span style='color:red'>NAN%</span></span>
+            </div>`
+                for (i = 0; i < 50; i++) {
                     var newRow = '<tr>';
-                    $.each(row, function (index, cell) {
-                        newRow += '<td>' + cell + '</td>';
+                    $.each(columns, function (index_c, cell) {
+                        if (data[i][columns[index_c]["title"]]) {
+                            newRow += '<td>' + data[i][columns[index_c]["title"]] + '</td>';
+                        } else {
+                            newRow += '<td>' + empty + '</td>';
+                        }
                     });
                     newRow += '</tr>';
                     table.append(newRow);
-                });
+                }
 
             })
             .catch(error => {
@@ -217,7 +224,6 @@
             sort_result: document.getElementById("input_sort").checked,
             sort_desc: document.getElementById("input_desc").checked,
         };
-        console.log(params);
 
         fetch(url, {
             method: "POST",
@@ -229,14 +235,10 @@
         })
             .then(response => response.json())
             .then(data => {
-                // Обработка ответа
-                data = data.data;
-                console.log("Update");
                 console.log(data);
+                data = data.data;
                 var table = $('#body_t');
-                // while (tbody.firstChild) {
-                //     tbody.removeChild(tbody.firstChild);
-                // }
+
                 var elmtTable = document.getElementById('body_t');
                 var tableRows = elmtTable.getElementsByTagName('tr');
                 var rowCount = tableRows.length;
@@ -244,14 +246,26 @@
                 for (var x = rowCount - 1; x >= 0; x--) {
                     elmtTable.removeChild(tableRows[x]);
                 }
-                $.each(data, function (index, row) {
+                if (data.length == 0){
+                    return ;
+                }
+                empty = `<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #B9BDBC'>
+            <span style='font-size: 18px'><span style='color:red'>NAN</span></span><br>
+            <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 20px'>CTR <span style='color:red'>NAN%</span></span><br>
+            <span style='font-size: 10px'><span style='color:red'>NAN</span></span> <span style='font-size: 10px; margin-left: 30px'>R <span style='color:red'>NAN%</span></span>
+            </div>`
+                for (i = 0; i < 50; i++) {
                     var newRow = '<tr>';
-                    $.each(row, function (index, cell) {
-                        newRow += '<td>' + cell + '</td>';
+                    $.each(columns, function (index_c, cell) {
+                        if (data[i][columns[index_c]["title"]]) {
+                            newRow += '<td>' + data[i][columns[index_c]["title"]] + '</td>';
+                        } else {
+                            newRow += '<td>' + empty + '</td>';
+                        }
                     });
                     newRow += '</tr>';
                     table.append(newRow);
-                });
+                }
 
             })
             .catch(error => {
