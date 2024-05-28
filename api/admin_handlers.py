@@ -62,6 +62,10 @@ async def generate_excel(request: Request, data_request: dict):
     header.insert(0, "")
     ws.append(header)
     start = 0
+    main_header = []
+    for i in range(int(data_request["amount"])):
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+    main_header = main_header[::-1]
     while True:
         start_el = (start * 50) + 1
         if data_request["sort_result"]:
@@ -93,16 +97,17 @@ async def generate_excel(request: Request, data_request: dict):
         if len(grouped_data) == 0:
             break
         for el in grouped_data:
+            info = {}
             res = []
             for k, stat in enumerate(el[1]):
-                res.append(stat[1])
-                res.append(stat[2])
-                res.append(stat[3])
-                res.append(stat[4])
-            res = pad_list_with_zeros_excel(res, 4 * (int(data_request["amount"])))
-            test = res[::-1]
-            test.insert(0, el[0])
-            ws.append(test)
+                info[stat[0].strftime(date_format_out)] = [stat[1], stat[2], stat[3], stat[4]]
+            res.append(el[0])
+            for el in main_header:
+                if el in info:
+                    res.extend(info[el])
+                else:
+                    res.extend([0, 0, 0, 0])
+            ws.append(res)
 
     output = io.BytesIO()
     wb.save(output)
@@ -131,6 +136,10 @@ async def generate_excel(request: Request, data_request: dict):
     header.insert(0, "")
     ws.append(header)
     start = 0
+    main_header = []
+    for i in range(int(data_request["amount"])):
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+    main_header = main_header[::-1]
     while True:
         start_el = (start * 50) + 1
         if data_request["sort_result"]:
@@ -162,16 +171,17 @@ async def generate_excel(request: Request, data_request: dict):
         if len(grouped_data) == 0:
             break
         for el in grouped_data:
+            info = {}
             res = []
             for k, stat in enumerate(el[1]):
-                res.append(stat[1])
-                res.append(stat[2])
-                res.append(stat[3])
-                res.append(stat[4])
-            res = pad_list_with_zeros_excel(res, 4 * (int(data_request["amount"])))
-            test = res[::-1]
-            test.insert(0, el[0])
-            ws.append(test)
+                info[stat[0].strftime(date_format_out)] = [stat[1], stat[2], stat[3], stat[4]]
+            res.append(el[0])
+            for el in main_header:
+                if el in info:
+                    res.extend(info[el])
+                else:
+                    res.extend([0, 0, 0, 0])
+            ws.append(res)
 
     output = io.StringIO()
     writer = csv.writer(output)
@@ -201,6 +211,10 @@ async def generate_excel(request: Request, data_request: dict):
     header.insert(0, "")
     ws.append(header)
     start = 0
+    main_header = []
+    for i in range(int(data_request["amount"])):
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+    main_header = main_header[::-1]
     while True:
         start_el = (start * 50) + 1
         if data_request["sort_result"]:
@@ -231,16 +245,17 @@ async def generate_excel(request: Request, data_request: dict):
         if len(grouped_data) == 0:
             break
         for el in grouped_data:
+            info = {}
             res = []
             for k, stat in enumerate(el[1]):
-                res.append(stat[1])
-                res.append(stat[2])
-                res.append(stat[3])
-                res.append(stat[4])
-            res = pad_list_with_zeros_excel(res, 4 * (int(data_request["amount"])))
-            test = res[::-1]
-            test.insert(0, el[0])
-            ws.append(test)
+                info[stat[0].strftime(date_format_out)] = [stat[1], stat[2], stat[3], stat[4]]
+            res.append(el[0])
+            for el in main_header:
+                if el in info:
+                    res.extend(info[el])
+                else:
+                    res.extend([0, 0, 0, 0])
+            ws.append(res)
 
     output = io.BytesIO()
     wb.save(output)
@@ -269,6 +284,10 @@ async def generate_excel(request: Request, data_request: dict):
     header.insert(0, "")
     ws.append(header)
     start = 0
+    main_header = []
+    for i in range(int(data_request["amount"])):
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+    main_header = main_header[::-1]
     while True:
         start_el = (start * 50) + 1
         if data_request["sort_result"]:
@@ -300,15 +319,17 @@ async def generate_excel(request: Request, data_request: dict):
             break
         for el in grouped_data:
             res = []
+            info = {}
             for k, stat in enumerate(el[1]):
-                res.append(stat[1])
-                res.append(stat[2])
-                res.append(stat[3])
-                res.append(stat[4])
-            res = pad_list_with_zeros_excel(res, 4 * (int(data_request["amount"])))
-            test = res[::-1]
-            test.insert(0, el[0])
-            ws.append(test)
+                info[stat[0].strftime(date_format_out)] = [stat[1], stat[2], stat[3], stat[4]]
+            res.append(el[0])
+            for el in main_header:
+                if el in info:
+                    res.extend(info[el])
+                else:
+                    res.extend([0, 0, 0, 0])
+
+            ws.append(res)
 
     output = io.StringIO()
     writer = csv.writer(output)
