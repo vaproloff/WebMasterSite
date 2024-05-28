@@ -482,7 +482,7 @@
 <script>
     function generateExcel() {
         const data = {
-            "start": (curPage * 50) + 1,
+            "start": 0,
             "length": 50,
             "start_date": document.getElementById('start_date').value, // Дата начала поиска
             "end_date": document.getElementById('end_date').value, // Дата окончания поиска
@@ -514,7 +514,7 @@
 
     function generateCsv() {
         const data = {
-            "start": (curPage * 50) + 1,
+            "start": 0,
             "length": 50,
             "start_date": document.getElementById('start_date').value, // Дата начала поиска
             "end_date": document.getElementById('end_date').value, // Дата окончания поиска
