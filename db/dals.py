@@ -24,7 +24,8 @@ class UrlDAL:
             self,
             add_values
     ):
-        self.db_session.add_all(add_values)
+        for value in add_values:
+            await self.db_session.merge(value)
         await self.db_session.flush()
         return
 
@@ -115,7 +116,8 @@ class MetricDAL:
             self,
             add_values
     ):
-        self.db_session.add_all(add_values)
+        for value in add_values:
+            await self.db_session.merge(value)
         await self.db_session.flush()
         return
 
@@ -130,7 +132,8 @@ class QueryDAL:
             self,
             add_values
     ):
-        self.db_session.add_all(add_values)
+        for value in add_values:
+            await self.db_session.merge(value)
         await self.db_session.flush()
         return
 

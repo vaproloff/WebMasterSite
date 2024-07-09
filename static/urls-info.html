@@ -81,6 +81,17 @@
 <!--<script src="/static/assets/vendor/jquery/jquery-3.3.1.min.js"></script>-->
 
 <script>
+      var minDate = new Date();
+      minDate.setHours(0, 0, 0, 0);
+      minDate.setDate(minDate.getDate() - 13);
+
+      var selectedDate = new Date(input.value);
+      if (selectedDate > maxDate) {
+        input.value = maxDate.toISOString().split('T')[0];
+      } else if (selectedDate < minDate) {
+        input.value = minDate.toISOString().split('T')[0];
+      }
+    }
     function getDate(minus_day) {
         var today = new Date();
         var twoWeeksAgo = new Date(today.getTime() - (minus_day * 24 * 60 * 60 * 1000));
@@ -100,6 +111,7 @@
         var yyyyTwoWeeksAgo = twoWeeksAgo.getFullYear();
 
         var twoWeeksAgoDate = yyyyTwoWeeksAgo + '-' + mmTwoWeeksAgo + '-' + ddTwoWeeksAgo;
+	console.log("Incremented Date:", twoWeeksAgoDate);
         return twoWeeksAgoDate
     }
 
@@ -107,6 +119,13 @@
     function calculateDays() {
         var start_date = new Date(document.getElementById('start_date').value);
         var end_date = new Date(document.getElementById('end_date').value);
+	console.log("Start Date:", start_date);
+	console.log("End Date:", end_date);
+	
+	if (isNaN(start_date.getTime()) || isNaN(end_date.getTime())) {
+    	    console.error("Invalid date(s) provided");
+    	    return 0;
+	}
 
         var diffTime = Math.abs(end_date - start_date);
         var diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -172,6 +191,7 @@
         })
             .then(response => response.json())
             .then(data => {
+		console.log("Received data:", data);
                 // Обработка ответа
                 data = data.data;
                 var table = $('#body_t');

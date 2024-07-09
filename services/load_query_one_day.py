@@ -1,3 +1,4 @@
+import config
 import asyncio
 from datetime import datetime
 from datetime import timedelta
@@ -10,9 +11,9 @@ from db.session import async_session
 from api.actions.queries import _add_new_urls
 from api.actions.metrics_queries import _add_new_metrics
 
-ACCESS_TOKEN = "y0_AgAEA7qkeLqBAAuw7AAAAAEDGzynAABr7pqZPg9NEb5O0OacK2wWzfFG2A"
-USER_ID = "1130000065018497"
-HOST_ID = "https:dn.ru:443"
+ACCESS_TOKEN = f"{config.ACCESS_TOKEN}"
+USER_ID = f"{config.USER_ID}"
+HOST_ID = f"{config.HOST_ID}"
 
 date_format = "%Y-%m-%d"
 
@@ -25,7 +26,7 @@ async def add_data(data):
         query_name = query['text_indicator']['value']
         new_url = [Query(query=query_name)]
         metrics = []
-        date = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+        date = (datetime.now() - timedelta(days=3)).strftime("%Y-%m-%d")
         data_add = {
             "date": date,
             "ctr": 0,

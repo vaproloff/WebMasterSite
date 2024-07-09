@@ -1,6 +1,7 @@
 import asyncio
 from datetime import datetime
 import requests
+import config
 
 from db.models import Url
 from db.models import Metrics
@@ -8,9 +9,9 @@ from db.session import async_session
 from api.actions.urls import _add_new_urls
 from api.actions.metrics_url import _add_new_metrics
 
-ACCESS_TOKEN = "y0_AgAEA7qkeLqBAAuw7AAAAAEDGzynAABr7pqZPg9NEb5O0OacK2wWzfFG2A"
-USER_ID = "1130000065018497"
-HOST_ID = "https:dn.ru:443"
+ACCESS_TOKEN = f"{config.ACCESS_TOKEN}"
+USER_ID = f"{config.USER_ID}"
+HOST_ID = f"{config.HOST_ID}"
 
 date_format = "%Y-%m-%d"
 

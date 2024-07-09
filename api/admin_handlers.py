@@ -368,8 +368,13 @@ async def login(request: Request, username: str = Form(), password: str = Form()
 
 @admin_router.post("/get-urls")
 async def get_urls(request: Request, data_request: dict):
-    start_date = datetime.strptime(data_request["start_date"], date_format_2)
-    end_date = datetime.strptime(data_request["end_date"], date_format_2)
+    today = datetime.now().date()
+
+    # Вычитаем 14 дней (две недели)
+    two_weeks_ago = today - timedelta(days=14)
+    start_date = min((datetime.strptime(data_request["start_date"], date_format_2).date()), two_weeks_ago)
+    end_date = min((datetime.strptime(data_request["end_date"], date_format_2).date()), datetime.now().date())
+    print(end_date)
     if data_request["sort_result"]:
         if data_request["search_text"] == "":
             urls = await _get_urls_with_pagination_sort(data_request["start"], data_request["length"], start_date,
@@ -434,6 +439,10 @@ async def get_urls(request: Request):
 
 @admin_router.post("/get-queries")
 async def get_urls(request: Request, data_request: dict):
+    today = datetime.now().date()
+
+    # Вычитаем 14 дней (две недели)
+    two_weeks_ago = today - timedelta(days=14)
     start_date = datetime.strptime(data_request["start_date"], date_format_2)
     end_date = datetime.strptime(data_request["end_date"], date_format_2)
     if data_request["sort_result"]:
