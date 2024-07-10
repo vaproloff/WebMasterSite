@@ -90,6 +90,7 @@ async def generate_excel(request: Request, data_request: dict):
                                                                 async_session)
         start += 1
         try:
+            urls.sort(key=lambda x: x[-1])
             grouped_data = [(key, sorted(list(group)[:14], key=lambda x: x[0])) for key, group in
                             groupby(urls, key=lambda x: x[-1])]
         except TypeError as e:
@@ -164,6 +165,7 @@ async def generate_excel(request: Request, data_request: dict):
                                                                 async_session)
         start += 1
         try:
+            urls.sort(key=lambda x: x[-1])
             grouped_data = [(key, sorted(list(group)[:14], key=lambda x: x[0])) for key, group in
                             groupby(urls, key=lambda x: x[-1])]
         except TypeError as e:
@@ -238,6 +240,7 @@ async def generate_excel(request: Request, data_request: dict):
                                                                       async_session)
         start += 1
         try:
+            urls.sort(key=lambda x: x[-1])
             grouped_data = [(key, sorted(list(group)[:14], key=lambda x: x[0])) for key, group in
                             groupby(urls, key=lambda x: x[-1])]
         except TypeError as e:
@@ -311,6 +314,7 @@ async def generate_excel(request: Request, data_request: dict):
                                                                       async_session)
         start += 1
         try:
+            urls.sort(key=lambda x: x[-1])
             grouped_data = [(key, sorted(list(group)[:14], key=lambda x: x[0])) for key, group in
                             groupby(urls, key=lambda x: x[-1])]
         except TypeError as e:
