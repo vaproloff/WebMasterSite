@@ -49,3 +49,17 @@ class MetricsQuery(Base):
     impression = Column(Float, nullable=False)
     demand = Column(Float, nullable=False)
     clicks = Column(Float, nullable=False)
+
+
+class UpdateLogsQuery(Base):
+    __tablename__ = "update_logs_query"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    update_date = Column(DateTime, nullable=False)
+
+
+class UpdateLogsUrl(Base):
+    __tablename__ = "update_logs_url"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    update_date = Column(DateTime, nullable=False)

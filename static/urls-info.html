@@ -81,17 +81,6 @@
 <!--<script src="/static/assets/vendor/jquery/jquery-3.3.1.min.js"></script>-->
 
 <script>
-      var minDate = new Date();
-      minDate.setHours(0, 0, 0, 0);
-      minDate.setDate(minDate.getDate() - 13);
-
-      var selectedDate = new Date(input.value);
-      if (selectedDate > maxDate) {
-        input.value = maxDate.toISOString().split('T')[0];
-      } else if (selectedDate < minDate) {
-        input.value = minDate.toISOString().split('T')[0];
-      }
-    }
     function getDate(minus_day) {
         var today = new Date();
         var twoWeeksAgo = new Date(today.getTime() - (minus_day * 24 * 60 * 60 * 1000));

@@ -3,11 +3,12 @@ from datetime import datetime
 import requests
 import config
 
-from db.models import Url
+from db.models import Url, UpdateLogsUrl
 from db.models import Metrics
 from db.session import async_session
 from api.actions.urls import _add_new_urls
 from api.actions.metrics_url import _add_new_metrics
+from db.utils import get_last_update_date, add_last_update_date
 
 ACCESS_TOKEN = f"{config.ACCESS_TOKEN}"
 USER_ID = f"{config.USER_ID}"
@@ -19,7 +20,7 @@ date_format = "%Y-%m-%d"
 URL = f"https://api.webmaster.yandex.net/v4/user/{USER_ID}/hosts/{HOST_ID}/query-analytics/list"
 
 
-async def add_data(data):
+async def add_data(data, last_update_date):
     for query in data['text_indicator_to_statistics']:
         query_name = query['text_indicator']['value']
         new_url = [Url(url=query_name)]
@@ -35,15 +36,16 @@ async def add_data(data):
         }
         for el in query['statistics']:
             if date != el['date']:
-                metrics.append(Metrics(
-                    url=query_name,
-                    date=datetime.strptime(date, date_format),
-                    ctr=data_add['ctr'],
-                    position=data_add['position'],
-                    impression=data_add['impression'],
-                    demand=data_add['demand'],
-                    clicks=data_add['clicks']
-                ))
+                if datetime.strptime(date, date_format) > last_update_date:
+                    metrics.append(Metrics(
+                        url=query_name,
+                        date=datetime.strptime(date, date_format),
+                        ctr=data_add['ctr'],
+                        position=data_add['position'],
+                        impression=data_add['impression'],
+                        demand=data_add['demand'],
+                        clicks=data_add['clicks']
+                    ))
                 date = el['date']
                 data_add = {
                     "date": date,
@@ -69,7 +71,7 @@ async def add_data(data):
         await _add_new_metrics(metrics, async_session)
 
 
-async def get_data_by_page(page):
+async def get_data_by_page(page, last_update_date):
     body = {
         "offset": page,
         "limit": 500,
@@ -85,7 +87,7 @@ async def get_data_by_page(page):
     print(response.text[:100])
     data = response.json()
 
-    await add_data(data)
+    await add_data(data, last_update_date)
 
 
 async def get_all_data():
@@ -101,14 +103,16 @@ async def get_all_data():
     response = requests.post(URL, json=body, headers={'Authorization': f'OAuth {ACCESS_TOKEN}',
                                                       "Content-Type": "application/json; charset=UTF-8"})
 
-    print(response.text[:100])
     data = response.json()
-    print(response.text, flush=True)
     count = data["count"]
-    await add_data(data)
+    last_update_date = await get_last_update_date(async_session, UpdateLogsUrl)
+    if not last_update_date:
+        last_update_date = datetime.strptime("1900-01-01", date_format)
+    await add_data(data, last_update_date)
     for offset in range(500, count, 500):
         print(f"[INFO] PAGE{offset} DONE!")
-        await get_data_by_page(offset)
+        await get_data_by_page(offset, last_update_date)
+    await add_last_update_date(async_session, UpdateLogsUrl)
 
 
 if __name__ == '__main__':

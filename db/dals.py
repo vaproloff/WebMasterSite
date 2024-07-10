@@ -116,8 +116,7 @@ class MetricDAL:
             self,
             add_values
     ):
-        for value in add_values:
-            await self.db_session.merge(value)
+        self.db_session.add_all(add_values)
         await self.db_session.flush()
         return
 
@@ -229,7 +228,6 @@ class MetricQueryDAL:
             self,
             add_values
     ):
-        for value in add_values:
-            await self.db_session.merge(value)
+        self.db_session.add_all(add_values)
         await self.db_session.flush()
         return
