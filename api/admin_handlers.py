@@ -393,6 +393,7 @@ async def get_urls(request: Request, data_request: dict):
                                                             end_date, data_request["search_text"],
                                                             async_session)
     try:
+        urls.sort(key=lambda x: x[-1])
         grouped_data = [(key, sorted(list(group)[:14], key=lambda x: x[0])) for key, group in
                         groupby(urls, key=lambda x: x[-1])]
     except TypeError as e:
@@ -465,6 +466,7 @@ async def get_urls(request: Request, data_request: dict):
                                                                   start_date, end_date, data_request["search_text"],
                                                                   async_session)
     try:
+        urls.sort(key=lambda x: x[-1])
         grouped_data = [(key, sorted(list(group)[:14], key=lambda x: x[0])) for key, group in
                         groupby(urls, key=lambda x: x[-1])]
     except TypeError as e:
