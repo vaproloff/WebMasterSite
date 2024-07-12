@@ -21,7 +21,7 @@ async def get_last_update_date(session, db_name):
 async def add_last_update_date(session, db_name):
     async with session() as s:
         now = datetime.now()
-        three_days_ago = now - timedelta(days=3)
+        three_days_ago = now - timedelta(days=4)
         date_str = three_days_ago.date()
 
         query = db_name(update_date=date_str)
