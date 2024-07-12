@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import Float
+from sqlalchemy import Float, Enum
 from sqlalchemy import Column
 from sqlalchemy import String
 from sqlalchemy import Integer
@@ -63,3 +63,21 @@ class UpdateLogsUrl(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     update_date = Column(DateTime, nullable=False)
+
+
+class QueryIndicator(Base):
+    __tablename__ = "query_indicator"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    indicator = Column(Enum("TOTAL_SHOWS", "TOTAL_CLICKS", "AVG_SHOW_POSITION", "AVG_CLICK_POSITION", name="indicator"),
+                       nullable=False)
+    value = Column(Float, nullable=False)
+    data = Column(DateTime, nullable=False)
+
+class UpdateLogsIndicator(Base):
+    __tablename__ = "update_logs_indicator"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    update_date = Column(DateTime, nullable=False)
+
+
