@@ -35,6 +35,7 @@ async def get_response(async_session):
     if not last_update_date:
         last_update_date = (datetime.now() - timedelta(days=60))
     print(last_update_date.date())
+    print("Начало выгрузки")
     response = requests.get(create_url(last_update_date.date()), headers={'Authorization': f'OAuth {ACCESS_TOKEN}',
                                                                    "Content-Type": "application/json; charset=UTF-8"})
 
@@ -59,6 +60,7 @@ async def main():
     response = await get_response(async_session)
     await add_data(response)
     await add_last_update_date(async_session, UpdateLogsIndicator, days=2)
+    print("Выгрузка завершена")
 
 
 if __name__ == '__main__':
