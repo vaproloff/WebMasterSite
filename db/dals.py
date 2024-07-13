@@ -3,7 +3,7 @@ from sqlalchemy import select
 from sqlalchemy import and_
 from sqlalchemy import desc
 
-from db.models import Url
+from db.models import Url, QueryIndicator
 from db.models import Metrics
 from db.models import Query
 from db.models import MetricsQuery
@@ -231,3 +231,28 @@ class MetricQueryDAL:
         self.db_session.add_all(add_values)
         await self.db_session.flush()
         return
+
+
+class IndicatorDAL:
+
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    async def add_new_indicator(
+            self,
+            values
+    ):
+        self.session.add_all(values)
+        await self.session.commit()
+
+    async def get_indicators_from_db(
+            self,
+            start_date,
+            end_date,
+    ):
+        query = select(QueryIndicator.indicator, QueryIndicator.value, QueryIndicator.date).where(
+            and_(QueryIndicator.date >= start_date, QueryIndicator.date <= end_date))
+        res = await self.session.execute(query)
+        product_row = res.fetchall()
+        if len(product_row) != 0:
+            return product_row

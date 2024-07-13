@@ -1,3 +1,5 @@
+from cmath import inf
+
 from fastapi import APIRouter, HTTPException
 from fastapi import Request
 from fastapi import Form
@@ -9,6 +11,7 @@ from datetime import datetime
 from datetime import timedelta
 from itertools import groupby
 
+from api.actions.indicators import _get_indicators_from_db
 from db.session import async_session
 from api.actions.urls import _get_urls_with_pagination
 from api.actions.urls import _get_urls_with_pagination_and_like
@@ -401,7 +404,8 @@ async def get_urls(request: Request, data_request: dict):
                                                             end_date, data_request["search_text"],
                                                             async_session)
     try:
-        urls.sort(key=lambda x: x[-1])
+        if urls:
+            urls.sort(key=lambda x: x[-1])
         grouped_data = [(key, sorted(list(group)[:14], key=lambda x: x[0])) for key, group in
                         groupby(urls, key=lambda x: x[-1])]
     except TypeError as e:
@@ -474,7 +478,8 @@ async def get_urls(request: Request, data_request: dict):
                                                                   start_date, end_date, data_request["search_text"],
                                                                   async_session)
     try:
-        urls.sort(key=lambda x: x[-1])
+        if urls:
+            urls.sort(key=lambda x: x[-1])
         grouped_data = [(key, sorted(list(group)[:14], key=lambda x: x[0])) for key, group in
                         groupby(urls, key=lambda x: x[-1])]
     except TypeError as e:
@@ -518,3 +523,147 @@ async def get_urls(request: Request, data_request: dict):
 async def get_urls(request: Request):
     response = templates.TemplateResponse("queries-info.html", {"request": request})
     return response
+
+
+@admin_router.get("/info-all-history")
+async def get_all_history(request: Request):
+    response = templates.TemplateResponse("all-history.html", {"request": request})
+    return response
+
+
+@admin_router.post("/get-all-history")
+async def post_all_history(request: Request, data_request: dict):
+    start_date = datetime.strptime(data_request["start_date"], date_format_2)
+    end_date = datetime.strptime(data_request["end_date"], date_format_2)
+    indicators = await _get_indicators_from_db(start_date,
+                                               end_date, async_session)
+
+    if indicators:
+        indicators.sort(key=lambda x: x[0])
+    try:
+        grouped_data = [(key, sorted(list(group), key=lambda x: x[2])) for key, group in
+                        groupby(indicators, key=lambda x: x[0])]
+    except TypeError as e:
+        return JSONResponse({"data": []})
+
+    if len(grouped_data) == 0:
+        return JSONResponse({"data": []})
+
+    data = []
+    for count, el in enumerate(grouped_data):
+        res = {"query":
+                   f"<div style='width:355px; height: 55px; overflow: auto; white-space: nowrap;'><span>{el[0]}</span></div>"}
+        prev_value = -inf
+        for name, value, date in el[1]:
+            if value >= prev_value:
+                color = "#9DE8BD"  # green
+            else:
+                color = "#FDC4BD"  # red
+            if value > 0:
+                res[date.strftime(
+                    date_format_2)] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: {color}; text-align: center; display: flex; align-items: center; justify-content: center;'>
+                                        <span style='font-size: 18px'>{value}</span>
+                                        </div>"""
+            prev_value = value
+        data.append(res)
+
+    json_data = jsonable_encoder(data)
+
+    # return JSONResponse({"data": json_data, "recordsTotal": limit, "recordsFiltered": 50000})
+    return JSONResponse({"data": json_data})
+
+
+@admin_router.post("/generate_excel_indicators")
+async def generate_excel_indicators(request: Request, data_request: dict):
+    wb = Workbook()
+    ws = wb.active
+    start_date = datetime.strptime(data_request["start_date"], date_format_2)
+    end_date = datetime.strptime(data_request["end_date"], date_format_2)
+    main_header = []
+    for i in range(int(data_request["amount"])):
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+    main_header = main_header[::-1]
+    main_header.insert(0, "Indicators")
+    ws.append(main_header)
+    main_header = []
+    for i in range(int(data_request["amount"])):
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+    main_header = main_header[::-1]
+    indicators = await _get_indicators_from_db(start_date, end_date, async_session)
+    grouped_data = []
+    if indicators:
+        indicators.sort(key=lambda x: x[0])
+    try:
+        grouped_data = [(key, sorted(list(group), key=lambda x: x[2])) for key, group in
+                        groupby(indicators, key=lambda x: x[0])]
+    except TypeError as e:
+        print("error")
+    if len(grouped_data) == 0:
+        print("empty data")
+    for el in grouped_data:
+        info = {}
+        res = []
+        for name, value, date in el[1]:
+            info[date.strftime(date_format_out)] = [value]
+        res.append(el[0])
+        for el in main_header:
+            if el in info:
+                res.extend(info[el])
+            else:
+                res.extend([0])
+        ws.append(res)
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    return StreamingResponse(io.BytesIO(output.getvalue()),
+                             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                             headers={"Content-Disposition": "attachment;filename='data.xlsx'"})
+
+@admin_router.post("/generate_csv_indicators/")
+async def generate_excel(request: Request, data_request: dict):
+    ws = []
+    start_date = datetime.strptime(data_request["start_date"], date_format_2)
+    end_date = datetime.strptime(data_request["end_date"], date_format_2)
+    main_header = []
+    for i in range(int(data_request["amount"])):
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+    main_header = main_header[::-1]
+    main_header.insert(0, "Indicators")
+    ws.append(main_header)
+    main_header = []
+    for i in range(int(data_request["amount"])):
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+    main_header = main_header[::-1]
+    indicators = await _get_indicators_from_db(start_date, end_date, async_session)
+    grouped_data = []
+    if indicators:
+        indicators.sort(key=lambda x: x[0])
+    try:
+        grouped_data = [(key, sorted(list(group), key=lambda x: x[2])) for key, group in
+                        groupby(indicators, key=lambda x: x[0])]
+    except TypeError as e:
+        print("error")
+    if len(grouped_data) == 0:
+        print("empty data")
+    for el in grouped_data:
+        info = {}
+        res = []
+        for name, value, date in el[1]:
+            info[date.strftime(date_format_out)] = [value]
+        res.append(el[0])
+        for el in main_header:
+            if el in info:
+                res.extend(info[el])
+            else:
+                res.extend([0])
+        ws.append(res)
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerows(ws)
+    output.seek(0)
+
+    return StreamingResponse(content=output.getvalue(),
+                             headers={"Content-Disposition": "attachment;filename='data.csv'"})

@@ -72,7 +72,7 @@ class QueryIndicator(Base):
     indicator = Column(Enum("TOTAL_SHOWS", "TOTAL_CLICKS", "AVG_SHOW_POSITION", "AVG_CLICK_POSITION", name="indicator"),
                        nullable=False)
     value = Column(Float, nullable=False)
-    data = Column(DateTime, nullable=False)
+    date = Column(DateTime, nullable=False)
 
 class UpdateLogsIndicator(Base):
     __tablename__ = "update_logs_indicator"
