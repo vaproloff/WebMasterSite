@@ -114,6 +114,35 @@
         document.getElementById('start_date').value = getDate(14);
     }
 
+    function getDayOfWeek(dateString) {
+      const dateParts = dateString.split("-");
+      const year = parseInt(dateParts[0], 10);
+      const month = parseInt(dateParts[1], 10) - 1;
+      const day = parseInt(dateParts[2], 10);
+
+      const date = new Date(year, month, day);
+      const dayOfWeek = date.getDay();
+
+      switch (dayOfWeek) {
+        case 0:
+          return "Воскресенье";
+        case 1:
+          return "Понедельник";
+        case 2:
+          return "Вторник";
+        case 3:
+          return "Среда";
+        case 4:
+          return "Четверг";
+        case 5:
+          return "Пятница";
+        case 6:
+          return "Суббота";
+        default:
+          return "Invalid date";
+          }
+        }
+
 
     function SetDataTable() {
 
@@ -132,7 +161,7 @@
         for (i = amount - 1; i >= 0; i--) {
             columns.push({"title": IncrementDate(document.getElementById('start_date').value, i)})
             var nameCell = document.createElement('td');
-            nameCell.textContent = IncrementDate(document.getElementById('start_date').value, i);
+            nameCell.innerHTML = getDayOfWeek(IncrementDate(document.getElementById('start_date').value, i)) + "<br>" + IncrementDate(document.getElementById('start_date').value, i);
             row.appendChild(nameCell);
         }
 

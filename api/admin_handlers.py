@@ -12,6 +12,7 @@ from datetime import timedelta
 from itertools import groupby
 
 from api.actions.indicators import _get_indicators_from_db
+from api.actions.utils import get_day_of_week
 from db.session import async_session
 from api.actions.urls import _get_urls_with_pagination
 from api.actions.urls import _get_urls_with_pagination_and_like
@@ -580,11 +581,17 @@ async def generate_excel_indicators(request: Request, data_request: dict):
     start_date = datetime.strptime(data_request["start_date"], date_format_2)
     end_date = datetime.strptime(data_request["end_date"], date_format_2)
     main_header = []
+    main_header_day_name = []
     for i in range(int(data_request["amount"])):
-        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+        date = (start_date + timedelta(days=i)).strftime(date_format_out)
+        main_header_day_name.append(get_day_of_week(date))
+        main_header.append(date)
     main_header = main_header[::-1]
     main_header.insert(0, "Indicators")
+    main_header_day_name = main_header_day_name[::-1]
+    main_header_day_name.insert(0, "День недели")
     ws.append(main_header)
+    ws.append(main_header_day_name)
     main_header = []
     for i in range(int(data_request["amount"])):
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
@@ -627,11 +634,17 @@ async def generate_excel(request: Request, data_request: dict):
     start_date = datetime.strptime(data_request["start_date"], date_format_2)
     end_date = datetime.strptime(data_request["end_date"], date_format_2)
     main_header = []
+    main_header_day_name = []
     for i in range(int(data_request["amount"])):
-        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+        date = (start_date + timedelta(days=i)).strftime(date_format_out)
+        main_header_day_name.append(get_day_of_week(date))
+        main_header.append(date)
     main_header = main_header[::-1]
     main_header.insert(0, "Indicators")
+    main_header_day_name = main_header_day_name[::-1]
+    main_header_day_name.insert(0, "День недели")
     ws.append(main_header)
+    ws.append(main_header_day_name)
     main_header = []
     for i in range(int(data_request["amount"])):
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
