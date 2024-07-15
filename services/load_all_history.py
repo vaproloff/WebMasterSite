@@ -37,7 +37,7 @@ async def get_response(async_session):
     print(last_update_date.date())
     print("Начало выгрузки")
     response = requests.get(create_url(last_update_date.date()), headers={'Authorization': f'OAuth {ACCESS_TOKEN}',
-                                                                   "Content-Type": "application/json; charset=UTF-8"})
+                                                                          "Content-Type": "application/json; charset=UTF-8"})
 
     return response
 
@@ -46,13 +46,30 @@ async def add_data(response: requests.models.Response):
     indicators = response.json()["indicators"]
 
     data_for_db = list()
+    data_for_total_ctr = dict()
     for indicator in indicators:
         for element in indicators[indicator]:
+            date = datetime.strptime(element["date"].split("T")[0], date_format)
             data_for_db.append(QueryIndicator(indicator=indicator,
                                               value=round(element["value"], 1),
-                                              date=datetime.strptime(element["date"].split("T")[0], date_format)))
+                                              date=date))
+            if date not in data_for_total_ctr:
+                data_for_total_ctr[date] = [0, 0]
+            if indicator == "TOTAL_CLICKS":
+                data_for_total_ctr[date][0] = element["value"]
+            elif indicator == "TOTAL_SHOWS":
+                data_for_total_ctr[date][1] = element["value"]
+    for key, value in data_for_total_ctr.items():
+        value = round(value[0] * 100 / value[1], 2) if value[1] != 0 else 0
+        data_for_db.append(QueryIndicator(
+            indicator="TOTAL_CTR",
+            value=value,
+            date=key
+        )
+        )
 
-            await _add_new_indicators(data_for_db, async_session)
+    await _add_new_indicators(data_for_db, async_session)
+
     return data_for_db
 
 

@@ -561,10 +561,16 @@ async def post_all_history(request: Request, data_request: dict):
             else:
                 color = "#FDC4BD"  # red
             if value > 0:
-                res[date.strftime(
-                    date_format_2)] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: {color}; text-align: center; display: flex; align-items: center; justify-content: center;'>
-                                        <span style='font-size: 18px'>{value}</span>
-                                        </div>"""
+                if el[0] != "TOTAL_CTR":
+                    res[date.strftime(
+                        date_format_2)] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: {color}; text-align: center; display: flex; align-items: center; justify-content: center;'>
+                                            <span style='font-size: 18px'>{value}</span>
+                                            </div>"""
+                else:
+                    res[date.strftime(
+                        date_format_2)] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: {color}; text-align: center; display: flex; align-items: center; justify-content: center;'>
+                                            <span style='font-size: 18px'>{value}%</span>
+                                            </div>"""
             prev_value = value
         data.append(res)
 
@@ -611,7 +617,10 @@ async def generate_excel_indicators(request: Request, data_request: dict):
         info = {}
         res = []
         for name, value, date in el[1]:
-            info[date.strftime(date_format_out)] = [value]
+            if name != "TOTAL_CTR":
+                info[date.strftime(date_format_out)] = [value]
+            else:
+                info[date.strftime(date_format_out)] = [f"{value}%"]
         res.append(el[0])
         for el in main_header:
             if el in info:
@@ -664,7 +673,10 @@ async def generate_excel(request: Request, data_request: dict):
         info = {}
         res = []
         for name, value, date in el[1]:
-            info[date.strftime(date_format_out)] = [value]
+            if name != "TOTAL_CTR":
+                info[date.strftime(date_format_out)] = [value]
+            else:
+                info[date.strftime(date_format_out)] = [f"{value}%"]
         res.append(el[0])
         for el in main_header:
             if el in info:

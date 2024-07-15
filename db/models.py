@@ -69,7 +69,7 @@ class QueryIndicator(Base):
     __tablename__ = "query_indicator"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    indicator = Column(Enum("TOTAL_SHOWS", "TOTAL_CLICKS", "AVG_SHOW_POSITION", "AVG_CLICK_POSITION", name="indicator"),
+    indicator = Column(Enum("TOTAL_SHOWS", "TOTAL_CLICKS", "AVG_SHOW_POSITION", "AVG_CLICK_POSITION", "TOTAL_CTR", name="indicator"),
                        nullable=False)
     value = Column(Float, nullable=False)
     date = Column(DateTime, nullable=False)
