@@ -1,12 +1,16 @@
+from typing import List
+
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, distinct
 from sqlalchemy import and_
 from sqlalchemy import desc
 
-from db.models import Url, QueryIndicator
+from db.models import Url, QueryIndicator, UpdateLogsQuery, QueryUrlsMerge
 from db.models import Metrics
 from db.models import Query
 from db.models import MetricsQuery
+from db.session import async_session
+from db.utils import get_last_update_date
 
 
 ###########################################################
@@ -232,6 +236,15 @@ class MetricQueryDAL:
         await self.db_session.flush()
         return
 
+    async def get_approach_query(
+            self,
+    ):
+        last_update_date = await get_last_update_date(async_session, UpdateLogsQuery)
+        query = select(distinct(MetricsQuery.query)).where(
+            and_(MetricsQuery.position <= 50, MetricsQuery.date == last_update_date))
+        result = await self.db_session.execute(query)
+        return result.fetchall()
+
 
 class IndicatorDAL:
 
@@ -252,6 +265,36 @@ class IndicatorDAL:
     ):
         query = select(QueryIndicator.indicator, QueryIndicator.value, QueryIndicator.date).where(
             and_(QueryIndicator.date >= start_date, QueryIndicator.date <= end_date))
+        res = await self.session.execute(query)
+        product_row = res.fetchall()
+        if len(product_row) != 0:
+            return product_row
+
+
+class MergeDAL:
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    async def get_merge_with_pagination(self, page, per_page):
+        query = select(QueryUrlsMerge.url, QueryUrlsMerge.queries, QueryUrlsMerge.date).offset(page).limit(
+            per_page)
+        res = await self.session.execute(query)
+        product_row = res.fetchall()
+        if len(product_row) != 0:
+            return product_row
+
+    async def get_merge_queries(self, date_start, date_end, queries: List[str]):
+        sub = select(Query).where(Query.query.in_(queries)).subquery()
+        query = select(MetricsQuery.date, MetricsQuery.position, MetricsQuery.clicks, MetricsQuery.impression,
+                       MetricsQuery.ctr, sub).join(sub,
+                                                   MetricsQuery.query == sub.c.query).group_by(
+            sub.c.query,
+            MetricsQuery.date,
+            MetricsQuery.position,
+            MetricsQuery.clicks,
+            MetricsQuery.impression,
+            MetricsQuery.ctr,
+        ).having(and_(MetricsQuery.date <= date_end, MetricsQuery.date >= date_start))
         res = await self.session.execute(query)
         product_row = res.fetchall()
         if len(product_row) != 0:

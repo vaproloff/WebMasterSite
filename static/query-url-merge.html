@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Queries-Info</title>
+    <title>Merge-Info</title>
     <link href="https://cdn.datatables.net/2.0.6/css/dataTables.dataTables.css">
     <link href="https://cdn.datatables.net/buttons/3.0.2/css/buttons.dataTables.css">
 </head>
@@ -13,6 +13,7 @@
         border-collapse: collapse;
         border-spacing: 0;
         width: 100%;
+        overflow-x: auto;
     }
 
     table.dataTable thead th {
@@ -55,7 +56,8 @@
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
-    .back-to-menu {
+
+        .back-to-menu {
   display: inline-block;
   padding: 10px 20px;
   border-radius: 5px;
@@ -69,7 +71,16 @@
   background-color: #555;
 }
 
+    td + td {
+      border-left: 3px solid #000;
+    }
 
+    tr + tr td {
+      border-top: 3px solid #000;
+
+      div {
+  border-bottom: 1px solid #000;
+    }
 </style>
 
 <a href="{{ url_for('show_menu_page') }}" class="back-to-menu">Back to Menu</a>
@@ -89,7 +100,6 @@
     <tr id="head_t">
 
     </tr>
-
     </thead>
     <tbody id="body_t">
 
@@ -112,12 +122,8 @@
 <script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.html5.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.print.min.js"></script>
 
-<div id="loader" style="display: none;">
-  <div class="spinner-border text-primary" role="status">
-    <span class="visually-hidden">Loading...</span>
-  </div>
-</div>
 
+<!--<script src="/static/assets/vendor/jquery/jquery-3.3.1.min.js"></script>-->
 
 <script>
     function getDate(minus_day) {
@@ -147,6 +153,11 @@
         var start_date = new Date(document.getElementById('start_date').value);
         var end_date = new Date(document.getElementById('end_date').value);
 
+	if (isNaN(start_date.getTime()) || isNaN(end_date.getTime())) {
+    	    console.error("Invalid date(s) provided");
+    	    return 0;
+	}
+
         var diffTime = Math.abs(end_date - start_date);
         var diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
@@ -166,18 +177,26 @@
 
         let row = document.getElementById("head_t");
 
+        var nameCell = document.createElement('td');
+        nameCell.textContent = "url";
+        row.appendChild(nameCell);
+        var nameCell = document.createElement('td');
+        nameCell.textContent = "queries";
+        row.appendChild(nameCell);
+        var nameCell = document.createElement('td');
+        nameCell.textContent = "result";
+        row.appendChild(nameCell);
+
+        columns = [
+            {"title": "url"},
+            {"title": "queries"},
+            {"title": "result"},
+        ]
+
         document.getElementById("prev").innerHTML = 0;
         document.getElementById("prev").disabled = true;
         document.getElementById("cur").innerHTML = 1;
         document.getElementById("next").innerHTML = 2;
-
-        var nameCell = document.createElement('td');
-        nameCell.textContent = "url";
-        row.appendChild(nameCell);
-
-        columns = [
-            {"title": "query"},
-        ]
 
         amount = calculateDays();
 
@@ -188,7 +207,7 @@
             row.appendChild(nameCell);
         }
 
-        var url = "/admin/get-queries";
+        var url = "/admin/get-merge";
         var params = {
             length: 50, // количество отображаемых элементов
             start: 0, // номер страницы
@@ -199,7 +218,6 @@
             sort_result: document.getElementById("input_sort").checked,
             sort_desc: document.getElementById("input_desc").checked,
         };
-        console.log(params);
 
         fetch(url, {
             method: "POST",
@@ -221,11 +239,16 @@
             </div>`
                 for (i = 0; i < 50; i++) {
                     var newRow = '<tr>';
+                    console.log(columns);
                     $.each(columns, function (index_c, cell) {
                         if (data[i][columns[index_c]["title"]]) {
                             newRow += '<td>' + data[i][columns[index_c]["title"]] + '</td>';
                         } else {
-                            newRow += '<td>' + empty + '</td>';
+                            var emptyTds = '';
+                            for (j = 0; j < data[i].count; j++) {
+                                emptyTds += empty;
+                            }
+                            newRow += '<td>' + emptyTds + '</td>';
                         }
                     });
                     newRow += '</tr>';
@@ -247,15 +270,24 @@
         var nameCell = document.createElement('td');
         nameCell.textContent = "url";
         row.appendChild(nameCell);
+        var nameCell = document.createElement('td');
+        nameCell.textContent = "queries";
+        row.appendChild(nameCell);
+        var nameCell = document.createElement('td');
+        nameCell.textContent = "result";
+        row.appendChild(nameCell);
+
+        columns = [
+            {"title": "url"},
+            {"title": "queries"},
+            {"title": "result"},
+        ]
 
         document.getElementById("prev").innerHTML = 0;
         document.getElementById("prev").disabled = true;
         document.getElementById("cur").innerHTML = 1;
         document.getElementById("next").innerHTML = 2;
 
-        columns = [
-            {"title": "query"},
-        ]
 
         amount = calculateDays();
 
@@ -265,7 +297,8 @@
             nameCell.textContent = IncrementDate(document.getElementById('start_date').value, i);
             row.appendChild(nameCell);
         }
-        var url = "/admin/get-queries";
+
+        var url = "/admin/get-merge";
         var params = {
             length: 50, // количество отображаемых элементов
             start: 0, // номер страницы
@@ -312,7 +345,11 @@
                         if (data[i][columns[index_c]["title"]]) {
                             newRow += '<td>' + data[i][columns[index_c]["title"]] + '</td>';
                         } else {
-                            newRow += '<td>' + empty + '</td>';
+                            var emptyTds = '';
+                            for (j = 0; j < data[i].count; j++) {
+                                emptyTds += empty;
+                            }
+                            newRow += '<td>' + emptyTds + '</td>';
                         }
                     });
                     newRow += '</tr>';
@@ -332,12 +369,20 @@
 
         let row = document.getElementById("head_t");
         row.innerHTML = "";
-        var nameCell = document.createElement('td');
+                var nameCell = document.createElement('td');
         nameCell.textContent = "url";
+        row.appendChild(nameCell);
+        var nameCell = document.createElement('td');
+        nameCell.textContent = "queries";
+        row.appendChild(nameCell);
+        var nameCell = document.createElement('td');
+        nameCell.textContent = "result";
         row.appendChild(nameCell);
 
         columns = [
-            {"title": "query"},
+            {"title": "url"},
+            {"title": "queries"},
+            {"title": "result"},
         ]
 
         amount = calculateDays();
@@ -361,7 +406,7 @@
         document.getElementById("next").innerHTML = CurPage;
 
 
-        var url = "/admin/get-queries";
+        var url = "/admin/get-merge";
         var params = {
             length: 50, // количество отображаемых элементов
             start: ((CurPage - 2) * 50) + 1, // номер страницы
@@ -404,11 +449,16 @@
             </div>`
                 for (i = 0; i < 50; i++) {
                     var newRow = '<tr>';
+                    console.log(columns);
                     $.each(columns, function (index_c, cell) {
                         if (data[i][columns[index_c]["title"]]) {
                             newRow += '<td>' + data[i][columns[index_c]["title"]] + '</td>';
                         } else {
-                            newRow += '<td>' + empty + '</td>';
+                            var emptyTds = '';
+                            for (j = 0; j < data[i].count; j++) {
+                                emptyTds += empty;
+                            }
+                            newRow += '<td>' + emptyTds + '</td>';
                         }
                     });
                     newRow += '</tr>';
@@ -428,12 +478,20 @@
 
         let row = document.getElementById("head_t");
         row.innerHTML = "";
-        var nameCell = document.createElement('td');
+                var nameCell = document.createElement('td');
         nameCell.textContent = "url";
+        row.appendChild(nameCell);
+        var nameCell = document.createElement('td');
+        nameCell.textContent = "queries";
+        row.appendChild(nameCell);
+        var nameCell = document.createElement('td');
+        nameCell.textContent = "result";
         row.appendChild(nameCell);
 
         columns = [
-            {"title": "query"},
+            {"title": "url"},
+            {"title": "queries"},
+            {"title": "result"},
         ]
 
         amount = calculateDays();
@@ -446,7 +504,7 @@
         }
         var CurPage = document.getElementById("cur").innerHTML;
         CurPage = Number.parseInt(CurPage, 10)
-        var url = "/admin/get-queries";
+        var url = "/admin/get-merge";
 
         document.getElementById("prev").innerHTML = CurPage;
         document.getElementById("prev").disabled = false;
@@ -496,11 +554,16 @@
             </div>`
                 for (i = 0; i < 50; i++) {
                     var newRow = '<tr>';
+                    console.log(columns);
                     $.each(columns, function (index_c, cell) {
                         if (data[i][columns[index_c]["title"]]) {
                             newRow += '<td>' + data[i][columns[index_c]["title"]] + '</td>';
                         } else {
-                            newRow += '<td>' + empty + '</td>';
+                            var emptyTds = '';
+                            for (j = 0; j < data[i].count; j++) {
+                                emptyTds += empty;
+                            }
+                            newRow += '<td>' + emptyTds + '</td>';
                         }
                     });
                     newRow += '</tr>';
@@ -519,76 +582,74 @@
     $(document).ready(SetDataTable())
 </script>
 <div class="loader" style="display: none;"></div>
-<script>
-    function generateExcel() {
-        $('.loader').show();
-        const data = {
-            "start": 0,
-            "length": 50,
-            "start_date": document.getElementById('start_date').value, // Дата начала поиска
-            "end_date": document.getElementById('end_date').value, // Дата окончания поиска
-            "amount": calculateDays(),
-            "search_text": document.getElementById("search_field").value,
-            "sort_result": document.getElementById("input_sort").checked,
-            "sort_desc": document.getElementById("input_desc").checked,
-        };
-        fetch('/admin/generate_excel_queries/', {
-            method: 'POST',
-            headers: {
-                "Content-Type": 'application/json'
-            },
-            body: JSON.stringify(data)
-        })
-            .then(response => {
-                return response.blob();
-            })
-            .then(blob => {
-                document.getElementById('loader').style.display = 'none';
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'query.xlsx';
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                $('.loader').hide();
-            });
-    }
+<!--<script>-->
+<!--    function generateExcel() {-->
+<!--        $('.loader').show();-->
+<!--        const data = {-->
+<!--            "start": 0,-->
+<!--            "length": 50,-->
+<!--            "start_date": document.getElementById('start_date').value, // Дата начала поиска-->
+<!--            "end_date": document.getElementById('end_date').value, // Дата окончания поиска-->
+<!--            "amount": calculateDays(),-->
+<!--            "search_text": document.getElementById("search_field").value,-->
+<!--            "sort_result": document.getElementById("input_sort").checked,-->
+<!--            "sort_desc": document.getElementById("input_desc").checked,-->
+<!--        };-->
+<!--        fetch('/admin/generate_excel_url/', {-->
+<!--            method: 'POST',-->
+<!--            headers: {-->
+<!--                "Content-Type": 'application/json'-->
+<!--            },-->
+<!--            body: JSON.stringify(data)-->
+<!--        })-->
+<!--            .then(response => {-->
+<!--                return response.blob();-->
+<!--            })-->
+<!--            .then(blob => {-->
+<!--                const url = window.URL.createObjectURL(blob);-->
+<!--                const a = document.createElement('a');-->
+<!--                a.href = url;-->
+<!--                a.download = 'data.xlsx';-->
+<!--                document.body.appendChild(a);-->
+<!--                a.click();-->
+<!--                window.URL.revokeObjectURL(url);-->
+<!--                $('.loader').hide();-->
+<!--            });-->
+<!--    }-->
 
-    function generateCsv() {
-        $('.loader').show();
-        const data = {
-            "start": 0,
-            "length": 50,
-            "start_date": document.getElementById('start_date').value, // Дата начала поиска
-            "end_date": document.getElementById('end_date').value, // Дата окончания поиска
-            "amount": calculateDays(),
-            "search_text": document.getElementById("search_field").value,
-            "sort_result": document.getElementById("input_sort").checked,
-            "sort_desc": document.getElementById("input_desc").checked,
-        };
-        fetch('/admin/generate_csv_queries/', {
-            method: 'POST',
-            headers: {
-                "Content-Type": 'application/json'
-            },
-            body: JSON.stringify(data)
-        })
-            .then(response => {
-                return response.blob();
-            })
-            .then(blob => {
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'query.csv';
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                $('.loader').hide();
-            });
-    }
-</script>
-
+<!--    function generateCsv() {-->
+<!--        $('.loader').show();-->
+<!--        const data = {-->
+<!--            "start": 0,-->
+<!--            "length": 50,-->
+<!--            "start_date": document.getElementById('start_date').value, // Дата начала поиска-->
+<!--            "end_date": document.getElementById('end_date').value, // Дата окончания поиска-->
+<!--            "amount": calculateDays(),-->
+<!--            "search_text": document.getElementById("search_field").value,-->
+<!--            "sort_result": document.getElementById("input_sort").checked,-->
+<!--            "sort_desc": document.getElementById("input_desc").checked,-->
+<!--        };-->
+<!--        fetch('/admin/generate_csv_urls/', {-->
+<!--            method: 'POST',-->
+<!--            headers: {-->
+<!--                "Content-Type": 'application/json'-->
+<!--            },-->
+<!--            body: JSON.stringify(data)-->
+<!--        })-->
+<!--            .then(response => {-->
+<!--                return response.blob();-->
+<!--            })-->
+<!--            .then(blob => {-->
+<!--                const url = window.URL.createObjectURL(blob);-->
+<!--                const a = document.createElement('a');-->
+<!--                a.href = url;-->
+<!--                a.download = 'data.csv';-->
+<!--                document.body.appendChild(a);-->
+<!--                a.click();-->
+<!--                window.URL.revokeObjectURL(url);-->
+<!--                $('.loader').hide();-->
+<!--            });-->
+<!--    }-->
+<!--</script>-->
 </body>
 </html>

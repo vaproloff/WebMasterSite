@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Urls-Info</title>
+    <title>History-Info</title>
     <link href="https://cdn.datatables.net/2.0.6/css/dataTables.dataTables.css">
     <link href="https://cdn.datatables.net/buttons/3.0.2/css/buttons.dataTables.css">
 </head>
@@ -56,11 +56,24 @@
   100% { transform: rotate(360deg); }
 }
 
+        .back-to-menu {
+  display: inline-block;
+  padding: 10px 20px;
+  border-radius: 5px;
+  background-color: #333;
+  color: #fff;
+  text-decoration: none;
+  transition: background-color 0.3s ease;
+}
+
+.back-to-menu:hover {
+  background-color: #555;
+}
+
 
 </style>
 
-<a href="/admin/info-urls"><h3 style="text-align: left">Таблица ссылок</h3></a>
-<a href="/admin/info-queries"><h3 style="text-align: left">Таблица запросов</h3></a>
+<a href="{{ url_for('show_menu_page') }}" class="back-to-menu">Back to Menu</a>
 <input type="date" id="start_date">
 <input type="date" id="end_date">
 <input type="button" value="Отфильтровать" onclick="UpdateTable();">

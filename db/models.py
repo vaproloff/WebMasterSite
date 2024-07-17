@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import Float, Enum
+from sqlalchemy import Float, Enum, ARRAY
 from sqlalchemy import Column
 from sqlalchemy import String
 from sqlalchemy import Integer
@@ -69,15 +69,33 @@ class QueryIndicator(Base):
     __tablename__ = "query_indicator"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    indicator = Column(Enum("TOTAL_SHOWS", "TOTAL_CLICKS", "AVG_SHOW_POSITION", "AVG_CLICK_POSITION", "TOTAL_CTR", name="indicator"),
-                       nullable=False)
+    indicator = Column(
+        Enum("TOTAL_SHOWS", "TOTAL_CLICKS", "AVG_SHOW_POSITION", "AVG_CLICK_POSITION", "TOTAL_CTR", name="indicator"),
+        nullable=False)
     value = Column(Float, nullable=False)
     date = Column(DateTime, nullable=False)
+
 
 class UpdateLogsIndicator(Base):
     __tablename__ = "update_logs_indicator"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     update_date = Column(DateTime, nullable=False)
+
+
+class QueryUrlsMerge(Base):
+    __tablename__ = "query_urls_merge"
+
+    url = Column(String, nullable=False, primary_key=True)
+    queries = Column(ARRAY(String))
+    date = Column(DateTime, nullable=False)
+
+
+class QueryUrlsMergeLogs(Base):
+    __tablename__ = "query_urls_merge_logs"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    update_date = Column(DateTime, nullable=False)
+
 
 

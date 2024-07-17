@@ -1,6 +1,6 @@
 from typing import Callable
 
-from db.dals import MetricQueryDAL
+from db.dals import MetricQueryDAL, MergeDAL
 
 
 async def _get_approach_query(session: Callable):
@@ -8,4 +8,20 @@ async def _get_approach_query(session: Callable):
         order_dal = MetricQueryDAL(s)
         queries = await order_dal.get_approach_query(
         )
+        return queries
+
+
+async def _get_merge_with_pagination(page, per_page, session: Callable):
+    async with session() as s:
+        url_dal = MergeDAL(s)
+        urls = await url_dal.get_merge_with_pagination(
+            page, per_page
+        )
+        return urls
+
+
+async def _get_merge_query(date_start, date_end, queries, session: Callable):
+    async with session() as s:
+        url_dal = MergeDAL(s)
+        queries = await url_dal.get_merge_queries(date_start, date_end, queries)
         return queries

@@ -12,6 +12,7 @@ from datetime import timedelta
 from itertools import groupby
 
 from api.actions.indicators import _get_indicators_from_db
+from api.actions.query_url_merge import _get_merge_with_pagination, _get_merge_query
 from api.actions.utils import get_day_of_week
 from db.session import async_session
 from api.actions.urls import _get_urls_with_pagination
@@ -45,6 +46,11 @@ def pad_list_with_zeros_excel(lst, amount):
         padding = [0] * (amount - len(lst))
         lst.extend(padding)
     return lst
+
+
+@admin_router.get("/menu")
+async def show_menu_page(request: Request):
+    return templates.TemplateResponse("menu.html", {"request": request})
 
 
 @admin_router.post("/generate_excel_url/")
@@ -378,6 +384,12 @@ async def login(request: Request, username: str = Form(), password: str = Form()
     return HTTPException(status_code=401, detail="Incorrect username or password")
 
 
+@admin_router.get("/info-urls")
+async def get_urls(request: Request):
+    response = templates.TemplateResponse("urls-info.html", {"request": request})
+    return response
+
+
 @admin_router.post("/get-urls")
 async def get_urls(request: Request, data_request: dict):
     today = datetime.now().date()
@@ -445,14 +457,14 @@ async def get_urls(request: Request, data_request: dict):
     return JSONResponse({"data": json_data})
 
 
-@admin_router.get("/info-urls")
-async def get_urls(request: Request):
-    response = templates.TemplateResponse("urls-info.html", {"request": request})
+@admin_router.get("/info-queries")
+async def get_queries(request: Request):
+    response = templates.TemplateResponse("queries-info.html", {"request": request})
     return response
 
 
 @admin_router.post("/get-queries")
-async def get_urls(request: Request, data_request: dict):
+async def get_queries(request: Request, data_request: dict):
     today = datetime.now().date()
 
     # Вычитаем 14 дней (две недели)
@@ -518,12 +530,6 @@ async def get_urls(request: Request, data_request: dict):
 
     # return JSONResponse({"data": json_data, "recordsTotal": limit, "recordsFiltered": 50000})
     return JSONResponse({"data": json_data})
-
-
-@admin_router.get("/info-queries")
-async def get_urls(request: Request):
-    response = templates.TemplateResponse("queries-info.html", {"request": request})
-    return response
 
 
 @admin_router.get("/info-all-history")
@@ -637,6 +643,7 @@ async def generate_excel_indicators(request: Request, data_request: dict):
                              media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                              headers={"Content-Disposition": "attachment;filename='data.xlsx'"})
 
+
 @admin_router.post("/generate_csv_indicators/")
 async def generate_excel(request: Request, data_request: dict):
     ws = []
@@ -692,3 +699,98 @@ async def generate_excel(request: Request, data_request: dict):
 
     return StreamingResponse(content=output.getvalue(),
                              headers={"Content-Disposition": "attachment;filename='data.csv'"})
+
+
+@admin_router.get("/info-merge")
+async def get_info_merge(request: Request):
+    response = templates.TemplateResponse("query-url-merge.html", {"request": request})
+    return response
+
+
+@admin_router.post("/get-merge")
+async def post_info_merge(request: Request, data_request: dict):
+    print("qw")
+    today = datetime.now().date()
+
+    # Вычитаем 14 дней (две недели)
+    two_weeks_ago = today - timedelta(days=14)
+    start_date = min((datetime.strptime(data_request["start_date"], date_format_2).date()), two_weeks_ago)
+    end_date = min((datetime.strptime(data_request["end_date"], date_format_2).date()), datetime.now().date())
+    if data_request["sort_result"]:
+        if data_request["search_text"] == "":
+            urls = await _get_urls_with_pagination_sort(data_request["start"], data_request["length"], start_date,
+                                                        end_date, data_request["sort_desc"], async_session)
+        else:
+            urls = await _get_urls_with_pagination_and_like_sort(data_request["start"], data_request["length"],
+                                                                 start_date, end_date, data_request["search_text"],
+                                                                 data_request["sort_desc"],
+                                                                 async_session)
+    else:
+        if data_request["search_text"] == "":
+            urls = await _get_merge_with_pagination(data_request["start"], data_request["length"],
+                                                    async_session)
+        else:
+            urls = await _get_urls_with_pagination_and_like(data_request["start"], data_request["length"], start_date,
+                                                            end_date, data_request["search_text"],
+                                                            async_session)
+    if len(urls) == 0:
+        return JSONResponse({"data": []})
+    data = []
+    all_queries = list()
+    for el in urls:
+        all_queries.extend(el[1])
+    queries = await _get_merge_query(start_date, end_date, all_queries, async_session)
+    if queries:
+        queries.sort(key=lambda x: x[-1])
+    grouped_data = dict([(key, sorted(list(group)[:14], key=lambda x: x[0])) for key, group in
+                         groupby(queries, key=lambda x: x[-1])])
+    for el in urls:
+        url, queries, date = el[0], el[1], el[2]
+        res = {"url":
+                   f"<div style='width:355px; height: 55px; overflow: auto; white-space: nowrap;'><span>{el[0]}</span></div>",
+               "queries": "", "count": 0}
+        for query in queries:
+            res["count"] += 1
+            res[
+                "queries"] += f"<div style='width:355px; height: 55px; overflow: auto; text-align: center; white-space: nowrap;'><span>{query}</span></div>"
+
+            total_clicks, position, impressions, ctr, count = 0, 0, 0, 0, 0
+            for k, stat in enumerate(grouped_data.get(query, [])):
+                up = 0
+                if k + 1 < len(grouped_data[query]):
+                    up = round(grouped_data[query][k][1] - grouped_data[query][k - 1][1], 2)
+                if up > 0:
+                    color = "#9DE8BD"
+                    color_text = "green"
+                elif up < 0:
+                    color = "#FDC4BD"
+                    color_text = "red"
+                else:
+                    color = "#B4D7ED"
+                    color_text = "black"
+                res[stat[0].strftime(date_format_2)] = ''.join(res.get(stat[0].strftime(date_format_2), []))
+                res[stat[0].strftime(
+                    date_format_2)] += f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: {color}'>
+                              <span style='font-size: 18px'>{stat[1]}</span><span style="margin-left: 5px; font-size: 10px; color: {color_text}">{abs(up)}</span><br>
+                              <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 20px'>CTR {stat[4]}%</span><br>
+                              <span style='font-size: 10px'>{stat[2]}</span> <span style='font-size: 10px; margin-left: 20px'>R {stat[3]}%</span>
+                              </div>"""
+                total_clicks += stat[2]
+                position += stat[1]
+                impressions += stat[3]
+                ctr += stat[4]
+                count += 1
+                if k == len(grouped_data[query]) - 1:
+                    res["result"] = res.get("result", "")
+                    res["result"] += f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD'>
+                              <span style='font-size: 15px'>Позиция:{round(position / count, 2)}</span>
+                              <span style='font-size: 15px'>Клики:{total_clicks}</span>
+                              <span style='font-size: 9px'>Показы:{impressions}</span>
+                              <span style='font-size: 9px'>ctr:{round(ctr / count, 2)}%</span>
+                              </div>"""
+
+        data.append(res)
+    json_data = jsonable_encoder(data)
+    #
+    # # return JSONResponse({"data": json_data, "recordsTotal": limit, "recordsFiltered": 50000})
+    return JSONResponse({"data": json_data})
