@@ -12,7 +12,6 @@ from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
 
-
 class Url(Base):
     __tablename__ = "url"
 
@@ -86,6 +85,7 @@ class UpdateLogsIndicator(Base):
 class QueryUrlsMerge(Base):
     __tablename__ = "query_urls_merge"
 
+    id = Column(Integer, nullable=False, primary_key=True, autoincrement=True)
     url = Column(String, nullable=False, primary_key=True)
     queries = Column(ARRAY(String))
     date = Column(DateTime, nullable=False)
@@ -96,6 +96,3 @@ class QueryUrlsMergeLogs(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     update_date = Column(DateTime, nullable=False)
-
-
-

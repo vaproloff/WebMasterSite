@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Callable
 
 from api.actions.metrics_queries import _add_new_metrics
@@ -37,7 +37,7 @@ async def record_to_merge_db(session: Callable):
                 values[url] = []
             values[url].append(query)
         for key, value in values.items():
-            values_to_db.append(QueryUrlsMerge(url=key, queries=value, date=START_DATE))
+            values_to_db.append(QueryUrlsMerge(url=key, queries=value))
         await _add_new_metrics(values_to_db, session)
         await add_last_update_date(session, QueryUrlsMergeLogs, START_DATE)
 

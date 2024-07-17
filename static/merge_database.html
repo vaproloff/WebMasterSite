@@ -49,10 +49,9 @@
 <body>
     <h1>Навигация</h1>
     <ul>
-        <li><a href="{{ url_for('get_queries') }}">Query Table</a></li>
-        <li><a href="{{ url_for('get_urls') }}">Url Table</a></li>
-        <li><a href="{{ url_for('get_all_history') }}">All history Table</a></li>
-        <li><a href="{{ url_for('show_menu_merge_page') }}">Query & Url Merge Table</a></li>
+          {% for date in all_dates %}
+            <li><a href="{{ url_for('get_info_merge') }}?date={{ date[0] }}">{{ date[0] }}</a></li>
+          {% endfor %}
     </ul>
 </body>
 </html>

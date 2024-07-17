@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,10 +13,11 @@ from db.models import MetricsQuery
 from db.session import async_session
 from db.utils import get_last_update_date
 
-
 ###########################################################
 # BLOCK FOR INTERACTION WITH DATABASE IN BUSINESS CONTEXT #
 ###########################################################
+
+date_format = "%Y-%m-%d"
 
 
 class UrlDAL:
@@ -275,9 +277,9 @@ class MergeDAL:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def get_merge_with_pagination(self, page, per_page):
-        query = select(QueryUrlsMerge.url, QueryUrlsMerge.queries, QueryUrlsMerge.date).offset(page).limit(
-            per_page)
+    async def get_merge_with_pagination(self, date, page, per_page):
+        query = select(QueryUrlsMerge.url, QueryUrlsMerge.queries).offset(page).limit(
+            per_page).where(QueryUrlsMerge.date == datetime.strptime(date.split()[0], date_format))
         res = await self.session.execute(query)
         product_row = res.fetchall()
         if len(product_row) != 0:
@@ -295,6 +297,43 @@ class MergeDAL:
             MetricsQuery.impression,
             MetricsQuery.ctr,
         ).having(and_(MetricsQuery.date <= date_end, MetricsQuery.date >= date_start))
+        res = await self.session.execute(query)
+        product_row = res.fetchall()
+        if len(product_row) != 0:
+            return product_row
+
+    async def get_merge_with_pagination_sort(self, date, sort_desc, page, per_page):
+        if sort_desc:
+            query = select(QueryUrlsMerge.url, QueryUrlsMerge.queries).order_by(desc(QueryUrlsMerge.url)).offset(
+                page).limit(
+                per_page).where(QueryUrlsMerge.date == datetime.strptime(date.split()[0], date_format))
+        else:
+            query = select(QueryUrlsMerge.url, QueryUrlsMerge.queries).order_by(QueryUrlsMerge.url).offset(page).limit(
+                per_page).where(QueryUrlsMerge.date == datetime.strptime(date.split()[0], date_format))
+        res = await self.session.execute(query)
+        product_row = res.fetchall()
+        if len(product_row) != 0:
+            return product_row
+
+    async def get_merge_with_pagination_and_like(self, date, search_text, page, per_page):
+        query = select(QueryUrlsMerge.url, QueryUrlsMerge.queries).filter(
+            QueryUrlsMerge.url.like(f"%{search_text.strip()}%")).offset(page).limit(
+            per_page).where(QueryUrlsMerge.date == datetime.strptime(date.split()[0], date_format))
+        res = await self.session.execute(query)
+        product_row = res.fetchall()
+        if len(product_row) != 0:
+            return product_row
+
+    async def get_merge_with_pagination_and_like_sort(self, date, search_text, sort_desc, page, per_page):
+        if sort_desc:
+            query = select(QueryUrlsMerge.url, QueryUrlsMerge.queries).order_by(desc(QueryUrlsMerge.url)).filter(
+                QueryUrlsMerge.url.like(f"%{search_text.strip()}%")).offset(
+                page).limit(
+                per_page).where(QueryUrlsMerge.date == datetime.strptime(date.split()[0], date_format))
+        else:
+            query = select(QueryUrlsMerge.url, QueryUrlsMerge.queries).order_by(QueryUrlsMerge.url).filter(
+                QueryUrlsMerge.url.like(f"%{search_text.strip()}%")).offset(page).limit(
+                per_page).where(QueryUrlsMerge.date == datetime.strptime(date.split()[0], date_format))
         res = await self.session.execute(query)
         product_row = res.fetchall()
         if len(product_row) != 0:

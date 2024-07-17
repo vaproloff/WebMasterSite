@@ -11,11 +11,11 @@ async def _get_approach_query(session: Callable):
         return queries
 
 
-async def _get_merge_with_pagination(page, per_page, session: Callable):
+async def _get_merge_with_pagination(date, page, per_page, session: Callable):
     async with session() as s:
         url_dal = MergeDAL(s)
         urls = await url_dal.get_merge_with_pagination(
-            page, per_page
+            date, page, per_page
         )
         return urls
 
@@ -25,3 +25,29 @@ async def _get_merge_query(date_start, date_end, queries, session: Callable):
         url_dal = MergeDAL(s)
         queries = await url_dal.get_merge_queries(date_start, date_end, queries)
         return queries
+
+
+async def _get_merge_with_pagination_sort(date, search_text, page, per_page, session: Callable):
+    async with session() as s:
+        url_dal = MergeDAL(s)
+        urls = await url_dal.get_merge_with_pagination_sort(
+            date, search_text, page, per_page
+        )
+        return urls
+
+
+async def _get_merge_with_pagination_and_like(date, search_text, page, per_page, session: Callable):
+    async with session() as s:
+        url_dal = MergeDAL(s)
+        urls = await url_dal.get_merge_with_pagination_and_like(
+            date, search_text, page, per_page
+        )
+        return urls
+
+async def _get_merge_with_pagination_and_like_sort(date, search_text, sort_desc, page, per_page, session: Callable):
+    async with session() as s:
+        url_dal = MergeDAL(s)
+        urls = await url_dal.get_merge_with_pagination_and_like_sort(
+            date, search_text, sort_desc, page, per_page
+        )
+        return urls

@@ -12,8 +12,10 @@ from datetime import timedelta
 from itertools import groupby
 
 from api.actions.indicators import _get_indicators_from_db
-from api.actions.query_url_merge import _get_merge_with_pagination, _get_merge_query
+from api.actions.query_url_merge import _get_merge_with_pagination, _get_merge_query, _get_merge_with_pagination_sort, \
+    _get_merge_with_pagination_and_like, _get_merge_with_pagination_and_like_sort
 from api.actions.utils import get_day_of_week
+from db.models import QueryUrlsMergeLogs
 from db.session import async_session
 from api.actions.urls import _get_urls_with_pagination
 from api.actions.urls import _get_urls_with_pagination_and_like
@@ -32,6 +34,8 @@ import io
 
 import csv
 import tempfile
+
+from db.utils import get_last_update_date, get_all_dates
 
 admin_router = APIRouter()
 
@@ -701,15 +705,22 @@ async def generate_excel(request: Request, data_request: dict):
                              headers={"Content-Disposition": "attachment;filename='data.csv'"})
 
 
+@admin_router.get("/menu/merge_database/")
+async def show_menu_merge_page(request: Request):
+    all_dates = await get_all_dates(async_session, QueryUrlsMergeLogs)
+    print(all_dates)
+    return templates.TemplateResponse("merge_database.html", {"request": request, "all_dates": all_dates})
+
+
 @admin_router.get("/info-merge")
 async def get_info_merge(request: Request):
-    response = templates.TemplateResponse("query-url-merge.html", {"request": request})
+    date = request.query_params.get("date")
+    response = templates.TemplateResponse("query-url-merge.html", {"request": request, "date": date})
     return response
 
 
 @admin_router.post("/get-merge")
 async def post_info_merge(request: Request, data_request: dict):
-    print("qw")
     today = datetime.now().date()
 
     # Вычитаем 14 дней (две недели)
@@ -718,22 +729,23 @@ async def post_info_merge(request: Request, data_request: dict):
     end_date = min((datetime.strptime(data_request["end_date"], date_format_2).date()), datetime.now().date())
     if data_request["sort_result"]:
         if data_request["search_text"] == "":
-            urls = await _get_urls_with_pagination_sort(data_request["start"], data_request["length"], start_date,
-                                                        end_date, data_request["sort_desc"], async_session)
+            urls = await _get_merge_with_pagination_sort(data_request["date"], data_request["sort_desc"],
+                                                         data_request["start"], data_request["length"],
+                                                         async_session)
         else:
-            urls = await _get_urls_with_pagination_and_like_sort(data_request["start"], data_request["length"],
-                                                                 start_date, end_date, data_request["search_text"],
-                                                                 data_request["sort_desc"],
-                                                                 async_session)
+            urls = await _get_merge_with_pagination_and_like_sort(data_request["date"], data_request["search_text"],
+                                                                  data_request["sort_desc"],
+                                                                  data_request["start"], data_request["length"],
+                                                                  async_session)
     else:
         if data_request["search_text"] == "":
-            urls = await _get_merge_with_pagination(data_request["start"], data_request["length"],
+            urls = await _get_merge_with_pagination(data_request["date"], data_request["start"], data_request["length"],
                                                     async_session)
         else:
-            urls = await _get_urls_with_pagination_and_like(data_request["start"], data_request["length"], start_date,
-                                                            end_date, data_request["search_text"],
-                                                            async_session)
-    if len(urls) == 0:
+            urls = await _get_merge_with_pagination_and_like(data_request["date"], data_request["search_text"],
+                                                             data_request["start"], data_request["length"],
+                                                             async_session)
+    if not urls or len(urls) == 0:
         return JSONResponse({"data": []})
     data = []
     all_queries = list()
@@ -745,7 +757,7 @@ async def post_info_merge(request: Request, data_request: dict):
     grouped_data = dict([(key, sorted(list(group)[:14], key=lambda x: x[0])) for key, group in
                          groupby(queries, key=lambda x: x[-1])])
     for el in urls:
-        url, queries, date = el[0], el[1], el[2]
+        url, queries = el[0], el[1]
         res = {"url":
                    f"<div style='width:355px; height: 55px; overflow: auto; white-space: nowrap;'><span>{el[0]}</span></div>",
                "queries": "", "count": 0}

@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from sqlalchemy import select
+from sqlalchemy import select, distinct
 
 date_format = "%Y-%m-%d"
 
@@ -24,3 +24,11 @@ async def add_last_update_date(session, db_name, date):
         s.add(query)
 
         await s.commit()
+
+
+async def get_all_dates(session, db_name):
+    async with session() as s:
+        query = select(distinct(db_name.update_date))
+        res = await s.execute(query)
+        res = res.fetchall()
+        return res
