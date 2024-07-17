@@ -22,6 +22,8 @@ URL = f"https://api.webmaster.yandex.net/v4/user/{USER_ID}/hosts/{HOST_ID}/query
 
 
 async def add_data(data, last_update_date):
+    global new_update_date
+    new_update_date = last_update_date
     for query in data['text_indicator_to_statistics']:
         query_name = query['text_indicator']['value']
         new_url = [Query(query=query_name)]
@@ -37,10 +39,13 @@ async def add_data(data, last_update_date):
         }
         for el in query['statistics']:
             if date != el['date']:
-                if datetime.strptime(date, date_format) > last_update_date:
+                date = datetime.strptime(date, date_format)
+                if date > new_update_date:
+                    new_update_date = date
+                if date > last_update_date:
                     metrics.append(MetricsQuery(
                         query=query_name,
-                        date=datetime.strptime(date, date_format),
+                        date=date,
                         ctr=data_add['ctr'],
                         position=data_add['position'],
                         impression=data_add['impression'],
@@ -116,7 +121,7 @@ async def get_all_data():
         curr = datetime.now()
         await get_data_by_page(offset, last_update_date)
         print(datetime.now() - curr)
-    await add_last_update_date(async_session, UpdateLogsQuery)
+    await add_last_update_date(async_session, UpdateLogsQuery, new_update_date)
 
 
 if __name__ == '__main__':

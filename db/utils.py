@@ -18,13 +18,9 @@ async def get_last_update_date(session, db_name):
     return
 
 
-async def add_last_update_date(session, db_name, days=4):
+async def add_last_update_date(session, db_name, date):
     async with session() as s:
-        now = datetime.now()
-        three_days_ago = now - timedelta(days=days)
-        date_str = three_days_ago.date()
-
-        query = db_name(update_date=date_str)
+        query = db_name(update_date=date)
         s.add(query)
 
         await s.commit()

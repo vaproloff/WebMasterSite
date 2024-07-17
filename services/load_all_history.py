@@ -1,15 +1,11 @@
 import asyncio
-import json
 from datetime import datetime, timedelta
 
 import requests
-from fastapi import Depends
-from sqlalchemy.ext.asyncio import AsyncSession
 
 import config
 from api.actions.indicators import _add_new_indicators
-from db.models import QueryIndicator, UpdateLogsIndicator, UpdateLogsIndicator
-from db.session import get_db
+from db.models import QueryIndicator, UpdateLogsIndicator
 
 from db.session import async_session
 from db.utils import get_last_update_date, add_last_update_date
@@ -76,7 +72,9 @@ async def add_data(response: requests.models.Response):
 async def main():
     response = await get_response(async_session)
     await add_data(response)
-    await add_last_update_date(async_session, UpdateLogsIndicator, days=2)
+    date = (datetime.now().date() - timedelta(days=2)).strftime(date_format)
+    date = datetime.strptime(date, date_format).date()
+    await add_last_update_date(async_session, UpdateLogsIndicator, date)
     print("Выгрузка завершена")
 
 
