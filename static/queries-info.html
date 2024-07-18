@@ -172,11 +172,15 @@
         document.getElementById("next").innerHTML = 2;
 
         var nameCell = document.createElement('td');
-        nameCell.textContent = "url";
+        nameCell.textContent = "query";
+        row.appendChild(nameCell);
+        var nameCell = document.createElement('td');
+        nameCell.textContent = "result";
         row.appendChild(nameCell);
 
         columns = [
             {"title": "query"},
+            {"title": "result"},
         ]
 
         amount = calculateDays();
@@ -248,13 +252,16 @@
         nameCell.textContent = "url";
         row.appendChild(nameCell);
 
-        document.getElementById("prev").innerHTML = 0;
-        document.getElementById("prev").disabled = true;
-        document.getElementById("cur").innerHTML = 1;
-        document.getElementById("next").innerHTML = 2;
+        var nameCell = document.createElement('td');
+        nameCell.textContent = "query";
+        row.appendChild(nameCell);
+        var nameCell = document.createElement('td');
+        nameCell.textContent = "result";
+        row.appendChild(nameCell);
 
         columns = [
             {"title": "query"},
+            {"title": "result"},
         ]
 
         amount = calculateDays();
@@ -333,11 +340,15 @@
         let row = document.getElementById("head_t");
         row.innerHTML = "";
         var nameCell = document.createElement('td');
-        nameCell.textContent = "url";
+        nameCell.textContent = "query";
+        row.appendChild(nameCell);
+        var nameCell = document.createElement('td');
+        nameCell.textContent = "result";
         row.appendChild(nameCell);
 
         columns = [
             {"title": "query"},
+            {"title": "result"},
         ]
 
         amount = calculateDays();
@@ -429,11 +440,15 @@
         let row = document.getElementById("head_t");
         row.innerHTML = "";
         var nameCell = document.createElement('td');
-        nameCell.textContent = "url";
+        nameCell.textContent = "query";
+        row.appendChild(nameCell);
+        var nameCell = document.createElement('td');
+        nameCell.textContent = "result";
         row.appendChild(nameCell);
 
         columns = [
             {"title": "query"},
+            {"title": "result"},
         ]
 
         amount = calculateDays();

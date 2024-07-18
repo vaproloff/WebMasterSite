@@ -23,6 +23,7 @@ async def run_bash_script():
 # Получаем список подходящих запросов из бд и формируем queries.txt
 async def get_approach_query(session: Callable):
     res = await _get_approach_query(session)
+    res = res[:500]
     with open("queries.txt", "w", encoding="utf-8") as f:
         for cursor, query in enumerate(res):
             if cursor < len(res) - 1:
@@ -48,10 +49,8 @@ async def record_to_merge_db(session: Callable):
 
 
 async def main():
-    # await get_approach_query(async_session)
-    # print("1")
-    # await run_bash_script()
-    # print("2")
+    await get_approach_query(async_session)
+    await run_bash_script()
     await record_to_merge_db(async_session)
 
 

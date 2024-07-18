@@ -71,14 +71,17 @@ async def generate_excel(request: Request, data_request: dict):
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
     main_header = main_header[::-1]
     main_header.insert(0, "Url")
+    for i in range(4):
+        main_header.insert(1, "Result")
     ws.append(main_header)
-    header = ["Position", "Click", "R", "CTR"] * (int(data_request["amount"]))
+    header = ["Position", "Click", "R", "CTR"] * (int(data_request["amount"]) + 4)
     header.insert(0, "")
     ws.append(header)
     start = 0
     main_header = []
     for i in range(int(data_request["amount"])):
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+    main_header.append("Result")
     main_header = main_header[::-1]
     while True:
         start_el = (start * 50) + 1
@@ -115,8 +118,15 @@ async def generate_excel(request: Request, data_request: dict):
         for el in grouped_data:
             info = {}
             res = []
+            total_clicks, position, impressions, ctr, count = 0, 0, 0, 0, 0
             for k, stat in enumerate(el[1]):
                 info[stat[0].strftime(date_format_out)] = [stat[1], stat[2], stat[3], stat[4]]
+                total_clicks += stat[2]
+                position += stat[1]
+                impressions += stat[3]
+                ctr += stat[4]
+                count += 1
+            info["Result"] = [round(position / count, 2), total_clicks, impressions, round(ctr / count, 2)]
             res.append(el[0])
             for el in main_header:
                 if el in info:
@@ -148,13 +158,16 @@ async def generate_excel(request: Request, data_request: dict):
     main_header = main_header[::-1]
     main_header.insert(0, "Url")
     ws.append(main_header)
-    header = ["Position", "Click", "R", "CTR"] * (int(data_request["amount"]))
+    header = ["Position", "Click", "R", "CTR"] * (int(data_request["amount"]) + 4)
     header.insert(0, "")
+    for i in range(4):
+        main_header.insert(1, "Result")
     ws.append(header)
     start = 0
     main_header = []
     for i in range(int(data_request["amount"])):
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+    main_header.append("Result")
     main_header = main_header[::-1]
     while True:
         start_el = (start * 50) + 1
@@ -191,8 +204,15 @@ async def generate_excel(request: Request, data_request: dict):
         for el in grouped_data:
             info = {}
             res = []
+            total_clicks, position, impressions, ctr, count = 0, 0, 0, 0, 0
             for k, stat in enumerate(el[1]):
                 info[stat[0].strftime(date_format_out)] = [stat[1], stat[2], stat[3], stat[4]]
+                total_clicks += stat[2]
+                position += stat[1]
+                impressions += stat[3]
+                ctr += stat[4]
+                count += 1
+            info["Result"] = [round(position / count, 2), total_clicks, impressions, round(ctr / count, 2)]
             res.append(el[0])
             for el in main_header:
                 if el in info:
@@ -224,14 +244,17 @@ async def generate_excel(request: Request, data_request: dict):
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
     main_header = main_header[::-1]
     main_header.insert(0, "Url")
+    for i in range(4):
+        main_header.insert(1, "Result")
     ws.append(main_header)
-    header = ["Position", "Click", "R", "CTR"] * (int(data_request["amount"]))
+    header = ["Position", "Click", "R", "CTR"] * (int(data_request["amount"]) + 4)
     header.insert(0, "")
     ws.append(header)
     start = 0
     main_header = []
     for i in range(int(data_request["amount"])):
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+    main_header.append("Result")
     main_header = main_header[::-1]
     while True:
         start_el = (start * 50) + 1
@@ -267,8 +290,15 @@ async def generate_excel(request: Request, data_request: dict):
         for el in grouped_data:
             info = {}
             res = []
+            total_clicks, position, impressions, ctr, count = 0, 0, 0, 0, 0
             for k, stat in enumerate(el[1]):
                 info[stat[0].strftime(date_format_out)] = [stat[1], stat[2], stat[3], stat[4]]
+                total_clicks += stat[2]
+                position += stat[1]
+                impressions += stat[3]
+                ctr += stat[4]
+                count += 1
+            info["Result"] = [round(position / count, 2), total_clicks, impressions, round(ctr / count, 2)]
             res.append(el[0])
             for el in main_header:
                 if el in info:
@@ -299,14 +329,17 @@ async def generate_excel(request: Request, data_request: dict):
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
     main_header = main_header[::-1]
     main_header.insert(0, "Url")
+    for i in range(4):
+        main_header.insert(1, "Result")
     ws.append(main_header)
-    header = ["Position", "Click", "R", "CTR"] * (int(data_request["amount"]))
+    header = ["Position", "Click", "R", "CTR"] * (int(data_request["amount"]) + 4)
     header.insert(0, "")
     ws.append(header)
     start = 0
     main_header = []
     for i in range(int(data_request["amount"])):
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+    main_header.append("Result")
     main_header = main_header[::-1]
     while True:
         start_el = (start * 50) + 1
@@ -342,8 +375,15 @@ async def generate_excel(request: Request, data_request: dict):
         for el in grouped_data:
             res = []
             info = {}
+            total_clicks, position, impressions, ctr, count = 0, 0, 0, 0, 0
             for k, stat in enumerate(el[1]):
                 info[stat[0].strftime(date_format_out)] = [stat[1], stat[2], stat[3], stat[4]]
+                total_clicks += stat[2]
+                position += stat[1]
+                impressions += stat[3]
+                ctr += stat[4]
+                count += 1
+            info["Result"] = [round(position / count, 2), total_clicks, impressions, round(ctr / count, 2)]
             res.append(el[0])
             for el in main_header:
                 if el in info:
@@ -435,6 +475,7 @@ async def get_urls(request: Request, data_request: dict):
     for el in grouped_data:
         res = {"url":
                    f"<div style='width:355px; height: 55px; overflow: auto; white-space: nowrap;'><span>{el[0]}</span></div>"}
+        total_clicks, position, impressions, ctr, count = 0, 0, 0, 0, 0
         for k, stat in enumerate(el[1]):
             up = 0
             if k + 1 < len(el[1]):
@@ -454,6 +495,19 @@ async def get_urls(request: Request, data_request: dict):
             <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 20px'>CTR {stat[4]}%</span><br>
             <span style='font-size: 10px'>{stat[2]}</span> <span style='font-size: 10px; margin-left: 20px'>R {stat[3]}%</span>
             </div>"""
+            total_clicks += stat[2]
+            position += stat[1]
+            impressions += stat[3]
+            ctr += stat[4]
+            count += 1
+            if k == len(el[1]) - 1:
+                res["result"] = res.get("result", "")
+                res["result"] += f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD'>
+                          <span style='font-size: 15px'>Позиция:{round(position / count, 2)}</span>
+                          <span style='font-size: 15px'>Клики:{total_clicks}</span>
+                          <span style='font-size: 9px'>Показы:{impressions}</span>
+                          <span style='font-size: 9px'>ctr:{round(ctr / count, 2)}%</span>
+                          </div>"""
         data.append(res)
     json_data = jsonable_encoder(data)
 
@@ -509,6 +563,7 @@ async def get_queries(request: Request, data_request: dict):
     for el in grouped_data:
         res = {"query":
                    f"<div style='width:355px; height: 55px; overflow: auto; white-space: nowrap;'><span>{el[0]}</span></div>"}
+        total_clicks, position, impressions, ctr, count = 0, 0, 0, 0, 0
         for k, stat in enumerate(el[1]):
             up = 0
             if k + 1 < len(el[1]):
@@ -528,6 +583,19 @@ async def get_queries(request: Request, data_request: dict):
               <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 20px'>CTR {stat[4]}%</span><br>
               <span style='font-size: 10px'>{stat[2]}</span> <span style='font-size: 10px; margin-left: 20px'>R {stat[3]}%</span>
               </div>"""
+            total_clicks += stat[2]
+            position += stat[1]
+            impressions += stat[3]
+            ctr += stat[4]
+            count += 1
+            if k == len(el[1]) - 1:
+                res["result"] = res.get("result", "")
+                res["result"] += f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD'>
+                          <span style='font-size: 15px'>Позиция:{round(position / count, 2)}</span>
+                          <span style='font-size: 15px'>Клики:{total_clicks}</span>
+                          <span style='font-size: 9px'>Показы:{impressions}</span>
+                          <span style='font-size: 9px'>ctr:{round(ctr / count, 2)}%</span>
+                          </div>"""
         data.append(res)
 
     json_data = jsonable_encoder(data)
@@ -767,38 +835,43 @@ async def post_info_merge(request: Request, data_request: dict):
                 "queries"] += f"<div style='width:355px; height: 55px; overflow: auto; text-align: center; white-space: nowrap;'><span>{query}</span></div>"
 
             total_clicks, position, impressions, ctr, count = 0, 0, 0, 0, 0
-            for k, stat in enumerate(grouped_data.get(query, [])):
-                up = 0
-                if k + 1 < len(grouped_data[query]):
-                    up = round(grouped_data[query][k][1] - grouped_data[query][k - 1][1], 2)
-                if up > 0:
-                    color = "#9DE8BD"
-                    color_text = "green"
-                elif up < 0:
-                    color = "#FDC4BD"
-                    color_text = "red"
+            for k, stat in enumerate(grouped_data.get(query, [None])):
+                if stat:
+                    up = 0
+                    if k + 1 < len(grouped_data[query]):
+                        up = round(grouped_data[query][k][1] - grouped_data[query][k - 1][1], 2)
+                    if up > 0:
+                        color = "#9DE8BD"
+                        color_text = "green"
+                    elif up < 0:
+                        color = "#FDC4BD"
+                        color_text = "red"
+                    else:
+                        color = "#B4D7ED"
+                        color_text = "black"
+                    res[stat[0].strftime(date_format_2)] = ''.join(res.get(stat[0].strftime(date_format_2), []))
+                    res[stat[0].strftime(
+                        date_format_2)] += f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: {color}'>
+                                  <span style='font-size: 18px'>{stat[1]}</span><span style="margin-left: 5px; font-size: 10px; color: {color_text}">{abs(up)}</span><br>
+                                  <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 20px'>CTR {stat[4]}%</span><br>
+                                  <span style='font-size: 10px'>{stat[2]}</span> <span style='font-size: 10px; margin-left: 20px'>R {stat[3]}%</span>
+                                  </div>"""
+                    total_clicks += stat[2]
+                    position += stat[1]
+                    impressions += stat[3]
+                    ctr += stat[4]
+                    count += 1
+                    if k == len(grouped_data[query]) - 1:
+                        res["result"] = res.get("result", "")
+                        res["result"] += f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD'>
+                                  <span style='font-size: 15px'>Позиция:{round(position / count, 2)}</span>
+                                  <span style='font-size: 15px'>Клики:{total_clicks}</span>
+                                  <span style='font-size: 9px'>Показы:{impressions}</span>
+                                  <span style='font-size: 9px'>ctr:{round(ctr / count, 2)}%</span>
+                                  </div>"""
                 else:
-                    color = "#B4D7ED"
-                    color_text = "black"
-                res[stat[0].strftime(date_format_2)] = ''.join(res.get(stat[0].strftime(date_format_2), []))
-                res[stat[0].strftime(
-                    date_format_2)] += f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: {color}'>
-                              <span style='font-size: 18px'>{stat[1]}</span><span style="margin-left: 5px; font-size: 10px; color: {color_text}">{abs(up)}</span><br>
-                              <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 20px'>CTR {stat[4]}%</span><br>
-                              <span style='font-size: 10px'>{stat[2]}</span> <span style='font-size: 10px; margin-left: 20px'>R {stat[3]}%</span>
-                              </div>"""
-                total_clicks += stat[2]
-                position += stat[1]
-                impressions += stat[3]
-                ctr += stat[4]
-                count += 1
-                if k == len(grouped_data[query]) - 1:
-                    res["result"] = res.get("result", "")
-                    res["result"] += f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD'>
-                              <span style='font-size: 15px'>Позиция:{round(position / count, 2)}</span>
-                              <span style='font-size: 15px'>Клики:{total_clicks}</span>
-                              <span style='font-size: 9px'>Показы:{impressions}</span>
-                              <span style='font-size: 9px'>ctr:{round(ctr / count, 2)}%</span>
+                    res["result"] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: ##FDC4BD'>
+                              <span style='font-size: 20px'>Нет данных</span>
                               </div>"""
 
         data.append(res)
@@ -806,3 +879,192 @@ async def post_info_merge(request: Request, data_request: dict):
     #
     # # return JSONResponse({"data": json_data, "recordsTotal": limit, "recordsFiltered": 50000})
     return JSONResponse({"data": json_data})
+
+
+@admin_router.post("/generate_excel_merge/")
+async def generate_excel(request: Request, data_request: dict):
+    wb = Workbook()
+    ws = wb.active
+    start_date = datetime.strptime(data_request["start_date"], date_format_2)
+    end_date = datetime.strptime(data_request["end_date"], date_format_2)
+    main_header = []
+    for i in range(int(data_request["amount"])):
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+    main_header = main_header[::-1]
+    main_header.insert(0, "Url")
+    main_header.insert(1, "Queries")
+    for i in range(4):
+        main_header.insert(2, "Result")
+    ws.append(main_header)
+    header = ["Position", "Click", "R", "CTR"] * (int(data_request["amount"]) + 4)
+    header.insert(0, "")
+    header.insert(0, "")
+    ws.append(header)
+    start = 0
+    main_header = []
+    for i in range(int(data_request["amount"])):
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+    main_header.append("Result")
+    main_header = main_header[::-1]
+    while True:
+        start_el = (start * 50) + 1
+        if data_request["sort_result"]:
+            if data_request["search_text"] == "":
+                urls = await _get_merge_with_pagination_sort(data_request["date"], data_request["sort_desc"],
+                                                             start_el, data_request["length"],
+                                                             async_session)
+            else:
+                urls = await _get_merge_with_pagination_and_like_sort(data_request["date"], data_request["search_text"],
+                                                                      data_request["sort_desc"],
+                                                                      start_el, data_request["length"],
+                                                                      async_session)
+        else:
+            if data_request["search_text"] == "":
+                urls = await _get_merge_with_pagination(data_request["date"], start_el,
+                                                        data_request["length"],
+                                                        async_session)
+            else:
+                urls = await _get_merge_with_pagination_and_like(data_request["date"], data_request["search_text"],
+                                                                 start_el, data_request["length"],
+                                                                 async_session)
+        start += 1
+        if not urls or len(urls) == 0:
+            break
+        all_queries = list()
+        for el in urls:
+            all_queries.extend(el[1])
+        queries = await _get_merge_query(start_date, end_date, all_queries, async_session)
+        if queries:
+            queries.sort(key=lambda x: x[-1])
+        grouped_data = dict([(key, sorted(list(group)[:14], key=lambda x: x[0])) for key, group in
+                             groupby(queries, key=lambda x: x[-1])])
+        for url, queries in urls:
+
+            for query in queries:
+                res = []
+                res.append(url)
+                print(url, query)
+                el = grouped_data.get(query, None)
+                info = {}
+                if el:
+                    total_clicks, position, impressions, ctr, count = 0, 0, 0, 0, 0
+                    for k, stat in enumerate(el):
+                        info[stat[0].strftime(date_format_out)] = [stat[1], stat[2], stat[3], stat[4]]
+                        total_clicks += stat[2]
+                        position += stat[1]
+                        impressions += stat[3]
+                        ctr += stat[4]
+                        count += 1
+                    info["Result"] = [round(position / count, 2), total_clicks, impressions, round(ctr / count, 2)]
+                res.append(query)
+                for el in main_header:
+                    if el in info:
+                        res.extend(info[el])
+                    else:
+                        res.extend([0, 0, 0, 0])
+                ws.append(res)
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    return StreamingResponse(io.BytesIO(output.getvalue()),
+                             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                             headers={"Content-Disposition": "attachment;filename='data.xlsx'"})
+
+
+@admin_router.post("/generate_csv_merge/")
+async def generate_excel(request: Request, data_request: dict):
+    ws = []
+    start_date = datetime.strptime(data_request["start_date"], date_format_2)
+    end_date = datetime.strptime(data_request["end_date"], date_format_2)
+    main_header = []
+    for i in range(int(data_request["amount"])):
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+    main_header = main_header[::-1]
+    main_header.insert(0, "Url")
+    main_header.insert(1, "Queries")
+    for i in range(4):
+        main_header.insert(2, "Result")
+    ws.append(main_header)
+    header = ["Position", "Click", "R", "CTR"] * (int(data_request["amount"]) + 4)
+    header.insert(0, "")
+    header.insert(0, "")
+    ws.append(header)
+    start = 0
+    main_header = []
+    for i in range(int(data_request["amount"])):
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+    main_header.append("Result")
+    main_header = main_header[::-1]
+    while True:
+        start_el = (start * 50) + 1
+        if data_request["sort_result"]:
+            if data_request["search_text"] == "":
+                urls = await _get_merge_with_pagination_sort(data_request["date"], data_request["sort_desc"],
+                                                             start_el, data_request["length"],
+                                                             async_session)
+            else:
+                urls = await _get_merge_with_pagination_and_like_sort(data_request["date"], data_request["search_text"],
+                                                                      data_request["sort_desc"],
+                                                                      start_el, data_request["length"],
+                                                                      async_session)
+        else:
+            if data_request["search_text"] == "":
+                urls = await _get_merge_with_pagination(data_request["date"], start_el,
+                                                        data_request["length"],
+                                                        async_session)
+            else:
+                urls = await _get_merge_with_pagination_and_like(data_request["date"], data_request["search_text"],
+                                                                 start_el, data_request["length"],
+                                                                 async_session)
+        start += 1
+        if not urls or len(urls) == 0:
+            break
+        all_queries = list()
+        for el in urls:
+            all_queries.extend(el[1])
+        queries = await _get_merge_query(start_date, end_date, all_queries, async_session)
+        if queries:
+            queries.sort(key=lambda x: x[-1])
+        grouped_data = dict([(key, sorted(list(group)[:14], key=lambda x: x[0])) for key, group in
+                             groupby(queries, key=lambda x: x[-1])])
+        for url, queries in urls:
+
+            for query in queries:
+                res = []
+                res.append(url)
+                print(url, query)
+                el = grouped_data.get(query, None)
+                info = {}
+                if el:
+                    total_clicks, position, impressions, ctr, count = 0, 0, 0, 0, 0
+                    for k, stat in enumerate(el):
+                        info[stat[0].strftime(date_format_out)] = [stat[1], stat[2], stat[3], stat[4]]
+                        total_clicks += stat[2]
+                        position += stat[1]
+                        impressions += stat[3]
+                        ctr += stat[4]
+                        count += 1
+                    info["Result"] = [round(position / count, 2), total_clicks, impressions, round(ctr / count, 2)]
+                res.append(query)
+                for el in main_header:
+                    if el in info:
+                        res.extend(info[el])
+                    else:
+                        res.extend([0, 0, 0, 0])
+                ws.append(res)
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerows(ws)
+    output.seek(0)
+
+    return StreamingResponse(content=output.getvalue(),
+                             headers={"Content-Disposition": "attachment;filename='data.csv'"})

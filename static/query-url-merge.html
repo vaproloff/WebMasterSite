@@ -586,74 +586,76 @@
     $(document).ready(SetDataTable())
 </script>
 <div class="loader" style="display: none;"></div>
-<!--<script>-->
-<!--    function generateExcel() {-->
-<!--        $('.loader').show();-->
-<!--        const data = {-->
-<!--            "start": 0,-->
-<!--            "length": 50,-->
-<!--            "start_date": document.getElementById('start_date').value, // Дата начала поиска-->
-<!--            "end_date": document.getElementById('end_date').value, // Дата окончания поиска-->
-<!--            "amount": calculateDays(),-->
-<!--            "search_text": document.getElementById("search_field").value,-->
-<!--            "sort_result": document.getElementById("input_sort").checked,-->
-<!--            "sort_desc": document.getElementById("input_desc").checked,-->
-<!--        };-->
-<!--        fetch('/admin/generate_excel_url/', {-->
-<!--            method: 'POST',-->
-<!--            headers: {-->
-<!--                "Content-Type": 'application/json'-->
-<!--            },-->
-<!--            body: JSON.stringify(data)-->
-<!--        })-->
-<!--            .then(response => {-->
-<!--                return response.blob();-->
-<!--            })-->
-<!--            .then(blob => {-->
-<!--                const url = window.URL.createObjectURL(blob);-->
-<!--                const a = document.createElement('a');-->
-<!--                a.href = url;-->
-<!--                a.download = 'data.xlsx';-->
-<!--                document.body.appendChild(a);-->
-<!--                a.click();-->
-<!--                window.URL.revokeObjectURL(url);-->
-<!--                $('.loader').hide();-->
-<!--            });-->
-<!--    }-->
+<script>
+    function generateExcel() {
+        $('.loader').show();
+        const data = {
+            "start": 0,
+            "length": 50,
+            "start_date": document.getElementById('start_date').value, // Дата начала поиска
+            "end_date": document.getElementById('end_date').value, // Дата окончания поиска
+            "amount": calculateDays(),
+            "search_text": document.getElementById("search_field").value,
+            "sort_result": document.getElementById("input_sort").checked,
+            "sort_desc": document.getElementById("input_desc").checked,
+            "date": '{{ date }}',
+        };
+        fetch('/admin/generate_excel_merge/', {
+            method: 'POST',
+            headers: {
+                "Content-Type": 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+            .then(response => {
+                return response.blob();
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'merge_excel.xlsx';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                $('.loader').hide();
+            });
+    }
 
-<!--    function generateCsv() {-->
-<!--        $('.loader').show();-->
-<!--        const data = {-->
-<!--            "start": 0,-->
-<!--            "length": 50,-->
-<!--            "start_date": document.getElementById('start_date').value, // Дата начала поиска-->
-<!--            "end_date": document.getElementById('end_date').value, // Дата окончания поиска-->
-<!--            "amount": calculateDays(),-->
-<!--            "search_text": document.getElementById("search_field").value,-->
-<!--            "sort_result": document.getElementById("input_sort").checked,-->
-<!--            "sort_desc": document.getElementById("input_desc").checked,-->
-<!--        };-->
-<!--        fetch('/admin/generate_csv_urls/', {-->
-<!--            method: 'POST',-->
-<!--            headers: {-->
-<!--                "Content-Type": 'application/json'-->
-<!--            },-->
-<!--            body: JSON.stringify(data)-->
-<!--        })-->
-<!--            .then(response => {-->
-<!--                return response.blob();-->
-<!--            })-->
-<!--            .then(blob => {-->
-<!--                const url = window.URL.createObjectURL(blob);-->
-<!--                const a = document.createElement('a');-->
-<!--                a.href = url;-->
-<!--                a.download = 'data.csv';-->
-<!--                document.body.appendChild(a);-->
-<!--                a.click();-->
-<!--                window.URL.revokeObjectURL(url);-->
-<!--                $('.loader').hide();-->
-<!--            });-->
-<!--    }-->
-<!--</script>-->
+    function generateCsv() {
+        $('.loader').show();
+        const data = {
+            "start": 0,
+            "length": 50,
+            "start_date": document.getElementById('start_date').value, // Дата начала поиска
+            "end_date": document.getElementById('end_date').value, // Дата окончания поиска
+            "amount": calculateDays(),
+            "search_text": document.getElementById("search_field").value,
+            "sort_result": document.getElementById("input_sort").checked,
+            "sort_desc": document.getElementById("input_desc").checked,
+            "date": '{{ date }}',
+        };
+        fetch('/admin/generate_csv_merge/', {
+            method: 'POST',
+            headers: {
+                "Content-Type": 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+            .then(response => {
+                return response.blob();
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'merge_csv.csv';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                $('.loader').hide();
+            });
+    }
+</script>
 </body>
 </html>
