@@ -3,7 +3,7 @@ from datetime import datetime
 import requests
 import config
 
-from db.models import Url, UpdateLogsUrl
+from db.models import Url
 from db.models import Metrics
 from db.session import async_session
 from api.actions.urls import _add_new_urls
@@ -21,8 +21,6 @@ URL = f"https://api.webmaster.yandex.net/v4/user/{USER_ID}/hosts/{HOST_ID}/query
 
 
 async def add_data(data, last_update_date):
-    global new_update_date
-    new_update_date = last_update_date
     for query in data['text_indicator_to_statistics']:
         query_name = query['text_indicator']['value']
         new_url = [Url(url=query_name)]
@@ -39,8 +37,6 @@ async def add_data(data, last_update_date):
         for el in query['statistics']:
             if date != el['date']:
                 date = datetime.strptime(date, date_format)
-                if date > new_update_date:
-                    new_update_date = date
                 if date > last_update_date:
                     metrics.append(Metrics(
                         url=query_name,
@@ -110,14 +106,14 @@ async def get_all_data():
 
     data = response.json()
     count = data["count"]
-    last_update_date = await get_last_update_date(async_session, UpdateLogsUrl)
+    last_update_date = await get_last_update_date(async_session, Metrics)
+    print("last update date:", last_update_date)
     if not last_update_date:
         last_update_date = datetime.strptime("1900-01-01", date_format)
     await add_data(data, last_update_date)
     for offset in range(500, count, 500):
         print(f"[INFO] PAGE{offset} DONE!")
         await get_data_by_page(offset, last_update_date)
-    await add_last_update_date(async_session, UpdateLogsUrl, new_update_date)
 
 
 if __name__ == '__main__':

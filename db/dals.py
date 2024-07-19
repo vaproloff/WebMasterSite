@@ -6,7 +6,7 @@ from sqlalchemy import select, distinct
 from sqlalchemy import and_
 from sqlalchemy import desc
 
-from db.models import Url, QueryIndicator, UpdateLogsQuery, QueryUrlsMerge
+from db.models import Url, QueryIndicator, QueryUrlsMerge
 from db.models import Metrics
 from db.models import Query
 from db.models import MetricsQuery
@@ -241,7 +241,7 @@ class MetricQueryDAL:
     async def get_approach_query(
             self,
     ):
-        last_update_date = await get_last_update_date(async_session, UpdateLogsQuery)
+        last_update_date = await get_last_update_date(async_session, MetricsQuery)
         query = select(distinct(MetricsQuery.query)).where(
             and_(MetricsQuery.position <= 50, MetricsQuery.date == last_update_date))
         result = await self.db_session.execute(query)

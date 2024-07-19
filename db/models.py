@@ -50,20 +50,6 @@ class MetricsQuery(Base):
     clicks = Column(Float, nullable=False)
 
 
-class UpdateLogsQuery(Base):
-    __tablename__ = "update_logs_query"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    update_date = Column(DateTime, nullable=False)
-
-
-class UpdateLogsUrl(Base):
-    __tablename__ = "update_logs_url"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    update_date = Column(DateTime, nullable=False)
-
-
 class QueryIndicator(Base):
     __tablename__ = "query_indicator"
 
@@ -73,13 +59,6 @@ class QueryIndicator(Base):
         nullable=False)
     value = Column(Float, nullable=False)
     date = Column(DateTime, nullable=False)
-
-
-class UpdateLogsIndicator(Base):
-    __tablename__ = "update_logs_indicator"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    update_date = Column(DateTime, nullable=False)
 
 
 class QueryUrlsMerge(Base):

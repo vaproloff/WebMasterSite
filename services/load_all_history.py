@@ -5,7 +5,7 @@ import requests
 
 import config
 from api.actions.indicators import _add_new_indicators
-from db.models import QueryIndicator, UpdateLogsIndicator
+from db.models import QueryIndicator
 
 from db.session import async_session
 from db.utils import get_last_update_date, add_last_update_date
@@ -18,16 +18,20 @@ date_format = "%Y-%m-%d"
 
 
 def create_url(date_from):
+    date_to = datetime.now() - timedelta(days=2)
+    date_to = date_to.date()
     return (f"https://api.webmaster.yandex.net/v4/user/{USER_ID}/hosts/{HOST_ID}/search-queries/all/history?"
             f"query_indicator=TOTAL_SHOWS&"
             f"query_indicator=TOTAL_CLICKS&"
             f"query_indicator=AVG_SHOW_POSITION&"
             f"query_indicator=AVG_CLICK_POSITION&"
-            f"date_from={date_from}")
+            f"date_from={date_from}&"
+            f"date_to={date_to}")
 
 
 async def get_response(async_session):
-    last_update_date = await get_last_update_date(async_session, UpdateLogsIndicator)
+    last_update_date = await get_last_update_date(async_session, QueryIndicator)
+    print("last update date:", last_update_date)
     if not last_update_date:
         last_update_date = (datetime.now() - timedelta(days=60))
     print(last_update_date.date())
@@ -72,9 +76,6 @@ async def add_data(response: requests.models.Response):
 async def main():
     response = await get_response(async_session)
     await add_data(response)
-    date = (datetime.now().date() - timedelta(days=2)).strftime(date_format)
-    date = datetime.strptime(date, date_format).date()
-    await add_last_update_date(async_session, UpdateLogsIndicator, date)
     print("Выгрузка завершена")
 
 
