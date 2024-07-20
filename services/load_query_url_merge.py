@@ -8,7 +8,7 @@ from db.models import QueryUrlsMerge, QueryUrlsMergeLogs
 from db.session import async_session
 
 from db.utils import add_last_update_date, get_last_update_date
-from services.search_competitors import run_bash
+from services.search_competitors_async import run_bash_async
 
 date_format = "%Y-%m-%d"
 
@@ -19,7 +19,6 @@ START_DATE = datetime.now().date()
 async def get_approach_query(session: Callable):
     res = await _get_approach_query(session)
     res = res
-    print(res)
     with open("queries.txt", "w", encoding="utf-8") as f:
         for cursor, query in enumerate(res):
             if cursor < len(res) - 1:
@@ -29,7 +28,7 @@ async def get_approach_query(session: Callable):
 
 
 async def record_to_merge_db(session: Callable):
-    with open("results_main_domain.txt", "r", encoding="utf-8") as f:
+    with open("results_main_domain_async.txt", "r", encoding="utf-8") as f:
         values = {}
         values_to_db = []
         lines = [line.strip() for line in f.readlines()]
@@ -49,11 +48,14 @@ async def record_to_merge_db(session: Callable):
 
 
 async def main():
+    print("Начало выполнения")
     await get_approach_query(async_session)
     curr = datetime.now()
-    await run_bash()
-    print("bash script complete:", datetime.now() - curr)
+    await run_bash_async()
+    print(datetime.now() - curr)
+    print("result main create")
     await record_to_merge_db(async_session)
+    print("Скрипт успешно выполнен")
 
 
 if __name__ == "__main__":
