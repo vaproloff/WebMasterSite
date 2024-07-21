@@ -1,4 +1,5 @@
 from cmath import inf
+from functools import reduce
 
 from fastapi import APIRouter, HTTPException
 from fastapi import Request
@@ -12,6 +13,8 @@ from datetime import timedelta
 from itertools import groupby
 
 from api.actions.indicators import _get_indicators_from_db
+from api.actions.metrics_queries import _get_top_data_query
+from api.actions.metrics_url import _get_top_data_urls
 from api.actions.query_url_merge import _get_merge_with_pagination, _get_merge_query, _get_merge_with_pagination_sort, \
     _get_merge_with_pagination_and_like, _get_merge_with_pagination_and_like_sort
 from api.actions.utils import get_day_of_week
@@ -651,11 +654,63 @@ async def post_all_history(request: Request, data_request: dict):
                                             </div>"""
             prev_value = value
         data.append(res)
+    data[-1], data[-2] = data[-2], data[-1]
+
+    query_top = []
+    top_position = 3, 5, 10, 20, 30
+    for top in top_position:
+        queries_top = await _get_top_data_query(top, async_session)
+        if queries_top:
+            queries_top.sort(key=lambda x: x[-1])
+        grouped_data = dict([(key, sorted(list(group)[:14], key=lambda x: x[0])) for key, group in
+                             groupby(queries_top, key=lambda x: x[-1])])
+        grouped_data_sum = {
+            "query":
+                f"<div style='width:355px; height: 55px; overflow: auto; white-space: nowrap;'><span>TOP {top}</span></div>"
+        }
+        for key, value in grouped_data.items():
+            impression_sum, clicks_sum, position_sum = reduce(
+                lambda curr, next: (curr[0] + next[0], curr[1] + next[1], round((curr[2] + next[2]) / 2, 2)), value)
+            grouped_data_sum[key.strftime(
+                date_format_2)] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD'>
+                          <span style='font-size: 14px'>Позиция:{position_sum}</span>
+                          <span style='font-size: 14px'>Клики:{clicks_sum}</span>
+                          <span style='font-size: 14px'>Показы:{impression_sum}</span>
+                          </div>"""
+
+        query_top.append(grouped_data_sum)
+
+    url_top = []
+    top_position = 3, 5, 10, 20, 30
+    for top in top_position:
+        urls_top = await _get_top_data_urls(top, async_session)
+        if urls_top:
+            urls_top.sort(key=lambda x: x[-1])
+        grouped_data = dict([(key, sorted(list(group)[:14], key=lambda x: x[0])) for key, group in
+                        groupby(urls_top, key=lambda x: x[-1])])
+        grouped_data_sum = {
+            "query":
+                f"<div style='width:355px; height: 55px; overflow: auto; white-space: nowrap;'><span>TOP {top}</span></div>"
+        }
+        for key, value in grouped_data.items():
+            impression_sum, clicks_sum, position_sum = reduce(
+                lambda curr, next: (curr[0] + next[0], curr[1] + next[1], round((curr[2] + next[2]) / 2, 2)), value)
+            grouped_data_sum[key.strftime(
+                date_format_2)] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD'>
+                          <span style='font-size: 14px'>Позиция:{position_sum}</span>
+                          <span style='font-size: 14px'>Клики:{clicks_sum}</span>
+                          <span style='font-size: 14px'>Показы:{impression_sum}</span>
+                          </div>"""
+
+        url_top.append(grouped_data_sum)
 
     json_data = jsonable_encoder(data)
-
-    # return JSONResponse({"data": json_data, "recordsTotal": limit, "recordsFiltered": 50000})
-    return JSONResponse({"data": json_data})
+    json_query_top = jsonable_encoder(query_top)
+    json_url_top = jsonable_encoder(url_top)
+    return JSONResponse({"data": json_data,
+                         "query_top": json_query_top,
+                         "url_top": json_url_top}
+                        )
 
 
 @admin_router.post("/generate_excel_indicators")

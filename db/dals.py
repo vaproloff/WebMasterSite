@@ -126,6 +126,15 @@ class MetricDAL:
         await self.db_session.flush()
         return
 
+    async def get_top_data(
+            self,
+            top: int
+    ):
+        query = select(Metrics.impression, Metrics.clicks, Metrics.position, Metrics.date).where(
+            Metrics.position <= top)
+        result = await self.db_session.execute(query)
+        return result.fetchall()
+
 
 class QueryDAL:
     """Data Access Layer for operating user info"""
@@ -244,6 +253,15 @@ class MetricQueryDAL:
         last_update_date = await get_last_update_date(async_session, MetricsQuery)
         query = select(distinct(MetricsQuery.query)).where(
             and_(MetricsQuery.position <= 50, MetricsQuery.date == last_update_date))
+        result = await self.db_session.execute(query)
+        return result.fetchall()
+
+    async def get_top_data(
+            self,
+            top: int
+    ):
+        query = select(MetricsQuery.impression, MetricsQuery.clicks, MetricsQuery.position, MetricsQuery.date).where(
+            MetricsQuery.position <= top)
         result = await self.db_session.execute(query)
         return result.fetchall()
 
