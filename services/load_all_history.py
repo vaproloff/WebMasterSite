@@ -1,11 +1,15 @@
 import asyncio
 from datetime import datetime, timedelta
+from functools import reduce
+from itertools import groupby
 
 import requests
 
 import config
-from api.actions.indicators import _add_new_indicators
-from db.models import QueryIndicator
+from api.actions.indicators import _add_new_indicators, _add_top
+from api.actions.metrics_queries import _get_top_data_query
+from api.actions.metrics_url import _get_top_data_urls
+from db.models import QueryIndicator, QueryUrlTop
 
 from db.session import async_session
 from db.utils import get_last_update_date, add_last_update_date
@@ -34,7 +38,6 @@ async def get_response(async_session):
     print("last update date:", last_update_date)
     if not last_update_date:
         last_update_date = (datetime.now() - timedelta(days=60))
-    print(last_update_date.date())
     print("Начало выгрузки")
     response = requests.get(create_url(last_update_date.date()), headers={'Authorization': f'OAuth {ACCESS_TOKEN}',
                                                                           "Content-Type": "application/json; charset=UTF-8"})
@@ -73,9 +76,53 @@ async def add_data(response: requests.models.Response):
     return data_for_db
 
 
+async def add_top():
+    last_update_date = await get_last_update_date(async_session, QueryUrlTop)
+    print("last update date for top 3, 5, 10, 20, 30:", last_update_date)
+    if not last_update_date:
+        last_update_date = (datetime.now() - timedelta(days=60))
+
+    top_position = 3, 5, 10, 20, 30
+    add_values = []
+    for top in top_position:
+        queries_top = await _get_top_data_query(top, async_session)
+        if queries_top:
+            queries_top.sort(key=lambda x: x[-1])
+        grouped_data = {k: list(v) for k, v in groupby(queries_top, key=lambda x: x[-1])}
+        for key, value in grouped_data.items():
+            if key > last_update_date:
+                impression_sum = sum(x[0] for x in value)
+                clicks_sum = sum(x[1] for x in value)
+                position_sum = round(sum(x[2] for x in value) / len(value), 2)
+                add_values.append(
+                    QueryUrlTop(top=top, type="query", position=position_sum, clicks=clicks_sum,
+                                impression=impression_sum,
+                                date=key))
+
+    top_position = 3, 5, 10, 20, 30
+    for top in top_position:
+        urls_top = await _get_top_data_urls(top, async_session)
+        if urls_top:
+            urls_top.sort(key=lambda x: x[-1])
+        grouped_data = {k: list(v) for k, v in groupby(urls_top, key=lambda x: x[-1])}
+        for key, value in grouped_data.items():
+            if key > last_update_date:
+                impression_sum = sum(x[0] for x in value)
+                clicks_sum = sum(x[1] for x in value)
+                position_sum = round(sum(x[2] for x in value) / len(value), 2)
+                add_values.append(
+                    QueryUrlTop(top=top, type="url", position=position_sum, clicks=clicks_sum,
+                                impression=impression_sum,
+                                date=key))
+
+    await _add_top(add_values, async_session)
+
+
 async def main():
     response = await get_response(async_session)
     await add_data(response)
+    print("Indicators загружены. Начинаем загрузку TOP")
+    await add_top()
     print("Выгрузка завершена")
 
 

@@ -6,7 +6,7 @@ from sqlalchemy import select, distinct
 from sqlalchemy import and_
 from sqlalchemy import desc
 
-from db.models import Url, QueryIndicator, QueryUrlsMerge
+from db.models import Url, QueryIndicator, QueryUrlsMerge, QueryUrlTop
 from db.models import Metrics
 from db.models import Query
 from db.models import MetricsQuery
@@ -130,8 +130,8 @@ class MetricDAL:
             self,
             top: int
     ):
-        query = select(Metrics.impression, Metrics.clicks, Metrics.position, Metrics.date).where(
-            Metrics.position <= top)
+        query = select(Metrics.impression, Metrics.clicks, Metrics.position, Metrics.date).where(and_(
+            Metrics.position <= top, Metrics.position > 0))
         result = await self.db_session.execute(query)
         return result.fetchall()
 
@@ -261,7 +261,8 @@ class MetricQueryDAL:
             top: int
     ):
         query = select(MetricsQuery.impression, MetricsQuery.clicks, MetricsQuery.position, MetricsQuery.date).where(
-            MetricsQuery.position <= top)
+            and_(
+                MetricsQuery.position <= top, MetricsQuery.position > 0))
         result = await self.db_session.execute(query)
         return result.fetchall()
 
@@ -289,6 +290,41 @@ class IndicatorDAL:
         product_row = res.fetchall()
         if len(product_row) != 0:
             return product_row
+
+    async def add_top(
+            self,
+            values
+    ):
+        self.session.add_all(values)
+        await self.session.commit()
+
+    async def get_top_query(
+            self,
+            start_date,
+            end_date,
+            top
+    ):
+        query = select(QueryUrlTop.position, QueryUrlTop.clicks, QueryUrlTop.impression, QueryUrlTop.date).where(and_
+                                                                                                                 (QueryUrlTop.type == "query",
+                                                                                                                  QueryUrlTop.top == top,
+                                                                                                                  QueryUrlTop.date >= start_date,
+                                                                                                                  QueryUrlTop.date <= end_date))
+        result = await self.session.execute(query)
+        return result.fetchall()
+
+    async def get_top_url(
+            self,
+            start_date,
+            end_date,
+            top
+    ):
+        query = select(QueryUrlTop.position, QueryUrlTop.clicks, QueryUrlTop.impression, QueryUrlTop.date).where(and_
+                                                                                                                 (QueryUrlTop.type == "url",
+                                                                                                                  QueryUrlTop.top == top,
+                                                                                                                  QueryUrlTop.date >= start_date,
+                                                                                                                  QueryUrlTop.date <= end_date))
+        result = await self.session.execute(query)
+        return result.fetchall()
 
 
 class MergeDAL:
@@ -326,7 +362,8 @@ class MergeDAL:
                 page).limit(
                 per_page).where(QueryUrlsMerge.date == datetime.strptime(date.split()[0], date_format))
         else:
-            query = select(QueryUrlsMerge.url, QueryUrlsMerge.queries).order_by(QueryUrlsMerge.url).offset(page).limit(
+            query = select(QueryUrlsMerge.url, QueryUrlsMerge.queries).order_by(QueryUrlsMerge.url).offset(
+                page).limit(
                 per_page).where(QueryUrlsMerge.date == datetime.strptime(date.split()[0], date_format))
         res = await self.session.execute(query)
         product_row = res.fetchall()

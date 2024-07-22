@@ -12,7 +12,7 @@ from datetime import datetime
 from datetime import timedelta
 from itertools import groupby
 
-from api.actions.indicators import _get_indicators_from_db
+from api.actions.indicators import _get_indicators_from_db, _get_top_query, _get_top_url
 from api.actions.metrics_queries import _get_top_data_query
 from api.actions.metrics_url import _get_top_data_urls
 from api.actions.query_url_merge import _get_merge_with_pagination, _get_merge_query, _get_merge_with_pagination_sort, \
@@ -656,57 +656,46 @@ async def post_all_history(request: Request, data_request: dict):
         data.append(res)
     data[-1], data[-2] = data[-2], data[-1]
 
-    query_top = []
-    top_position = 3, 5, 10, 20, 30
-    for top in top_position:
-        queries_top = await _get_top_data_query(top, async_session)
-        if queries_top:
-            queries_top.sort(key=lambda x: x[-1])
-        grouped_data = dict([(key, sorted(list(group)[:14], key=lambda x: x[0])) for key, group in
-                             groupby(queries_top, key=lambda x: x[-1])])
+    TOP = 3, 5, 10, 20, 30
+    query_front = []
+    for top in TOP:
         grouped_data_sum = {
             "query":
                 f"<div style='width:355px; height: 55px; overflow: auto; white-space: nowrap;'><span>TOP {top}</span></div>"
         }
-        for key, value in grouped_data.items():
-            impression_sum, clicks_sum, position_sum = reduce(
-                lambda curr, next: (curr[0] + next[0], curr[1] + next[1], round((curr[2] + next[2]) / 2, 2)), value)
-            grouped_data_sum[key.strftime(
+        query_top = await _get_top_query(start_date, end_date, top, async_session)
+        query_top.sort(key=lambda x: x[-1])
+        for position, clicks, impression, date in query_top:
+            grouped_data_sum[date.strftime(
                 date_format_2)] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD'>
-                          <span style='font-size: 14px'>Позиция:{position_sum}</span>
-                          <span style='font-size: 14px'>Клики:{clicks_sum}</span>
-                          <span style='font-size: 14px'>Показы:{impression_sum}</span>
+                          <span style='font-size: 14px'>Позиция:{position}</span>
+                          <span style='font-size: 14px'>Клики:{clicks}</span>
+                          <span style='font-size: 14px'>Показы:{impression}</span>
                           </div>"""
 
-        query_top.append(grouped_data_sum)
+        query_front.append(grouped_data_sum)
 
-    url_top = []
-    top_position = 3, 5, 10, 20, 30
-    for top in top_position:
-        urls_top = await _get_top_data_urls(top, async_session)
-        if urls_top:
-            urls_top.sort(key=lambda x: x[-1])
-        grouped_data = dict([(key, sorted(list(group)[:14], key=lambda x: x[0])) for key, group in
-                        groupby(urls_top, key=lambda x: x[-1])])
+    url_front = []
+    for top in TOP:
         grouped_data_sum = {
             "query":
                 f"<div style='width:355px; height: 55px; overflow: auto; white-space: nowrap;'><span>TOP {top}</span></div>"
         }
-        for key, value in grouped_data.items():
-            impression_sum, clicks_sum, position_sum = reduce(
-                lambda curr, next: (curr[0] + next[0], curr[1] + next[1], round((curr[2] + next[2]) / 2, 2)), value)
-            grouped_data_sum[key.strftime(
+        query_top = await _get_top_url(start_date, end_date, top, async_session)
+        query_top.sort(key=lambda x: x[-1])
+        for position, clicks, impression, date in query_top:
+            grouped_data_sum[date.strftime(
                 date_format_2)] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD'>
-                          <span style='font-size: 14px'>Позиция:{position_sum}</span>
-                          <span style='font-size: 14px'>Клики:{clicks_sum}</span>
-                          <span style='font-size: 14px'>Показы:{impression_sum}</span>
+                          <span style='font-size: 14px'>Позиция:{position}</span>
+                          <span style='font-size: 14px'>Клики:{clicks}</span>
+                          <span style='font-size: 14px'>Показы:{impression}</span>
                           </div>"""
 
-        url_top.append(grouped_data_sum)
+        url_front.append(grouped_data_sum)
 
     json_data = jsonable_encoder(data)
-    json_query_top = jsonable_encoder(query_top)
-    json_url_top = jsonable_encoder(url_top)
+    json_query_top = jsonable_encoder(query_front)
+    json_url_top = jsonable_encoder(url_front)
     return JSONResponse({"data": json_data,
                          "query_top": json_query_top,
                          "url_top": json_url_top}
@@ -771,6 +760,71 @@ async def generate_excel_indicators(request: Request, data_request: dict):
                              headers={"Content-Disposition": "attachment;filename='data.xlsx'"})
 
 
+@admin_router.post("/generate_excel_top")
+async def generate_excel_indicators(request: Request, data_request: dict):
+    wb = Workbook()
+    ws = wb.active
+    start_date = datetime.strptime(data_request["start_date"], date_format_2)
+    end_date = datetime.strptime(data_request["end_date"], date_format_2)
+    main_header = []
+    for i in range(int(data_request["amount"])):
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+    main_header = main_header[::-1]
+    main_header.insert(0, "TOP")
+    ws.append(main_header)
+    header = ["Position", "Click", "Impression"] * (int(data_request["amount"]))
+    header.insert(0, "")
+    ws.append(header)
+    ws.append(["query"])
+    start = 0
+    main_header = []
+    for i in range(int(data_request["amount"])):
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+    main_header = main_header[::-1]
+
+    TOP = 3, 5, 10, 20, 30
+    for top in TOP:
+        res = [f"TOP {top}"]
+        info = {}
+        query_top = await _get_top_query(start_date, end_date, top, async_session)
+        query_top.sort(key=lambda x: x[-1])
+        for position, clicks, impression, date in query_top:
+            info[date.strftime(date_format_out)] = [position, clicks, impression]
+        for el in main_header:
+            if el in info:
+                res.extend(info[el])
+            else:
+                res.extend([0, 0, 0])
+        ws.append(res)
+
+    ws.append(["url"])
+
+    TOP = 3, 5, 10, 20, 30
+    for top in TOP:
+        res = [f"TOP {top}"]
+        info = {}
+        url_top = await _get_top_url(start_date, end_date, top, async_session)
+        url_top.sort(key=lambda x: x[-1])
+        for position, clicks, impression, date in url_top:
+            info[date.strftime(date_format_out)] = [position, clicks, impression]
+        for el in main_header:
+            if el in info:
+                res.extend(info[el])
+            else:
+                res.extend([0])
+        ws.append(res)
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    return StreamingResponse(io.BytesIO(output.getvalue()),
+                             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                             headers={"Content-Disposition": "attachment;filename='data.xlsx'"})
+
+
 @admin_router.post("/generate_csv_indicators/")
 async def generate_excel(request: Request, data_request: dict):
     ws = []
@@ -812,6 +866,70 @@ async def generate_excel(request: Request, data_request: dict):
             else:
                 info[date.strftime(date_format_out)] = [f"{value}%"]
         res.append(el[0])
+        for el in main_header:
+            if el in info:
+                res.extend(info[el])
+            else:
+                res.extend([0])
+        ws.append(res)
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerows(ws)
+    output.seek(0)
+
+    return StreamingResponse(content=output.getvalue(),
+                             headers={"Content-Disposition": "attachment;filename='data.csv'"})
+
+
+@admin_router.post("/generate_csv_top")
+async def generate_excel_indicators(request: Request, data_request: dict):
+    ws = []
+    start_date = datetime.strptime(data_request["start_date"], date_format_2)
+    end_date = datetime.strptime(data_request["end_date"], date_format_2)
+    main_header = []
+    for i in range(int(data_request["amount"])):
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+    main_header = main_header[::-1]
+    main_header.insert(0, "TOP")
+    ws.append(main_header)
+    header = ["Position", "Click", "Impression"] * (int(data_request["amount"]))
+    header.insert(0, "")
+    ws.append(header)
+    ws.append(["query"])
+    start = 0
+    main_header = []
+    for i in range(int(data_request["amount"])):
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+    main_header = main_header[::-1]
+
+    TOP = 3, 5, 10, 20, 30
+    for top in TOP:
+        res = [f"TOP {top}"]
+        info = {}
+        query_top = await _get_top_query(start_date, end_date, top, async_session)
+        query_top.sort(key=lambda x: x[-1])
+        for position, clicks, impression, date in query_top:
+            info[date.strftime(date_format_out)] = [position, clicks, impression]
+        for el in main_header:
+            if el in info:
+                res.extend(info[el])
+            else:
+                res.extend([0, 0, 0])
+        ws.append(res)
+
+    ws.append(["url"])
+
+    TOP = 3, 5, 10, 20, 30
+    for top in TOP:
+        res = [f"TOP {top}"]
+        info = {}
+        url_top = await _get_top_url(start_date, end_date, top, async_session)
+        url_top.sort(key=lambda x: x[-1])
+        for position, clicks, impression, date in url_top:
+            info[date.strftime(date_format_out)] = [position, clicks, impression]
         for el in main_header:
             if el in info:
                 res.extend(info[el])

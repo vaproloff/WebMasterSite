@@ -78,7 +78,9 @@
 <input type="date" id="end_date">
 <input type="button" value="Отфильтровать" onclick="UpdateTable();">
 <input type="button" value="Excel" onclick="generateExcel();">
+<input type="button" value="Excel Top" onclick="generateExcelTop();">
 <input type="button" value="Csv" onclick="generateCsv();">
+<input type="button" value="Csv Top" onclick="generateCsvTop();">
 <table id="example" class="display nowrap" style="width:100%;">
 
     <thead>
@@ -345,6 +347,37 @@
                     table.append(newRow);
                 }
 
+                var newRow = '<tr><td><div style="width:355px; height: 55px; overflow: auto; white-space: nowrap;"><span style="font-size: 18px;">' + 'query top:' + '</span></div></td></tr>';
+            table.append(newRow);
+
+            for (i = 0; i < 5; i++) {
+                    var newRow = '<tr>';
+                    $.each(columns, function (index_c, cell) {
+                        if (query_top[i][columns[index_c]["title"]]) {
+                            newRow += '<td>' + query_top[i][columns[index_c]["title"]] + '</td>';
+                        } else {
+                            newRow += '<td>' + empty + '</td>';
+                        }
+                    });
+                    newRow += '</tr>';
+                    table.append(newRow);
+                }
+
+            var newRow = '<tr><td><div style="width:355px; height: 55px; overflow: auto; white-space: nowrap;"><span style="font-size: 18px;">' + 'url top:' + '</span></div></td></tr>';
+            table.append(newRow);
+
+            for (i = 0; i < 5; i++) {
+                    var newRow = '<tr>';
+                    $.each(columns, function (index_c, cell) {
+                        if (url_top[i][columns[index_c]["title"]]) {
+                            newRow += '<td>' + url_top[i][columns[index_c]["title"]] + '</td>';
+                        } else {
+                            newRow += '<td>' + empty + '</td>';
+                        }
+                    });
+                    newRow += '</tr>';
+                    table.append(newRow);
+                }
             })
             .catch(error => {
                 // Обработка ошибки
@@ -387,6 +420,35 @@
             });
     }
 
+    function generateExcelTop() {
+        $('.loader').show();
+        const data = {
+            "start_date": document.getElementById('start_date').value, // Дата начала поиска
+            "end_date": document.getElementById('end_date').value, // Дата окончания поиска
+            "amount": calculateDays(),
+        };
+        fetch('/admin/generate_excel_top/', {
+            method: 'POST',
+            headers: {
+                "Content-Type": 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+            .then(response => {
+                return response.blob();
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'top_excel.xlsx';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                $('.loader').hide();
+            });
+    }
+
     function generateCsv() {
         $('.loader').show();
         const data = {
@@ -409,6 +471,35 @@
                 const a = document.createElement('a');
                 a.href = url;
                 a.download = 'indicators_csv.csv';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                $('.loader').hide();
+            });
+    }
+
+    function generateCsvTop() {
+        $('.loader').show();
+        const data = {
+            "start_date": document.getElementById('start_date').value, // Дата начала поиска
+            "end_date": document.getElementById('end_date').value, // Дата окончания поиска
+            "amount": calculateDays(),
+        };
+        fetch('/admin/generate_csv_top/', {
+            method: 'POST',
+            headers: {
+                "Content-Type": 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+            .then(response => {
+                return response.blob();
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'top_csv.csv';
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(url);

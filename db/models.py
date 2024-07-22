@@ -12,6 +12,7 @@ from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
 
+
 class Url(Base):
     __tablename__ = "url"
 
@@ -75,3 +76,15 @@ class QueryUrlsMergeLogs(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     update_date = Column(DateTime, nullable=False)
+
+
+class QueryUrlTop(Base):
+    __tablename__ = "query_url_top"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    top = Column(Integer, nullable=False)
+    type = Column(String, nullable=False)
+    position = Column(Float, nullable=False)
+    clicks = Column(Float, nullable=False)
+    impression = Column(Float, nullable=False)
+    date = Column(DateTime, nullable=False)
