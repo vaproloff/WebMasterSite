@@ -51,7 +51,11 @@ async def main():
     print("Начало выполнения")
     await get_approach_query(async_session)
     curr = datetime.now()
-    await run_bash_async()
+    try:
+        await run_bash_async()
+    except Exception as e:
+        print(
+            "Произошло досрочное выключение xmlstock парсера(нулевой баланс/превышен лимит запросов в секунду/ошибка на их стороне")
     print(datetime.now() - curr)
     print("result main create")
     await record_to_merge_db(async_session)
