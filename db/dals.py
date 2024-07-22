@@ -252,7 +252,7 @@ class MetricQueryDAL:
     ):
         last_update_date = await get_last_update_date(async_session, MetricsQuery)
         query = select(distinct(MetricsQuery.query)).where(
-            and_(MetricsQuery.position <= 50, MetricsQuery.date == last_update_date))
+            and_(MetricsQuery.position <= 20, MetricsQuery.date == last_update_date, MetricsQuery.position > 0))
         result = await self.db_session.execute(query)
         return result.fetchall()
 
