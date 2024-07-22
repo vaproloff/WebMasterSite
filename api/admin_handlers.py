@@ -466,7 +466,7 @@ async def get_urls(request: Request, data_request: dict):
     try:
         if urls:
             urls.sort(key=lambda x: x[-1])
-        grouped_data = [(key, sorted(list(group)[:14], key=lambda x: x[0])) for key, group in
+        grouped_data = [(key, sorted(list(group), key=lambda x: x[0])) for key, group in
                         groupby(urls, key=lambda x: x[-1])]
     except TypeError as e:
         if urls is None:
@@ -554,7 +554,7 @@ async def get_queries(request: Request, data_request: dict):
     try:
         if urls:
             urls.sort(key=lambda x: x[-1])
-        grouped_data = [(key, sorted(list(group)[:14], key=lambda x: x[0])) for key, group in
+        grouped_data = [(key, sorted(list(group), key=lambda x: x[0])) for key, group in
                         groupby(urls, key=lambda x: x[-1])]
     except TypeError as e:
         return JSONResponse({"data": []})
