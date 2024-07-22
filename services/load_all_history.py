@@ -24,13 +24,16 @@ date_format = "%Y-%m-%d"
 def create_url(date_from):
     date_to = datetime.now() - timedelta(days=2)
     date_to = date_to.date()
-    return (f"https://api.webmaster.yandex.net/v4/user/{USER_ID}/hosts/{HOST_ID}/search-queries/all/history?"
-            f"query_indicator=TOTAL_SHOWS&"
-            f"query_indicator=TOTAL_CLICKS&"
-            f"query_indicator=AVG_SHOW_POSITION&"
-            f"query_indicator=AVG_CLICK_POSITION&"
-            f"date_from={date_from}&"
-            f"date_to={date_to}")
+    if date_to > date_from:
+        date_from += timedelta(days=1)
+        return (f"https://api.webmaster.yandex.net/v4/user/{USER_ID}/hosts/{HOST_ID}/search-queries/all/history?"
+                f"query_indicator=TOTAL_SHOWS&"
+                f"query_indicator=TOTAL_CLICKS&"
+                f"query_indicator=AVG_SHOW_POSITION&"
+                f"query_indicator=AVG_CLICK_POSITION&"
+                f"date_from={date_from}&"
+                f"date_to={date_to}")
+    return -1
 
 
 async def get_response(async_session):
@@ -39,13 +42,20 @@ async def get_response(async_session):
     if not last_update_date:
         last_update_date = (datetime.now() - timedelta(days=60))
     print("Начало выгрузки")
-    response = requests.get(create_url(last_update_date.date()), headers={'Authorization': f'OAuth {ACCESS_TOKEN}',
-                                                                          "Content-Type": "application/json; charset=UTF-8"})
+    URL = create_url(last_update_date.date())
+    if URL == -1:
+        return -1
+    response = requests.get(URL, headers={'Authorization': f'OAuth {ACCESS_TOKEN}',
+                                          "Content-Type": "application/json; charset=UTF-8"})
 
     return response
 
 
-async def add_data(response: requests.models.Response):
+async def add_data(response: requests.models.Response | int):
+    if response == -1:
+        print("Все данные Indicators уже в базе")
+        return
+
     indicators = response.json()["indicators"]
 
     data_for_db = list()
