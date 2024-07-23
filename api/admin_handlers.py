@@ -441,10 +441,8 @@ async def get_urls(request: Request):
 async def get_urls(request: Request, data_request: dict):
     today = datetime.now().date()
 
-    # Вычитаем 14 дней (две недели)
-    two_weeks_ago = today - timedelta(days=14)
-    start_date = min((datetime.strptime(data_request["start_date"], date_format_2).date()), two_weeks_ago)
-    end_date = min((datetime.strptime(data_request["end_date"], date_format_2).date()), datetime.now().date())
+    start_date = datetime.strptime(data_request["start_date"], date_format_2)
+    end_date = datetime.strptime(data_request["end_date"], date_format_2)
     print(end_date)
     if data_request["sort_result"]:
         if data_request["search_text"] == "":
@@ -483,20 +481,20 @@ async def get_urls(request: Request, data_request: dict):
             up = 0
             if k + 1 < len(el[1]):
                 up = round(el[1][k][1] - el[1][k - 1][1], 2)
-            if up > 0:
+            if up < 0:
                 color = "#9DE8BD"
                 color_text = "green"
-            elif up < 0:
+            if up > 0:
                 color = "#FDC4BD"
                 color_text = "red"
-            else:
+            if stat[1] <= 3:
                 color = "#B4D7ED"
-                color_text = "black"
+                color_text = "blue"
             res[stat[0].strftime(
                 date_format_2)] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: {color}'>
             <span style='font-size: 18px'>{stat[1]}</span><span style="margin-left: 5px; font-size: 10px; color: {color_text}">{abs(up)}</span><br>
             <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 20px'>CTR {stat[4]}%</span><br>
-            <span style='font-size: 10px'>{stat[2]}</span> <span style='font-size: 10px; margin-left: 20px'>R {stat[3]}%</span>
+            <span style='font-size: 10px'>{stat[2]}</span> <span style='font-size: 10px; margin-left: 20px'>R {int(stat[3])}</span>
             </div>"""
             total_clicks += stat[2]
             position += stat[1]
@@ -528,8 +526,6 @@ async def get_queries(request: Request):
 async def get_queries(request: Request, data_request: dict):
     today = datetime.now().date()
 
-    # Вычитаем 14 дней (две недели)
-    two_weeks_ago = today - timedelta(days=14)
     start_date = datetime.strptime(data_request["start_date"], date_format_2)
     end_date = datetime.strptime(data_request["end_date"], date_format_2)
     if data_request["sort_result"]:
@@ -571,20 +567,20 @@ async def get_queries(request: Request, data_request: dict):
             up = 0
             if k + 1 < len(el[1]):
                 up = round(el[1][k][1] - el[1][k - 1][1], 2)
-            if up > 0:
+            if up < 0:
                 color = "#9DE8BD"
                 color_text = "green"
-            elif up < 0:
+            if up > 0:
                 color = "#FDC4BD"
                 color_text = "red"
-            else:
+            if stat[1] <= 3:
                 color = "#B4D7ED"
-                color_text = "black"
+                color_text = "blue"
             res[stat[0].strftime(
                 date_format_2)] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: {color}'>
               <span style='font-size: 18px'>{stat[1]}</span><span style="margin-left: 5px; font-size: 10px; color: {color_text}">{abs(up)}</span><br>
               <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 20px'>CTR {stat[4]}%</span><br>
-              <span style='font-size: 10px'>{stat[2]}</span> <span style='font-size: 10px; margin-left: 20px'>R {stat[3]}%</span>
+              <span style='font-size: 10px'>{stat[2]}</span> <span style='font-size: 10px; margin-left: 20px'>R {int(stat[3])}</span>
               </div>"""
             total_clicks += stat[2]
             position += stat[1]
@@ -665,13 +661,13 @@ async def post_all_history(request: Request, data_request: dict):
         }
         query_top = await _get_top_query(start_date, end_date, top, async_session)
         query_top.sort(key=lambda x: x[-1])
-        for position, clicks, impression, date in query_top:
+        for position, clicks, impression, count, date in query_top:
             grouped_data_sum[date.strftime(
                 date_format_2)] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD'>
-                          <span style='font-size: 14px'>Позиция:{position}</span>
-                          <span style='font-size: 14px'>Клики:{clicks}</span>
-                          <span style='font-size: 14px'>Показы:{impression}</span>
-                          </div>"""
+              <span style='font-size: 18px'>{position}</span><br>
+              <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 20px'>Count: {count}</span><br>
+              <span style='font-size: 10px'>{clicks}</span> <span style='font-size: 10px; margin-left: 20px'>R: {int(impression)}</span>
+              </div>"""
 
         query_front.append(grouped_data_sum)
 
@@ -683,13 +679,13 @@ async def post_all_history(request: Request, data_request: dict):
         }
         query_top = await _get_top_url(start_date, end_date, top, async_session)
         query_top.sort(key=lambda x: x[-1])
-        for position, clicks, impression, date in query_top:
+        for position, clicks, impression, count, date in query_top:
             grouped_data_sum[date.strftime(
                 date_format_2)] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD'>
-                          <span style='font-size: 14px'>Позиция:{position}</span>
-                          <span style='font-size: 14px'>Клики:{clicks}</span>
-                          <span style='font-size: 14px'>Показы:{impression}</span>
-                          </div>"""
+              <span style='font-size: 18px'>{position}</span><br>
+              <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 20px'>Count: {count}</span><br>
+              <span style='font-size: 10px'>{clicks}</span> <span style='font-size: 10px; margin-left: 20px'>R: {int(impression)}</span>
+              </div>"""
 
         url_front.append(grouped_data_sum)
 
@@ -771,10 +767,11 @@ async def generate_excel_indicators(request: Request, data_request: dict):
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
     main_header = main_header[::-1]
     main_header.insert(0, "TOP")
     ws.append(main_header)
-    header = ["Position", "Click", "Impression"] * (int(data_request["amount"]))
+    header = ["Position", "Click", "Impression", "Count"] * (int(data_request["amount"]))
     header.insert(0, "")
     ws.append(header)
     ws.append(["query"])
@@ -790,13 +787,13 @@ async def generate_excel_indicators(request: Request, data_request: dict):
         info = {}
         query_top = await _get_top_query(start_date, end_date, top, async_session)
         query_top.sort(key=lambda x: x[-1])
-        for position, clicks, impression, date in query_top:
-            info[date.strftime(date_format_out)] = [position, clicks, impression]
+        for position, clicks, impression, count, date in query_top:
+            info[date.strftime(date_format_out)] = [position, clicks, impression, count]
         for el in main_header:
             if el in info:
                 res.extend(info[el])
             else:
-                res.extend([0, 0, 0])
+                res.extend([0, 0, 0, 0])
         ws.append(res)
 
     ws.append(["url"])
@@ -807,13 +804,13 @@ async def generate_excel_indicators(request: Request, data_request: dict):
         info = {}
         url_top = await _get_top_url(start_date, end_date, top, async_session)
         url_top.sort(key=lambda x: x[-1])
-        for position, clicks, impression, date in url_top:
-            info[date.strftime(date_format_out)] = [position, clicks, impression]
+        for position, clicks, impression, clicks, date in url_top:
+            info[date.strftime(date_format_out)] = [position, clicks, impression, clicks]
         for el in main_header:
             if el in info:
                 res.extend(info[el])
             else:
-                res.extend([0])
+                res.extend([0, 0, 0, 0])
         ws.append(res)
 
     output = io.BytesIO()
@@ -892,10 +889,11 @@ async def generate_excel_indicators(request: Request, data_request: dict):
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
     main_header = main_header[::-1]
     main_header.insert(0, "TOP")
     ws.append(main_header)
-    header = ["Position", "Click", "Impression"] * (int(data_request["amount"]))
+    header = ["Position", "Click", "Impression", "clicks"] * (int(data_request["amount"]))
     header.insert(0, "")
     ws.append(header)
     ws.append(["query"])
@@ -911,13 +909,13 @@ async def generate_excel_indicators(request: Request, data_request: dict):
         info = {}
         query_top = await _get_top_query(start_date, end_date, top, async_session)
         query_top.sort(key=lambda x: x[-1])
-        for position, clicks, impression, date in query_top:
-            info[date.strftime(date_format_out)] = [position, clicks, impression]
+        for position, clicks, impression, count, date in query_top:
+            info[date.strftime(date_format_out)] = [position, clicks, impression, count]
         for el in main_header:
             if el in info:
                 res.extend(info[el])
             else:
-                res.extend([0, 0, 0])
+                res.extend([0, 0, 0, 0])
         ws.append(res)
 
     ws.append(["url"])
@@ -928,13 +926,13 @@ async def generate_excel_indicators(request: Request, data_request: dict):
         info = {}
         url_top = await _get_top_url(start_date, end_date, top, async_session)
         url_top.sort(key=lambda x: x[-1])
-        for position, clicks, impression, date in url_top:
-            info[date.strftime(date_format_out)] = [position, clicks, impression]
+        for position, clicks, impression, count, date in url_top:
+            info[date.strftime(date_format_out)] = [position, clicks, impression, count]
         for el in main_header:
             if el in info:
                 res.extend(info[el])
             else:
-                res.extend([0])
+                res.extend([0, 0, 0, 0])
         ws.append(res)
 
     output = io.StringIO()

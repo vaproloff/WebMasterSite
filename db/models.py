@@ -87,4 +87,5 @@ class QueryUrlTop(Base):
     position = Column(Float, nullable=False)
     clicks = Column(Float, nullable=False)
     impression = Column(Float, nullable=False)
+    count = Column(Integer, nullable=False)
     date = Column(DateTime, nullable=False)

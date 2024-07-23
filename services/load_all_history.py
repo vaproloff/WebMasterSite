@@ -106,7 +106,7 @@ async def add_top():
                 position_sum = round(sum(x[2] for x in value) / len(value), 2)
                 add_values.append(
                     QueryUrlTop(top=top, type="query", position=position_sum, clicks=clicks_sum,
-                                impression=impression_sum,
+                                impression=impression_sum, count=len(value),
                                 date=key))
 
     top_position = 3, 5, 10, 20, 30
@@ -122,7 +122,7 @@ async def add_top():
                 position_sum = round(sum(x[2] for x in value) / len(value), 2)
                 add_values.append(
                     QueryUrlTop(top=top, type="url", position=position_sum, clicks=clicks_sum,
-                                impression=impression_sum,
+                                impression=impression_sum, count=len(value),
                                 date=key))
 
     await _add_top(add_values, async_session)

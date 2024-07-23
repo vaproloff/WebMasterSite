@@ -304,11 +304,12 @@ class IndicatorDAL:
             end_date,
             top
     ):
-        query = select(QueryUrlTop.position, QueryUrlTop.clicks, QueryUrlTop.impression, QueryUrlTop.date).where(and_
-                                                                                                                 (QueryUrlTop.type == "query",
-                                                                                                                  QueryUrlTop.top == top,
-                                                                                                                  QueryUrlTop.date >= start_date,
-                                                                                                                  QueryUrlTop.date <= end_date))
+        query = select(QueryUrlTop.position, QueryUrlTop.clicks, QueryUrlTop.impression, QueryUrlTop.count,
+                       QueryUrlTop.date).where(and_
+                                               (QueryUrlTop.type == "query",
+                                                QueryUrlTop.top == top,
+                                                QueryUrlTop.date >= start_date,
+                                                QueryUrlTop.date <= end_date))
         result = await self.session.execute(query)
         return result.fetchall()
 
@@ -318,11 +319,12 @@ class IndicatorDAL:
             end_date,
             top
     ):
-        query = select(QueryUrlTop.position, QueryUrlTop.clicks, QueryUrlTop.impression, QueryUrlTop.date).where(and_
-                                                                                                                 (QueryUrlTop.type == "url",
-                                                                                                                  QueryUrlTop.top == top,
-                                                                                                                  QueryUrlTop.date >= start_date,
-                                                                                                                  QueryUrlTop.date <= end_date))
+        query = select(QueryUrlTop.position, QueryUrlTop.clicks, QueryUrlTop.impression, QueryUrlTop.count,
+                       QueryUrlTop.date).where(and_
+                                               (QueryUrlTop.type == "url",
+                                                QueryUrlTop.top == top,
+                                                QueryUrlTop.date >= start_date,
+                                                QueryUrlTop.date <= end_date))
         result = await self.session.execute(query)
         return result.fetchall()
 
