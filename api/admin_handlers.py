@@ -500,7 +500,8 @@ async def get_urls(request: Request, data_request: dict):
             position += stat[1]
             impressions += stat[3]
             ctr += stat[4]
-            count += 1
+            if position > 0:
+                count += 1
             if k == len(el[1]) - 1:
                 res["result"] = res.get("result", "")
                 res["result"] += f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD'>
@@ -586,7 +587,8 @@ async def get_queries(request: Request, data_request: dict):
             position += stat[1]
             impressions += stat[3]
             ctr += stat[4]
-            count += 1
+            if position > 0:
+                count += 1
             if k == len(el[1]) - 1:
                 res["result"] = res.get("result", "")
                 res["result"] += f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD'>
@@ -665,8 +667,8 @@ async def post_all_history(request: Request, data_request: dict):
             grouped_data_sum[date.strftime(
                 date_format_2)] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD'>
               <span style='font-size: 18px'>{position}</span><br>
-              <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 20px'>Count: {count}</span><br>
-              <span style='font-size: 10px'>{clicks}</span> <span style='font-size: 10px; margin-left: 20px'>R: {int(impression)}</span>
+              <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 10px'>Count: {count}</span><br>
+              <span style='font-size: 10px'>{clicks}</span> <span style='font-size: 10px; margin-left: 10px'>R: {int(impression)}</span>
               </div>"""
 
         query_front.append(grouped_data_sum)
@@ -961,11 +963,6 @@ async def get_info_merge(request: Request):
 @admin_router.post("/get-merge")
 async def post_info_merge(request: Request, data_request: dict):
     today = datetime.now().date()
-
-    # Вычитаем 14 дней (две недели)
-    two_weeks_ago = today - timedelta(days=14)
-    start_date = min((datetime.strptime(data_request["start_date"], date_format_2).date()), two_weeks_ago)
-    end_date = min((datetime.strptime(data_request["end_date"], date_format_2).date()), datetime.now().date())
     if data_request["sort_result"]:
         if data_request["search_text"] == "":
             urls = await _get_merge_with_pagination_sort(data_request["date"], data_request["sort_desc"],
