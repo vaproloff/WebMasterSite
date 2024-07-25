@@ -439,7 +439,6 @@ async def get_urls(request: Request):
 
 @admin_router.post("/get-urls")
 async def get_urls(request: Request, data_request: dict):
-    today = datetime.now().date()
 
     start_date = datetime.strptime(data_request["start_date"], date_format_2)
     end_date = datetime.strptime(data_request["end_date"], date_format_2)
@@ -500,16 +499,24 @@ async def get_urls(request: Request, data_request: dict):
             position += stat[1]
             impressions += stat[3]
             ctr += stat[4]
-            if position > 0:
+            if stat[1] > 0:
                 count += 1
             if k == len(el[1]) - 1:
                 res["result"] = res.get("result", "")
-                res["result"] += f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD'>
-                          <span style='font-size: 15px'>Позиция:{round(position / count, 2)}</span>
-                          <span style='font-size: 15px'>Клики:{total_clicks}</span>
-                          <span style='font-size: 9px'>Показы:{impressions}</span>
-                          <span style='font-size: 9px'>ctr:{round(ctr / count, 2)}%</span>
-                          </div>"""
+                if count > 0:
+                    res["result"] += f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD'>
+                              <span style='font-size: 15px'>Позиция:{round(position / count, 2)}</span>
+                              <span style='font-size: 15px'>Клики:{total_clicks}</span>
+                              <span style='font-size: 9px'>Показы:{impressions}</span>
+                              <span style='font-size: 9px'>ctr:{round(ctr / count, 2)}%</span>
+                              </div>"""
+                else:
+                    res["result"] += f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD'>
+                              <span style='font-size: 15px'>Позиция:{0}</span>
+                              <span style='font-size: 15px'>Клики:{total_clicks}</span>
+                              <span style='font-size: 9px'>Показы:{impressions}</span>
+                              <span style='font-size: 9px'>ctr:{0}%</span>
+                              </div>"""
         data.append(res)
     json_data = jsonable_encoder(data)
 
@@ -587,16 +594,24 @@ async def get_queries(request: Request, data_request: dict):
             position += stat[1]
             impressions += stat[3]
             ctr += stat[4]
-            if position > 0:
+            if stat[1] > 0:
                 count += 1
             if k == len(el[1]) - 1:
                 res["result"] = res.get("result", "")
-                res["result"] += f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD'>
-                          <span style='font-size: 15px'>Позиция:{round(position / count, 2)}</span>
-                          <span style='font-size: 15px'>Клики:{total_clicks}</span>
-                          <span style='font-size: 9px'>Показы:{impressions}</span>
-                          <span style='font-size: 9px'>ctr:{round(ctr / count, 2)}%</span>
-                          </div>"""
+                if count > 0:
+                    res["result"] += f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD'>
+                              <span style='font-size: 15px'>Позиция:{round(position / count, 2)}</span>
+                              <span style='font-size: 15px'>Клики:{total_clicks}</span>
+                              <span style='font-size: 9px'>Показы:{impressions}</span>
+                              <span style='font-size: 9px'>ctr:{round(ctr / count, 2)}%</span>
+                              </div>"""
+                else:
+                    res["result"] += f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD'>
+                              <span style='font-size: 15px'>Позиция:{0}</span>
+                              <span style='font-size: 15px'>Клики:{total_clicks}</span>
+                              <span style='font-size: 9px'>Показы:{impressions}</span>
+                              <span style='font-size: 9px'>ctr:{0}%</span>
+                              </div>"""
         data.append(res)
 
     json_data = jsonable_encoder(data)
