@@ -9,7 +9,7 @@ from db.models import Query
 from db.models import MetricsQuery
 from db.session import async_session
 from api.actions.queries import _add_new_urls
-from api.actions.metrics_queries import _add_new_metrics
+from api.actions.metrics_queries import _add_new_metrics, _delete_data
 
 ACCESS_TOKEN = f"{config.ACCESS_TOKEN}"
 USER_ID = f"{config.USER_ID}"
@@ -84,6 +84,8 @@ async def get_data_by_page(page):
 
 
 async def get_all_data():
+    date = (datetime.now() - timedelta(days=3))
+    await _delete_data(date.date(), async_session)
     body = {
         "offset": 0,
         "limit": 500,
@@ -96,9 +98,7 @@ async def get_all_data():
     response = requests.post(URL, json=body, headers={'Authorization': f'OAuth {ACCESS_TOKEN}',
                                                       "Content-Type": "application/json; charset=UTF-8"})
 
-    print(response.text[:100])
     data = response.json()
-    print(response.text, flush=True)
     count = data["count"]
     await add_data(data)
     for offset in range(500, count, 500):
