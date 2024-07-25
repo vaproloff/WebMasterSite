@@ -17,8 +17,9 @@ if config.config_file_name is not None:
 # add your model's MetaData object here
 # for 'autogenerate' support
 from db.models import Base
+from api.auth.models import Base as auth_base
 
-target_metadata = Base.metadata
+target_metadata = [Base.metadata, auth_base.metadata]
 
 
 # target_metadata = None

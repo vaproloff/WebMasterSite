@@ -1,7 +1,7 @@
 from cmath import inf
 from functools import reduce
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from fastapi import Request
 from fastapi import Form
 from fastapi.encoders import jsonable_encoder
@@ -13,11 +13,11 @@ from datetime import timedelta
 from itertools import groupby
 
 from api.actions.indicators import _get_indicators_from_db, _get_top_query, _get_top_url
-from api.actions.metrics_queries import _get_top_data_query
-from api.actions.metrics_url import _get_top_data_urls
 from api.actions.query_url_merge import _get_merge_with_pagination, _get_merge_query, _get_merge_with_pagination_sort, \
     _get_merge_with_pagination_and_like, _get_merge_with_pagination_and_like_sort
 from api.actions.utils import get_day_of_week
+from api.auth.auth_config import fastapi_users
+from api.auth.models import User
 from db.models import QueryUrlsMergeLogs
 from db.session import async_session
 from api.actions.urls import _get_urls_with_pagination
@@ -46,6 +46,8 @@ templates = Jinja2Templates(directory="static")
 
 date_format_2 = "%Y-%m-%d"
 date_format_out = "%d.%m.%Y"
+
+current_superuser = fastapi_users.current_user(active=True, superuser=True)
 
 
 def pad_list_with_zeros_excel(lst, amount):
@@ -448,7 +450,7 @@ async def login(request: Request, username: str = Form(), password: str = Form()
 
 
 @admin_router.get("/info-urls")
-async def get_urls(request: Request):
+async def get_urls(request: Request, user: User = Depends(current_superuser)):
     response = templates.TemplateResponse("urls-info.html", {"request": request})
     return response
 
@@ -1281,5 +1283,4 @@ async def generate_excel(request: Request, data_request: dict):
     return StreamingResponse(content=output.getvalue(),
                              headers={"Content-Disposition": "attachment;filename='data.csv'"})
 
-
-#test
+# test

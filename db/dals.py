@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import List
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, distinct
+from sqlalchemy import select, distinct, delete
 from sqlalchemy import and_
 from sqlalchemy import desc
 
@@ -265,6 +265,13 @@ class MetricQueryDAL:
                 MetricsQuery.position <= top, MetricsQuery.position > 0))
         result = await self.db_session.execute(query)
         return result.fetchall()
+
+    async def delete_data(
+            self,
+            date
+    ):
+        query = delete(MetricsQuery).where(MetricsQuery.date == date)
+        await self.db_session.execute(query)
 
 
 class IndicatorDAL:

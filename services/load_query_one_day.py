@@ -84,6 +84,7 @@ async def get_data_by_page(page):
 
 
 async def get_all_data():
+    date = (datetime.now() - timedelta(days=3))
     body = {
         "offset": 0,
         "limit": 500,
