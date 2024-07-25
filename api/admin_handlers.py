@@ -67,7 +67,7 @@ async def generate_excel(request: Request, data_request: dict):
     start_date = datetime.strptime(data_request["start_date"], date_format_2)
     end_date = datetime.strptime(data_request["end_date"], date_format_2)
     main_header = []
-    for i in range(int(data_request["amount"])):
+    for i in range(int(data_request["amount"]) + 1):
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
@@ -82,7 +82,7 @@ async def generate_excel(request: Request, data_request: dict):
     ws.append(header)
     start = 0
     main_header = []
-    for i in range(int(data_request["amount"])):
+    for i in range(int(data_request["amount"]) + 1):
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
     main_header.append("Result")
     main_header = main_header[::-1]
@@ -128,8 +128,12 @@ async def generate_excel(request: Request, data_request: dict):
                 position += stat[1]
                 impressions += stat[3]
                 ctr += stat[4]
-                count += 1
-            info["Result"] = [round(position / count, 2), total_clicks, impressions, round(ctr / count, 2)]
+                if stat[1] > 0:
+                    count += 1
+            if count > 0:
+                info["Result"] = [round(position / count, 2), total_clicks, impressions, round(ctr / count, 2)]
+            else:
+                info["Result"] = [0, total_clicks, impressions, 0]
             res.append(el[0])
             for el in main_header:
                 if el in info:
@@ -153,7 +157,7 @@ async def generate_excel(request: Request, data_request: dict):
     start_date = datetime.strptime(data_request["start_date"], date_format_2)
     end_date = datetime.strptime(data_request["end_date"], date_format_2)
     main_header = []
-    for i in range(int(data_request["amount"])):
+    for i in range(int(data_request["amount"]) + 1):
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
@@ -168,7 +172,7 @@ async def generate_excel(request: Request, data_request: dict):
     ws.append(header)
     start = 0
     main_header = []
-    for i in range(int(data_request["amount"])):
+    for i in range(int(data_request["amount"]) + 1):
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
     main_header.append("Result")
     main_header = main_header[::-1]
@@ -214,8 +218,12 @@ async def generate_excel(request: Request, data_request: dict):
                 position += stat[1]
                 impressions += stat[3]
                 ctr += stat[4]
-                count += 1
-            info["Result"] = [round(position / count, 2), total_clicks, impressions, round(ctr / count, 2)]
+                if stat[1] > 0:
+                    count += 1
+            if count > 0:
+                info["Result"] = [round(position / count, 2), total_clicks, impressions, round(ctr / count, 2)]
+            else:
+                info["Result"] = [0, total_clicks, impressions, 0]
             res.append(el[0])
             for el in main_header:
                 if el in info:
@@ -240,7 +248,7 @@ async def generate_excel(request: Request, data_request: dict):
     start_date = datetime.strptime(data_request["start_date"], date_format_2)
     end_date = datetime.strptime(data_request["end_date"], date_format_2)
     main_header = []
-    for i in range(int(data_request["amount"])):
+    for i in range(int(data_request["amount"]) + 1):
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
@@ -255,7 +263,7 @@ async def generate_excel(request: Request, data_request: dict):
     ws.append(header)
     start = 0
     main_header = []
-    for i in range(int(data_request["amount"])):
+    for i in range(int(data_request["amount"]) + 1):
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
     main_header.append("Result")
     main_header = main_header[::-1]
@@ -300,8 +308,12 @@ async def generate_excel(request: Request, data_request: dict):
                 position += stat[1]
                 impressions += stat[3]
                 ctr += stat[4]
-                count += 1
-            info["Result"] = [round(position / count, 2), total_clicks, impressions, round(ctr / count, 2)]
+                if stat[1] > 0:
+                    count += 1
+            if count > 0:
+                info["Result"] = [round(position / count, 2), total_clicks, impressions, round(ctr / count, 2)]
+            else:
+                info["Result"] = [0, total_clicks, impressions, 0]
             res.append(el[0])
             for el in main_header:
                 if el in info:
@@ -325,7 +337,7 @@ async def generate_excel(request: Request, data_request: dict):
     start_date = datetime.strptime(data_request["start_date"], date_format_2)
     end_date = datetime.strptime(data_request["end_date"], date_format_2)
     main_header = []
-    for i in range(int(data_request["amount"])):
+    for i in range(int(data_request["amount"]) + 1):
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
@@ -340,7 +352,7 @@ async def generate_excel(request: Request, data_request: dict):
     ws.append(header)
     start = 0
     main_header = []
-    for i in range(int(data_request["amount"])):
+    for i in range(int(data_request["amount"]) + 1):
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
     main_header.append("Result")
     main_header = main_header[::-1]
@@ -385,8 +397,12 @@ async def generate_excel(request: Request, data_request: dict):
                 position += stat[1]
                 impressions += stat[3]
                 ctr += stat[4]
-                count += 1
-            info["Result"] = [round(position / count, 2), total_clicks, impressions, round(ctr / count, 2)]
+                if stat[1] > 0:
+                    count += 1
+            if count > 0:
+                info["Result"] = [round(position / count, 2), total_clicks, impressions, round(ctr / count, 2)]
+            else:
+                info["Result"] = [0, total_clicks, impressions, 0]
             res.append(el[0])
             for el in main_header:
                 if el in info:
@@ -439,7 +455,6 @@ async def get_urls(request: Request):
 
 @admin_router.post("/get-urls")
 async def get_urls(request: Request, data_request: dict):
-
     start_date = datetime.strptime(data_request["start_date"], date_format_2)
     end_date = datetime.strptime(data_request["end_date"], date_format_2)
     print(end_date)
@@ -480,9 +495,8 @@ async def get_urls(request: Request, data_request: dict):
             up = 0
             if k + 1 < len(el[1]):
                 up = round(el[1][k][1] - el[1][k - 1][1], 2)
-            if up < 0:
-                color = "#9DE8BD"
-                color_text = "green"
+            color = "#9DE8BD"
+            color_text = "green"
             if up > 0:
                 color = "#FDC4BD"
                 color_text = "red"
@@ -532,8 +546,6 @@ async def get_queries(request: Request):
 
 @admin_router.post("/get-queries")
 async def get_queries(request: Request, data_request: dict):
-    today = datetime.now().date()
-
     start_date = datetime.strptime(data_request["start_date"], date_format_2)
     end_date = datetime.strptime(data_request["end_date"], date_format_2)
     if data_request["sort_result"]:
@@ -571,13 +583,13 @@ async def get_queries(request: Request, data_request: dict):
         res = {"query":
                    f"<div style='width:355px; height: 55px; overflow: auto; white-space: nowrap;'><span>{el[0]}</span></div>"}
         total_clicks, position, impressions, ctr, count = 0, 0, 0, 0, 0
+        print(position)
         for k, stat in enumerate(el[1]):
             up = 0
             if k + 1 < len(el[1]):
                 up = round(el[1][k][1] - el[1][k - 1][1], 2)
-            if up < 0:
-                color = "#9DE8BD"
-                color_text = "green"
+            color = "#9DE8BD"
+            color_text = "green"
             if up > 0:
                 color = "#FDC4BD"
                 color_text = "red"
@@ -596,6 +608,7 @@ async def get_queries(request: Request, data_request: dict):
             ctr += stat[4]
             if stat[1] > 0:
                 count += 1
+            print(position)
             if k == len(el[1]) - 1:
                 res["result"] = res.get("result", "")
                 if count > 0:
@@ -977,7 +990,8 @@ async def get_info_merge(request: Request):
 
 @admin_router.post("/get-merge")
 async def post_info_merge(request: Request, data_request: dict):
-    today = datetime.now().date()
+    start_date = datetime.strptime(data_request["start_date"], date_format_2)
+    end_date = datetime.strptime(data_request["end_date"], date_format_2)
     if data_request["sort_result"]:
         if data_request["search_text"] == "":
             urls = await _get_merge_with_pagination_sort(data_request["date"], data_request["sort_desc"],
@@ -1023,15 +1037,14 @@ async def post_info_merge(request: Request, data_request: dict):
                     up = 0
                     if k + 1 < len(grouped_data[query]):
                         up = round(grouped_data[query][k][1] - grouped_data[query][k - 1][1], 2)
+                    color = "#9DE8BD"
+                    color_text = "green"
                     if up > 0:
-                        color = "#9DE8BD"
-                        color_text = "green"
-                    elif up < 0:
                         color = "#FDC4BD"
                         color_text = "red"
-                    else:
+                    if stat[1] <= 3:
                         color = "#B4D7ED"
-                        color_text = "black"
+                        color_text = "blue"
                     res[stat[0].strftime(date_format_2)] = ''.join(res.get(stat[0].strftime(date_format_2), []))
                     res[stat[0].strftime(
                         date_format_2)] += f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: {color}'>
@@ -1043,15 +1056,24 @@ async def post_info_merge(request: Request, data_request: dict):
                     position += stat[1]
                     impressions += stat[3]
                     ctr += stat[4]
-                    count += 1
+                    if stat[1] > 0:
+                        count += 1
                     if k == len(grouped_data[query]) - 1:
                         res["result"] = res.get("result", "")
-                        res["result"] += f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD'>
-                                  <span style='font-size: 15px'>Позиция:{round(position / count, 2)}</span>
-                                  <span style='font-size: 15px'>Клики:{total_clicks}</span>
-                                  <span style='font-size: 9px'>Показы:{impressions}</span>
-                                  <span style='font-size: 9px'>ctr:{round(ctr / count, 2)}%</span>
-                                  </div>"""
+                        if count > 0:
+                            res["result"] += f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD'>
+                                      <span style='font-size: 15px'>Позиция:{round(position / count, 2)}</span>
+                                      <span style='font-size: 15px'>Клики:{total_clicks}</span>
+                                      <span style='font-size: 9px'>Показы:{impressions}</span>
+                                      <span style='font-size: 9px'>ctr:{round(ctr / count, 2)}%</span>
+                                      </div>"""
+                        else:
+                            res["result"] += f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD'>
+                                      <span style='font-size: 15px'>Позиция:{0}</span>
+                                      <span style='font-size: 15px'>Клики:{total_clicks}</span>
+                                      <span style='font-size: 9px'>Показы:{impressions}</span>
+                                      <span style='font-size: 9px'>ctr:{0}%</span>
+                                      </div>"""
                 else:
                     res["result"] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: ##FDC4BD'>
                               <span style='font-size: 20px'>Нет данных</span>
@@ -1071,7 +1093,7 @@ async def generate_excel(request: Request, data_request: dict):
     start_date = datetime.strptime(data_request["start_date"], date_format_2)
     end_date = datetime.strptime(data_request["end_date"], date_format_2)
     main_header = []
-    for i in range(int(data_request["amount"])):
+    for i in range(int(data_request["amount"]) + 1):
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
@@ -1088,7 +1110,7 @@ async def generate_excel(request: Request, data_request: dict):
     ws.append(header)
     start = 0
     main_header = []
-    for i in range(int(data_request["amount"])):
+    for i in range(int(data_request["amount"]) + 1):
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
     main_header.append("Result")
     main_header = main_header[::-1]
@@ -1140,8 +1162,12 @@ async def generate_excel(request: Request, data_request: dict):
                         position += stat[1]
                         impressions += stat[3]
                         ctr += stat[4]
-                        count += 1
-                    info["Result"] = [round(position / count, 2), total_clicks, impressions, round(ctr / count, 2)]
+                        if stat[1] > 0:
+                            count += 1
+                    if count > 0:
+                        info["Result"] = [round(position / count, 2), total_clicks, impressions, round(ctr / count, 2)]
+                    else:
+                        info["Result"] = [0, total_clicks, impressions, 0]
                 res.append(query)
                 for el in main_header:
                     if el in info:
@@ -1165,7 +1191,7 @@ async def generate_excel(request: Request, data_request: dict):
     start_date = datetime.strptime(data_request["start_date"], date_format_2)
     end_date = datetime.strptime(data_request["end_date"], date_format_2)
     main_header = []
-    for i in range(int(data_request["amount"])):
+    for i in range(int(data_request["amount"]) + 1):
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
@@ -1182,7 +1208,7 @@ async def generate_excel(request: Request, data_request: dict):
     ws.append(header)
     start = 0
     main_header = []
-    for i in range(int(data_request["amount"])):
+    for i in range(int(data_request["amount"]) + 1):
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
     main_header.append("Result")
     main_header = main_header[::-1]
@@ -1223,7 +1249,6 @@ async def generate_excel(request: Request, data_request: dict):
             for query in queries:
                 res = []
                 res.append(url)
-                print(url, query)
                 el = grouped_data.get(query, None)
                 info = {}
                 if el:
@@ -1234,8 +1259,12 @@ async def generate_excel(request: Request, data_request: dict):
                         position += stat[1]
                         impressions += stat[3]
                         ctr += stat[4]
-                        count += 1
-                    info["Result"] = [round(position / count, 2), total_clicks, impressions, round(ctr / count, 2)]
+                        if stat[1] > 0:
+                            count += 1
+                    if count > 0:
+                        info["Result"] = [round(position / count, 2), total_clicks, impressions, round(ctr / count, 2)]
+                    else:
+                        info["Result"] = [0, total_clicks, impressions, 0]
                 res.append(query)
                 for el in main_header:
                     if el in info:
