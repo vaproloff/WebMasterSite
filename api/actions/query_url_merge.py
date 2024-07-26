@@ -36,18 +36,21 @@ async def _get_merge_with_pagination_sort(date, search_text, page, per_page, ses
         return urls
 
 
-async def _get_merge_with_pagination_and_like(date, search_text, page, per_page, session: Callable):
+async def _get_merge_with_pagination_and_like(date, search_text_url, search_text_query, page, per_page,
+                                              session: Callable):
     async with session() as s:
         url_dal = MergeDAL(s)
         urls = await url_dal.get_merge_with_pagination_and_like(
-            date, search_text, page, per_page
+            date, search_text_url, search_text_query, page, per_page
         )
         return urls
 
-async def _get_merge_with_pagination_and_like_sort(date, search_text, sort_desc, page, per_page, session: Callable):
+
+async def _get_merge_with_pagination_and_like_sort(date, search_text_url, search_text_query, sort_desc, page, per_page,
+                                                   session: Callable):
     async with session() as s:
         url_dal = MergeDAL(s)
         urls = await url_dal.get_merge_with_pagination_and_like_sort(
-            date, search_text, sort_desc, page, per_page
+            date, search_text_url, search_text_query, sort_desc, page, per_page
         )
         return urls
