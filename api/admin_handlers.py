@@ -995,26 +995,29 @@ async def post_info_merge(request: Request, data_request: dict):
     start_date = datetime.strptime(data_request["start_date"], date_format_2)
     end_date = datetime.strptime(data_request["end_date"], date_format_2)
     if data_request["sort_result"]:
-        if data_request["search_text"] == "":
+        if data_request["search_text_url"] == "" and data_request["search_text_query"] == "":
             urls = await _get_merge_with_pagination_sort(data_request["date"], data_request["sort_desc"],
                                                          data_request["start"], data_request["length"],
                                                          async_session)
         else:
-            urls = await _get_merge_with_pagination_and_like_sort(data_request["date"], data_request["search_text"],
+            urls = await _get_merge_with_pagination_and_like_sort(data_request["date"], data_request["search_text_url"],
+                                                                  data_request["search_text_query"],
                                                                   data_request["sort_desc"],
                                                                   data_request["start"], data_request["length"],
                                                                   async_session)
     else:
-        if data_request["search_text"] == "":
+        if data_request["search_text_url"] == "" and data_request["search_text_query"] == "":
             urls = await _get_merge_with_pagination(data_request["date"], data_request["start"], data_request["length"],
                                                     async_session)
         else:
-            urls = await _get_merge_with_pagination_and_like(data_request["date"], data_request["search_text"],
+            urls = await _get_merge_with_pagination_and_like(data_request["date"], data_request["search_text_url"],
+                                                             data_request["search_text_query"],
                                                              data_request["start"], data_request["length"],
                                                              async_session)
     if not urls or len(urls) == 0:
         return JSONResponse({"data": []})
     data = []
+    print(urls)
     all_queries = list()
     for el in urls:
         all_queries.extend(el[1])
@@ -1117,36 +1120,40 @@ async def generate_excel(request: Request, data_request: dict):
     main_header.append("Result")
     main_header = main_header[::-1]
     while True:
-        start_el = (start * 50) + 1
+        start_el = (start * 50)
         if data_request["sort_result"]:
-            if data_request["search_text"] == "":
+            if data_request["search_text_url"] == "" and data_request["search_text_query"] == "":
                 urls = await _get_merge_with_pagination_sort(data_request["date"], data_request["sort_desc"],
                                                              start_el, data_request["length"],
                                                              async_session)
             else:
-                urls = await _get_merge_with_pagination_and_like_sort(data_request["date"], data_request["search_text"],
+                urls = await _get_merge_with_pagination_and_like_sort(data_request["date"],
+                                                                      data_request["search_text_url"],
+                                                                      data_request["search_text_query"],
                                                                       data_request["sort_desc"],
                                                                       start_el, data_request["length"],
                                                                       async_session)
         else:
-            if data_request["search_text"] == "":
+            if data_request["search_text_url"] == "" and data_request["search_text_query"] == "":
                 urls = await _get_merge_with_pagination(data_request["date"], start_el,
                                                         data_request["length"],
                                                         async_session)
             else:
-                urls = await _get_merge_with_pagination_and_like(data_request["date"], data_request["search_text"],
+                urls = await _get_merge_with_pagination_and_like(data_request["date"], data_request["search_text_url"],
+                                                                 data_request["search_text_query"],
                                                                  start_el, data_request["length"],
                                                                  async_session)
         start += 1
         if not urls or len(urls) == 0:
             break
+        print(urls)
         all_queries = list()
         for el in urls:
             all_queries.extend(el[1])
         queries = await _get_merge_query(start_date, end_date, all_queries, async_session)
         if queries:
             queries.sort(key=lambda x: x[-1])
-        grouped_data = dict([(key, sorted(list(group)[:14], key=lambda x: x[0])) for key, group in
+        grouped_data = dict([(key, sorted(list(group), key=lambda x: x[0])) for key, group in
                              groupby(queries, key=lambda x: x[-1])])
         for url, queries in urls:
 
@@ -1215,24 +1222,27 @@ async def generate_excel(request: Request, data_request: dict):
     main_header.append("Result")
     main_header = main_header[::-1]
     while True:
-        start_el = (start * 50) + 1
+        start_el = (start * 50)
         if data_request["sort_result"]:
-            if data_request["search_text"] == "":
+            if data_request["search_text_url"] == "" and data_request["search_text_query"] == "":
                 urls = await _get_merge_with_pagination_sort(data_request["date"], data_request["sort_desc"],
                                                              start_el, data_request["length"],
                                                              async_session)
             else:
-                urls = await _get_merge_with_pagination_and_like_sort(data_request["date"], data_request["search_text"],
+                urls = await _get_merge_with_pagination_and_like_sort(data_request["date"],
+                                                                      data_request["search_text_url"],
+                                                                      data_request["search_text_query"],
                                                                       data_request["sort_desc"],
                                                                       start_el, data_request["length"],
                                                                       async_session)
         else:
-            if data_request["search_text"] == "":
+            if data_request["search_text_url"] == "" and data_request["search_text_query"] == "":
                 urls = await _get_merge_with_pagination(data_request["date"], start_el,
                                                         data_request["length"],
                                                         async_session)
             else:
-                urls = await _get_merge_with_pagination_and_like(data_request["date"], data_request["search_text"],
+                urls = await _get_merge_with_pagination_and_like(data_request["date"], data_request["search_text_url"],
+                                                                 data_request["search_text_query"],
                                                                  start_el, data_request["length"],
                                                                  async_session)
         start += 1

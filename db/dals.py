@@ -2,7 +2,11 @@ from datetime import datetime
 from typing import List
 
 from sqlalchemy.ext.asyncio import AsyncSession
+<<<<<<< HEAD
 from sqlalchemy import select, distinct, delete
+=======
+from sqlalchemy import select, distinct, delete, text
+>>>>>>> main
 from sqlalchemy import and_
 from sqlalchemy import desc
 
@@ -134,6 +138,14 @@ class MetricDAL:
             Metrics.position <= top, Metrics.position > 0))
         result = await self.db_session.execute(query)
         return result.fetchall()
+
+    async def delete_data(
+            self,
+            date
+    ):
+        query = delete(Metrics).where(Metrics.date == date)
+        await self.db_session.execute(query)
+        await self.db_session.commit()
 
 
 class QueryDAL:
@@ -272,6 +284,7 @@ class MetricQueryDAL:
     ):
         query = delete(MetricsQuery).where(MetricsQuery.date == date)
         await self.db_session.execute(query)
+        await self.db_session.commit()
 
 
 class IndicatorDAL:
@@ -379,25 +392,46 @@ class MergeDAL:
         if len(product_row) != 0:
             return product_row
 
-    async def get_merge_with_pagination_and_like(self, date, search_text, page, per_page):
-        query = select(QueryUrlsMerge.url, QueryUrlsMerge.queries).filter(
-            QueryUrlsMerge.url.like(f"%{search_text.strip()}%")).offset(page).limit(
-            per_page).where(QueryUrlsMerge.date == datetime.strptime(date.split()[0], date_format))
+    async def get_merge_with_pagination_and_like(self, date, search_text_url, search_text_query, page, per_page):
+        if search_text_query:
+            query = select(QueryUrlsMerge.url, QueryUrlsMerge.queries).filter(
+                text("EXISTS (SELECT 1 FROM unnest(queries) AS query WHERE query LIKE :search_text)")
+            ).params(search_text='%' + search_text_query.strip() + '%').offset(page).limit(per_page).where(
+                QueryUrlsMerge.date == datetime.strptime(date.split()[0], date_format)
+            )
+        elif search_text_url:
+            query = select(QueryUrlsMerge.url, QueryUrlsMerge.queries).filter(
+                QueryUrlsMerge.url.like(f"%{search_text_url.strip()}%")).offset(page).limit(
+                per_page).where(QueryUrlsMerge.date == datetime.strptime(date.split()[0], date_format))
         res = await self.session.execute(query)
         product_row = res.fetchall()
         if len(product_row) != 0:
             return product_row
 
-    async def get_merge_with_pagination_and_like_sort(self, date, search_text, sort_desc, page, per_page):
+    async def get_merge_with_pagination_and_like_sort(self, date, search_text_url, search_text_query, sort_desc, page,
+                                                      per_page):
         if sort_desc:
-            query = select(QueryUrlsMerge.url, QueryUrlsMerge.queries).order_by(desc(QueryUrlsMerge.url)).filter(
-                QueryUrlsMerge.url.like(f"%{search_text.strip()}%")).offset(
-                page).limit(
-                per_page).where(QueryUrlsMerge.date == datetime.strptime(date.split()[0], date_format))
+            if search_text_query:
+                query = select(QueryUrlsMerge.url, QueryUrlsMerge.queries).order_by(desc(QueryUrlsMerge.url)).filter(
+                    text("EXISTS (SELECT 1 FROM unnest(queries) AS query WHERE query LIKE :search_text)")
+                ).params(search_text='%' + search_text_query.strip() + '%').offset(page).limit(per_page).where(
+                    QueryUrlsMerge.date == datetime.strptime(date.split()[0], date_format)
+                )
+            elif search_text_url:
+                query = select(QueryUrlsMerge.url, QueryUrlsMerge.queries).order_by(desc(QueryUrlsMerge.url)).filter(
+                    QueryUrlsMerge.url.like(f"%{search_text_url.strip()}%")).offset(page).limit(
+                    per_page).where(QueryUrlsMerge.date == datetime.strptime(date.split()[0], date_format))
         else:
-            query = select(QueryUrlsMerge.url, QueryUrlsMerge.queries).order_by(QueryUrlsMerge.url).filter(
-                QueryUrlsMerge.url.like(f"%{search_text.strip()}%")).offset(page).limit(
-                per_page).where(QueryUrlsMerge.date == datetime.strptime(date.split()[0], date_format))
+            if search_text_query:
+                query = select(QueryUrlsMerge.url, QueryUrlsMerge.queries).order_by(QueryUrlsMerge.url).filter(
+                    text("EXISTS (SELECT 1 FROM unnest(queries) AS query WHERE query LIKE :search_text)")
+                ).params(search_text='%' + search_text_query.strip() + '%').offset(page).limit(per_page).where(
+                    QueryUrlsMerge.date == datetime.strptime(date.split()[0], date_format)
+                )
+            elif search_text_url:
+                query = select(QueryUrlsMerge.url, QueryUrlsMerge.queries).order_by(QueryUrlsMerge.url).filter(
+                    QueryUrlsMerge.url.like(f"%{search_text_url.strip()}%")).offset(page).limit(
+                    per_page).where(QueryUrlsMerge.date == datetime.strptime(date.split()[0], date_format))
         res = await self.session.execute(query)
         product_row = res.fetchall()
         if len(product_row) != 0:

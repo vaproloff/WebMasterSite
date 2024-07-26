@@ -86,7 +86,10 @@
 <a href="{{ url_for('show_menu_page') }}" class="back-to-menu">Back to Menu</a>
 <input type="date" id="start_date">
 <input type="date" id="end_date">
-<input type="text" id="search_field" style="width: 250px">
+<label for="search_field_url">Url:</label>
+<input type="text" id="search_field_url" style="width: 250px">
+<label for="search_field_query">Query:</label>
+<input type="text" id="search_field_query" style="width: 250px">
 <label for="input_sort">Отсортировать?</label>
 <input type="checkbox" id="input_sort">
 <label for="input_desc">По убыванию?</label>
@@ -214,7 +217,8 @@
             start_date: document.getElementById('start_date').value, // Дата начала поиска
             end_date: document.getElementById('end_date').value, // Дата окончания поиска
             amount: calculateDays(),
-            search_text: document.getElementById("search_field").value,
+            search_text_url: document.getElementById("search_field_url").value,
+            search_text_query: document.getElementById("search_field_query").value,
             sort_result: document.getElementById("input_sort").checked,
             sort_desc: document.getElementById("input_desc").checked,
             date: '{{ date }}'
@@ -306,7 +310,8 @@
             start_date: document.getElementById('start_date').value, // Дата начала поиска
             end_date: document.getElementById('end_date').value, // Дата окончания поиска
             amount: calculateDays(),
-            search_text: document.getElementById("search_field").value,
+            search_text_url: document.getElementById("search_field_url").value,
+            search_text_query: document.getElementById("search_field_query").value,
             sort_result: document.getElementById("input_sort").checked,
             sort_desc: document.getElementById("input_desc").checked,
             date: '{{ date }}',
@@ -415,7 +420,8 @@
             start_date: document.getElementById('start_date').value, // Дата начала поиска
             end_date: document.getElementById('end_date').value, // Дата окончания поиска
             amount: calculateDays(),
-            search_text: document.getElementById("search_field").value,
+            search_text_url: document.getElementById("search_field_url").value,
+            search_text_query: document.getElementById("search_field_query").value,
             sort_result: document.getElementById("input_sort").checked,
             sort_desc: document.getElementById("input_desc").checked,
             date: '{{ date }}',
@@ -521,7 +527,8 @@
             start_date: document.getElementById('start_date').value, // Дата начала поиска
             end_date: document.getElementById('end_date').value, // Дата окончания поиска
             amount: calculateDays(),
-            search_text: document.getElementById("search_field").value,
+            search_text_url: document.getElementById("search_field_url").value,
+            search_text_query: document.getElementById("search_field_query").value,
             sort_result: document.getElementById("input_sort").checked,
             sort_desc: document.getElementById("input_desc").checked,
             date: '{{ date }}',
@@ -595,7 +602,8 @@
             "start_date": document.getElementById('start_date').value, // Дата начала поиска
             "end_date": document.getElementById('end_date').value, // Дата окончания поиска
             "amount": calculateDays(),
-            "search_text": document.getElementById("search_field").value,
+            search_text_url: document.getElementById("search_field_url").value,
+            search_text_query: document.getElementById("search_field_query").value,
             "sort_result": document.getElementById("input_sort").checked,
             "sort_desc": document.getElementById("input_desc").checked,
             "date": '{{ date }}',
@@ -630,7 +638,8 @@
             "start_date": document.getElementById('start_date').value, // Дата начала поиска
             "end_date": document.getElementById('end_date').value, // Дата окончания поиска
             "amount": calculateDays(),
-            "search_text": document.getElementById("search_field").value,
+            search_text_url: document.getElementById("search_field_url").value,
+            search_text_query: document.getElementById("search_field_query").value,
             "sort_result": document.getElementById("input_sort").checked,
             "sort_desc": document.getElementById("input_desc").checked,
             "date": '{{ date }}',

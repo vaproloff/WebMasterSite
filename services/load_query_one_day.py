@@ -9,7 +9,7 @@ from db.models import Query
 from db.models import MetricsQuery
 from db.session import async_session
 from api.actions.queries import _add_new_urls
-from api.actions.metrics_queries import _add_new_metrics
+from api.actions.metrics_queries import _add_new_metrics, _delete_data
 
 ACCESS_TOKEN = f"{config.ACCESS_TOKEN}"
 USER_ID = f"{config.USER_ID}"
@@ -21,12 +21,11 @@ date_format = "%Y-%m-%d"
 URL = f"https://api.webmaster.yandex.net/v4/user/{USER_ID}/hosts/{HOST_ID}/query-analytics/list"
 
 
-async def add_data(data):
+async def add_data(data, date):
     for query in data['text_indicator_to_statistics']:
         query_name = query['text_indicator']['value']
         new_url = [Query(query=query_name)]
         metrics = []
-        date = (datetime.now() - timedelta(days=3)).strftime("%Y-%m-%d")
         data_add = {
             "date": date,
             "ctr": 0,
@@ -64,7 +63,7 @@ async def add_data(data):
         await _add_new_metrics(metrics, async_session)
 
 
-async def get_data_by_page(page):
+async def get_data_by_page(page, date):
     body = {
         "offset": page,
         "limit": 500,
@@ -80,11 +79,20 @@ async def get_data_by_page(page):
     print(response.text[:100])
     data = response.json()
 
-    await add_data(data)
+    await add_data(data, date)
 
 
 async def get_all_data():
     date = (datetime.now() - timedelta(days=3))
+    date_input = input("Введите дату, которую необходимо обновить (в формате YYYY-MM-DD): ")
+
+    try:
+        # Преобразование строки в объект даты
+        date_obj = datetime.strptime(date_input, "%Y-%m-%d")
+        print(f"Введенная дата: {date_obj}")
+    except ValueError:
+        print("Неверный формат даты. Пожалуйста, введите дату в формате YYYY-MM-DD.")
+    await _delete_data(date_obj, async_session)
     body = {
         "offset": 0,
         "limit": 500,
@@ -97,14 +105,12 @@ async def get_all_data():
     response = requests.post(URL, json=body, headers={'Authorization': f'OAuth {ACCESS_TOKEN}',
                                                       "Content-Type": "application/json; charset=UTF-8"})
 
-    print(response.text[:100])
     data = response.json()
-    print(response.text, flush=True)
     count = data["count"]
-    await add_data(data)
+    await add_data(data, date)
     for offset in range(500, count, 500):
         print(f"[INFO] PAGE{offset} DONE!")
-        await get_data_by_page(offset)
+        await get_data_by_page(offset, date)
 
 
 if __name__ == '__main__':
