@@ -185,9 +185,13 @@
         var nameCell = document.createElement('td');
         nameCell.textContent = "url";
         row.appendChild(nameCell);
+        var nameCell = document.createElement('td');
+        nameCell.textContent = "result";
+        row.appendChild(nameCell);
 
         columns = [
             {"title": "query"},
+            {"title": "result"}
         ]
 
         amount = calculateDays();
@@ -286,9 +290,13 @@
         var nameCell = document.createElement('td');
         nameCell.textContent = "url";
         row.appendChild(nameCell);
+        var nameCell = document.createElement('td');
+        nameCell.textContent = "result";
+        row.appendChild(nameCell);
 
         columns = [
             {"title": "query"},
+            {"title": "result"}
         ]
 
         amount = calculateDays();
@@ -296,12 +304,12 @@
         for (i = amount - 1; i >= 0; i--) {
             columns.push({"title": IncrementDate(document.getElementById('start_date').value, i)})
             var nameCell = document.createElement('td');
-            nameCell.textContent = IncrementDate(document.getElementById('start_date').value, i);
+            nameCell.innerHTML = getDayOfWeek(IncrementDate(document.getElementById('start_date').value, i)) + "<br>" + IncrementDate(document.getElementById('start_date').value, i);
             row.appendChild(nameCell);
         }
         var url = "/admin/get-all-history";
         var params = {
-            length: 4, // количество отображаемых элементов
+            length: 5, // количество отображаемых элементов
             start_date: document.getElementById('start_date').value, // Дата начала поиска
             end_date: document.getElementById('end_date').value, // Дата окончания поиска
             amount: calculateDays(),
@@ -334,7 +342,7 @@
                 text-align: center; display: flex; align-items: center; justify-content: center;'>
             <span style='font-size: 18px'><span style='color:red'>NAN</span></span><br>
             </div>`
-                for (i = 0; i < 4; i++) {
+                for (i = 0; i < 5; i++) {
                     var newRow = '<tr>';
                     $.each(columns, function (index_c, cell) {
                         if (data[i][columns[index_c]["title"]]) {

@@ -662,12 +662,15 @@ async def post_all_history(request: Request, data_request: dict):
         res = {"query":
                    f"<div style='width:355px; height: 55px; overflow: auto; white-space: nowrap;'><span>{el[0]}</span></div>"}
         prev_value = -inf
+        value_sum, count = 0, 0
         for name, value, date in el[1]:
             if value >= prev_value:
                 color = "#9DE8BD"  # green
             else:
                 color = "#FDC4BD"  # red
             if value > 0:
+                value_sum += value
+                count += 1
                 if el[0] != "TOTAL_CTR":
                     res[date.strftime(
                         date_format_2)] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: {color}; text-align: center; display: flex; align-items: center; justify-content: center;'>
@@ -678,7 +681,20 @@ async def post_all_history(request: Request, data_request: dict):
                         date_format_2)] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: {color}; text-align: center; display: flex; align-items: center; justify-content: center;'>
                                             <span style='font-size: 18px'>{value}%</span>
                                             </div>"""
-            prev_value = value
+                prev_value = value
+
+        if el[0] in ("AVG_CLICK_POSITION", "TOTAL_CTR", "AVG_SHOW_POSITION"):
+            if count > 0:
+                value_sum = round(value_sum / count, 2)
+
+        if el[0] != "TOTAL_CTR":
+            res["result"] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD; text-align: center; display: flex; align-items: center; justify-content: center;'>
+                                    <span style='font-size: 18px'>{value_sum}</span>
+                                    </div>"""
+        else:
+            res["result"] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD; text-align: center; display: flex; align-items: center; justify-content: center;'>
+                                    <span style='font-size: 18px'>{value_sum}%</span>
+                                    </div>"""
         data.append(res)
     data[-1], data[-2] = data[-2], data[-1]
 
@@ -691,12 +707,28 @@ async def post_all_history(request: Request, data_request: dict):
         }
         query_top = await _get_top_query(start_date, end_date, top, async_session)
         query_top.sort(key=lambda x: x[-1])
+        total_position, total_clicks, total_impression, total_count, count_for_avg = 0, 0, 0, 0, 0
         for position, clicks, impression, count, date in query_top:
             grouped_data_sum[date.strftime(
                 date_format_2)] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD'>
               <span style='font-size: 18px'>{position}</span><br>
               <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 10px'>Count: {count}</span><br>
               <span style='font-size: 10px'>{clicks}</span> <span style='font-size: 10px; margin-left: 10px'>R: {int(impression)}</span>
+              </div>"""
+            total_position += position
+            total_clicks += clicks
+            total_impression += impression
+            total_count += count
+            if position > 0:
+                count_for_avg += 1
+
+        if count_for_avg > 0:
+            total_position = round(total_position / count_for_avg, 2)
+
+        grouped_data_sum["result"] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD'>
+              <span style='font-size: 18px'>{total_position}</span><br>
+              <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 10px'>Count: {total_count}</span><br>
+              <span style='font-size: 10px'>{total_clicks}</span> <span style='font-size: 10px; margin-left: 10px'>R: {int(total_impression)}</span>
               </div>"""
 
         query_front.append(grouped_data_sum)
@@ -709,12 +741,28 @@ async def post_all_history(request: Request, data_request: dict):
         }
         query_top = await _get_top_url(start_date, end_date, top, async_session)
         query_top.sort(key=lambda x: x[-1])
+        total_position, total_clicks, total_impression, total_count, count_for_avg = 0, 0, 0, 0, 0
         for position, clicks, impression, count, date in query_top:
             grouped_data_sum[date.strftime(
                 date_format_2)] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD'>
               <span style='font-size: 18px'>{position}</span><br>
-              <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 20px'>Count: {count}</span><br>
-              <span style='font-size: 10px'>{clicks}</span> <span style='font-size: 10px; margin-left: 20px'>R: {int(impression)}</span>
+              <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 10px'>Count: {count}</span><br>
+              <span style='font-size: 10px'>{clicks}</span> <span style='font-size: 10px; margin-left: 10px'>R: {int(impression)}</span>
+              </div>"""
+            total_position += position
+            total_clicks += clicks
+            total_impression += impression
+            total_count += count
+            if position > 0:
+                count_for_avg += 1
+
+        if count_for_avg > 0:
+            total_position = round(total_position / count_for_avg, 2)
+
+        grouped_data_sum["result"] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD'>
+              <span style='font-size: 18px'>{total_position}</span><br>
+              <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 10px'>Count: {total_count}</span><br>
+              <span style='font-size: 10px'>{total_clicks}</span> <span style='font-size: 10px; margin-left: 10px'>R: {int(total_impression)}</span>
               </div>"""
 
         url_front.append(grouped_data_sum)
@@ -742,8 +790,10 @@ async def generate_excel_indicators(request: Request, data_request: dict):
         main_header.append(date)
     main_header = main_header[::-1]
     main_header.insert(0, "Indicators")
+    main_header.insert(1, "result")
     main_header_day_name = main_header_day_name[::-1]
     main_header_day_name.insert(0, "День недели")
+    main_header_day_name.insert(1, "result")
     ws.append(main_header)
     ws.append(main_header_day_name)
     main_header = []
@@ -764,12 +814,23 @@ async def generate_excel_indicators(request: Request, data_request: dict):
     for el in grouped_data:
         info = {}
         res = []
+        value_sum, count = 0, 0
         for name, value, date in el[1]:
             if name != "TOTAL_CTR":
                 info[date.strftime(date_format_out)] = [value]
             else:
                 info[date.strftime(date_format_out)] = [f"{value}%"]
+            value_sum += value
+            count += 1
+
+        if el[0] in ("AVG_CLICK_POSITION", "TOTAL_CTR", "AVG_SHOW_POSITION"):
+            if count > 0:
+                value_sum = round(value_sum / count, 2)
         res.append(el[0])
+        if el[0] != "TOTAL_CTR":
+            res.append(value_sum)
+        else:
+            res.append(f"{value_sum}%")
         for el in main_header:
             if el in info:
                 res.extend(info[el])
@@ -800,8 +861,10 @@ async def generate_excel_indicators(request: Request, data_request: dict):
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
     main_header = main_header[::-1]
     main_header.insert(0, "TOP")
+    for i in range(4):
+        main_header.insert(1, "result")
     ws.append(main_header)
-    header = ["Position", "Click", "Impression", "Count"] * (int(data_request["amount"]))
+    header = ["Position", "Click", "Impression", "Count"] * (int(data_request["amount"]) + 1)
     header.insert(0, "")
     ws.append(header)
     ws.append(["query"])
@@ -809,6 +872,7 @@ async def generate_excel_indicators(request: Request, data_request: dict):
     main_header = []
     for i in range(int(data_request["amount"])):
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+    main_header.append("result")
     main_header = main_header[::-1]
 
     TOP = 3, 5, 10, 20, 30
@@ -817,8 +881,19 @@ async def generate_excel_indicators(request: Request, data_request: dict):
         info = {}
         query_top = await _get_top_query(start_date, end_date, top, async_session)
         query_top.sort(key=lambda x: x[-1])
+        total_position, total_clicks, total_impression, total_count, count_for_avg = 0, 0, 0, 0, 0
         for position, clicks, impression, count, date in query_top:
             info[date.strftime(date_format_out)] = [position, clicks, impression, count]
+            total_position += position
+            total_clicks += clicks
+            total_impression += impression
+            total_count += count
+            if position > 0:
+                count_for_avg += 1
+
+        if count_for_avg > 0:
+            total_position = round(total_position / count_for_avg, 2)
+        info["result"] = [total_position, total_clicks, total_impression, total_count]
         for el in main_header:
             if el in info:
                 res.extend(info[el])
@@ -834,8 +909,19 @@ async def generate_excel_indicators(request: Request, data_request: dict):
         info = {}
         url_top = await _get_top_url(start_date, end_date, top, async_session)
         url_top.sort(key=lambda x: x[-1])
-        for position, clicks, impression, clicks, date in url_top:
-            info[date.strftime(date_format_out)] = [position, clicks, impression, clicks]
+        total_position, total_clicks, total_impression, total_count, count_for_avg = 0, 0, 0, 0, 0
+        for position, clicks, impression, count, date in url_top:
+            info[date.strftime(date_format_out)] = [position, clicks, impression, count]
+            total_position += position
+            total_clicks += clicks
+            total_impression += impression
+            total_count += count
+            if position > 0:
+                count_for_avg += 1
+
+        if count_for_avg > 0:
+            total_position = round(total_position / count_for_avg, 2)
+        info["result"] = [total_position, total_clicks, total_impression, total_count]
         for el in main_header:
             if el in info:
                 res.extend(info[el])
@@ -887,12 +973,23 @@ async def generate_excel(request: Request, data_request: dict):
     for el in grouped_data:
         info = {}
         res = []
+        value_sum, count = 0, 0
         for name, value, date in el[1]:
             if name != "TOTAL_CTR":
                 info[date.strftime(date_format_out)] = [value]
             else:
                 info[date.strftime(date_format_out)] = [f"{value}%"]
-        res.append(el[0])
+            value_sum += value
+            count += 1
+
+        if el[0] in ("AVG_CLICK_POSITION", "TOTAL_CTR", "AVG_SHOW_POSITION"):
+            if count > 0:
+                value_sum = round(value_sum / count, 2)
+        if el[0] != "TOTAL_CTR":
+            res.append(value_sum)
+        else:
+            res.append(f"{value_sum}%")
+        res.append(value_sum)
         for el in main_header:
             if el in info:
                 res.extend(info[el])
@@ -922,8 +1019,10 @@ async def generate_excel_indicators(request: Request, data_request: dict):
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
     main_header = main_header[::-1]
     main_header.insert(0, "TOP")
+    for i in range(4):
+        main_header.insert(1, "result")
     ws.append(main_header)
-    header = ["Position", "Click", "Impression", "clicks"] * (int(data_request["amount"]))
+    header = ["Position", "Click", "Impression", "clicks"] * (int(data_request["amount"]) + 1)
     header.insert(0, "")
     ws.append(header)
     ws.append(["query"])
@@ -931,6 +1030,7 @@ async def generate_excel_indicators(request: Request, data_request: dict):
     main_header = []
     for i in range(int(data_request["amount"])):
         main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+    main_header.append("result")
     main_header = main_header[::-1]
 
     TOP = 3, 5, 10, 20, 30
@@ -939,8 +1039,19 @@ async def generate_excel_indicators(request: Request, data_request: dict):
         info = {}
         query_top = await _get_top_query(start_date, end_date, top, async_session)
         query_top.sort(key=lambda x: x[-1])
+        total_position, total_clicks, total_impression, total_count, count_for_avg = 0, 0, 0, 0, 0
         for position, clicks, impression, count, date in query_top:
             info[date.strftime(date_format_out)] = [position, clicks, impression, count]
+            total_position += position
+            total_clicks += clicks
+            total_impression += impression
+            total_count += count
+            if position > 0:
+                count_for_avg += 1
+
+        if count_for_avg > 0:
+            total_position = round(total_position / count_for_avg, 2)
+        info["result"] = [total_position, total_clicks, total_impression, total_count]
         for el in main_header:
             if el in info:
                 res.extend(info[el])
@@ -956,8 +1067,19 @@ async def generate_excel_indicators(request: Request, data_request: dict):
         info = {}
         url_top = await _get_top_url(start_date, end_date, top, async_session)
         url_top.sort(key=lambda x: x[-1])
+        total_position, total_clicks, total_impression, total_count, count_for_avg = 0, 0, 0, 0, 0
         for position, clicks, impression, count, date in url_top:
             info[date.strftime(date_format_out)] = [position, clicks, impression, count]
+            total_position += position
+            total_clicks += clicks
+            total_impression += impression
+            total_count += count
+            if position > 0:
+                count_for_avg += 1
+
+        if count_for_avg > 0:
+            total_position = round(total_position / count_for_avg, 2)
+        info["result"] = [total_position, total_clicks, total_impression, total_count]
         for el in main_header:
             if el in info:
                 res.extend(info[el])
@@ -1015,7 +1137,6 @@ async def post_info_merge(request: Request, data_request: dict):
     if not urls or len(urls) == 0:
         return JSONResponse({"data": []})
     data = []
-    print(urls)
     all_queries = list()
     for el in urls:
         all_queries.extend(el[1])

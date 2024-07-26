@@ -18,7 +18,7 @@ START_DATE = datetime.now().date()
 # Получаем список подходящих запросов из бд и формируем queries.txt
 async def get_approach_query(session: Callable):
     res = await _get_approach_query(session)
-    res = res
+    res = res[:100]
     with open("queries.txt", "w", encoding="utf-8") as f:
         for cursor, query in enumerate(res):
             if cursor < len(res) - 1:
