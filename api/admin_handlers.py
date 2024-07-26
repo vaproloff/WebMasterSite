@@ -1022,7 +1022,7 @@ async def post_info_merge(request: Request, data_request: dict):
     queries = await _get_merge_query(start_date, end_date, all_queries, async_session)
     if queries:
         queries.sort(key=lambda x: x[-1])
-    grouped_data = dict([(key, sorted(list(group)[:14], key=lambda x: x[0])) for key, group in
+    grouped_data = dict([(key, sorted(list(group), key=lambda x: x[0])) for key, group in
                          groupby(queries, key=lambda x: x[-1])])
     for el in urls:
         url, queries = el[0], el[1]
@@ -1252,7 +1252,7 @@ async def generate_excel(request: Request, data_request: dict):
         queries = await _get_merge_query(start_date, end_date, all_queries, async_session)
         if queries:
             queries.sort(key=lambda x: x[-1])
-        grouped_data = dict([(key, sorted(list(group)[:14], key=lambda x: x[0])) for key, group in
+        grouped_data = dict([(key, sorted(list(group), key=lambda x: x[0])) for key, group in
                              groupby(queries, key=lambda x: x[-1])])
         for url, queries in urls:
 
