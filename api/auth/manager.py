@@ -3,11 +3,14 @@ from typing import Optional
 from fastapi import Depends, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi_users import BaseUserManager, IntegerIDMixin, exceptions
+from starlette.responses import RedirectResponse
 
 from api.auth.models import User
 from api.auth.schemas import UserCreate
 from api.auth.utils import get_user_db
 from config import SECRET
+
+from fastapi import Request, Response
 
 
 class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
@@ -113,6 +116,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
 
     ):
         print(f"Verification requested for user {user.id}. Verification token: {token}")
+
 
 
 async def get_user_manager(user_db=Depends(get_user_db)):

@@ -2,11 +2,7 @@ from datetime import datetime
 from typing import List
 
 from sqlalchemy.ext.asyncio import AsyncSession
-<<<<<<< HEAD
-from sqlalchemy import select, distinct, delete
-=======
 from sqlalchemy import select, distinct, delete, text
->>>>>>> main
 from sqlalchemy import and_
 from sqlalchemy import desc
 

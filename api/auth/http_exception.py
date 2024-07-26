@@ -9,7 +9,7 @@ templates = Jinja2Templates(directory="static")
 
 def http_exception_handler(request: Request, exc: HTTPException):
     if exc.status_code == 401:
-        return RedirectResponse(url="/unauthorized")
+        return RedirectResponse(url="/admin")
     else:
         return JSONResponse(
             status_code=exc.status_code,

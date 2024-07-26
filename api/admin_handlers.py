@@ -62,8 +62,13 @@ async def show_menu_page(request: Request):
     return templates.TemplateResponse("menu.html", {"request": request})
 
 
+@admin_router.post("/menu")
+async def show_menu_page(request: Request):
+    return templates.TemplateResponse("menu.html", {"request": request})
+
+
 @admin_router.post("/generate_excel_url/")
-async def generate_excel(request: Request, data_request: dict):
+async def generate_excel(request: Request, data_request: dict, user: User = Depends(current_superuser)):
     wb = Workbook()
     ws = wb.active
     start_date = datetime.strptime(data_request["start_date"], date_format_2)
@@ -154,7 +159,7 @@ async def generate_excel(request: Request, data_request: dict):
 
 
 @admin_router.post("/generate_csv_urls/")
-async def generate_excel(request: Request, data_request: dict):
+async def generate_excel(request: Request, data_request: dict, user: User = Depends(current_superuser)):
     ws = []
     start_date = datetime.strptime(data_request["start_date"], date_format_2)
     end_date = datetime.strptime(data_request["end_date"], date_format_2)
@@ -244,7 +249,7 @@ async def generate_excel(request: Request, data_request: dict):
 
 
 @admin_router.post("/generate_excel_queries/")
-async def generate_excel(request: Request, data_request: dict):
+async def generate_excel(request: Request, data_request: dict, user: User = Depends(current_superuser)):
     wb = Workbook()
     ws = wb.active
     start_date = datetime.strptime(data_request["start_date"], date_format_2)
@@ -334,7 +339,7 @@ async def generate_excel(request: Request, data_request: dict):
 
 
 @admin_router.post("/generate_csv_queries/")
-async def generate_excel(request: Request, data_request: dict):
+async def generate_excel(request: Request, data_request: dict, user: User = Depends(current_superuser)):
     ws = []
     start_date = datetime.strptime(data_request["start_date"], date_format_2)
     end_date = datetime.strptime(data_request["end_date"], date_format_2)
@@ -439,6 +444,11 @@ async def login(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
 
 
+@admin_router.get("/register")
+async def register(request: Request):
+    return templates.TemplateResponse("register.html", {"request": request})
+
+
 @admin_router.post("/")
 async def login(request: Request, username: str = Form(), password: str = Form()):
     with open('users.txt', 'r') as file:
@@ -456,7 +466,7 @@ async def get_urls(request: Request, user: User = Depends(current_superuser)):
 
 
 @admin_router.post("/get-urls")
-async def get_urls(request: Request, data_request: dict):
+async def get_urls(request: Request, data_request: dict, user: User = Depends(current_superuser)):
     start_date = datetime.strptime(data_request["start_date"], date_format_2)
     end_date = datetime.strptime(data_request["end_date"], date_format_2)
     print(end_date)
@@ -541,13 +551,13 @@ async def get_urls(request: Request, data_request: dict):
 
 
 @admin_router.get("/info-queries")
-async def get_queries(request: Request):
+async def get_queries(request: Request, user: User = Depends(current_superuser)):
     response = templates.TemplateResponse("queries-info.html", {"request": request})
     return response
 
 
 @admin_router.post("/get-queries")
-async def get_queries(request: Request, data_request: dict):
+async def get_queries(request: Request, data_request: dict, user: User = Depends(current_superuser)):
     start_date = datetime.strptime(data_request["start_date"], date_format_2)
     end_date = datetime.strptime(data_request["end_date"], date_format_2)
     if data_request["sort_result"]:
@@ -636,13 +646,13 @@ async def get_queries(request: Request, data_request: dict):
 
 
 @admin_router.get("/info-all-history")
-async def get_all_history(request: Request):
+async def get_all_history(request: Request, user: User = Depends(current_superuser)):
     response = templates.TemplateResponse("all-history.html", {"request": request})
     return response
 
 
 @admin_router.post("/get-all-history")
-async def post_all_history(request: Request, data_request: dict):
+async def post_all_history(request: Request, data_request: dict, user: User = Depends(current_superuser)):
     start_date = datetime.strptime(data_request["start_date"], date_format_2)
     end_date = datetime.strptime(data_request["end_date"], date_format_2)
     indicators = await _get_indicators_from_db(start_date,
@@ -731,7 +741,7 @@ async def post_all_history(request: Request, data_request: dict):
 
 
 @admin_router.post("/generate_excel_indicators")
-async def generate_excel_indicators(request: Request, data_request: dict):
+async def generate_excel_indicators(request: Request, data_request: dict, user: User = Depends(current_superuser)):
     wb = Workbook()
     ws = wb.active
     start_date = datetime.strptime(data_request["start_date"], date_format_2)
@@ -789,7 +799,7 @@ async def generate_excel_indicators(request: Request, data_request: dict):
 
 
 @admin_router.post("/generate_excel_top")
-async def generate_excel_indicators(request: Request, data_request: dict):
+async def generate_excel_indicators(request: Request, data_request: dict, user: User = Depends(current_superuser)):
     wb = Workbook()
     ws = wb.active
     start_date = datetime.strptime(data_request["start_date"], date_format_2)
@@ -855,7 +865,7 @@ async def generate_excel_indicators(request: Request, data_request: dict):
 
 
 @admin_router.post("/generate_csv_indicators/")
-async def generate_excel(request: Request, data_request: dict):
+async def generate_excel(request: Request, data_request: dict, user: User = Depends(current_superuser)):
     ws = []
     start_date = datetime.strptime(data_request["start_date"], date_format_2)
     end_date = datetime.strptime(data_request["end_date"], date_format_2)
@@ -912,7 +922,7 @@ async def generate_excel(request: Request, data_request: dict):
 
 
 @admin_router.post("/generate_csv_top")
-async def generate_excel_indicators(request: Request, data_request: dict):
+async def generate_excel_indicators(request: Request, data_request: dict, user: User = Depends(current_superuser)):
     ws = []
     start_date = datetime.strptime(data_request["start_date"], date_format_2)
     end_date = datetime.strptime(data_request["end_date"], date_format_2)
@@ -977,21 +987,21 @@ async def generate_excel_indicators(request: Request, data_request: dict):
 
 
 @admin_router.get("/menu/merge_database/")
-async def show_menu_merge_page(request: Request):
+async def show_menu_merge_page(request: Request, user: User = Depends(current_superuser)):
     all_dates = await get_all_dates(async_session, QueryUrlsMergeLogs)
     print(all_dates)
     return templates.TemplateResponse("merge_database.html", {"request": request, "all_dates": all_dates})
 
 
 @admin_router.get("/info-merge")
-async def get_info_merge(request: Request):
+async def get_info_merge(request: Request, user: User = Depends(current_superuser)):
     date = request.query_params.get("date")
     response = templates.TemplateResponse("query-url-merge.html", {"request": request, "date": date})
     return response
 
 
 @admin_router.post("/get-merge")
-async def post_info_merge(request: Request, data_request: dict):
+async def post_info_merge(request: Request, data_request: dict, user: User = Depends(current_superuser)):
     start_date = datetime.strptime(data_request["start_date"], date_format_2)
     end_date = datetime.strptime(data_request["end_date"], date_format_2)
     if data_request["sort_result"]:
@@ -1092,7 +1102,7 @@ async def post_info_merge(request: Request, data_request: dict):
 
 
 @admin_router.post("/generate_excel_merge/")
-async def generate_excel(request: Request, data_request: dict):
+async def generate_excel(request: Request, data_request: dict, user: User = Depends(current_superuser)):
     wb = Workbook()
     ws = wb.active
     start_date = datetime.strptime(data_request["start_date"], date_format_2)
@@ -1195,7 +1205,7 @@ async def generate_excel(request: Request, data_request: dict):
 
 
 @admin_router.post("/generate_csv_merge/")
-async def generate_excel(request: Request, data_request: dict):
+async def generate_excel(request: Request, data_request: dict, user: User = Depends(current_superuser)):
     ws = []
     start_date = datetime.strptime(data_request["start_date"], date_format_2)
     end_date = datetime.strptime(data_request["end_date"], date_format_2)
