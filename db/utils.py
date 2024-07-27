@@ -22,7 +22,7 @@ async def add_last_update_date(session, db_name, date):
 
 async def get_all_dates(session, db_name):
     async with session() as s:
-        query = select(distinct(db_name.update_date))
+        query = select(distinct(db_name.update_date)).order_by(db_name.update_date.desc())
         res = await s.execute(query)
         res = res.fetchall()
         return res
