@@ -440,7 +440,7 @@ def pad_list_with_zeros(lst, amount):
 
 
 @admin_router.get("/")
-async def login(request: Request):
+async def login_page(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
 
 
@@ -450,7 +450,7 @@ async def register(request: Request):
 
 
 @admin_router.post("/")
-async def login(request: Request, username: str = Form(), password: str = Form()):
+async def login_page(request: Request, username: str = Form(), password: str = Form()):
     with open('users.txt', 'r') as file:
         for line in file:
             stored_username, stored_password = line.strip().split(':')
