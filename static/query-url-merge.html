@@ -184,6 +184,9 @@
         nameCell.textContent = "url";
         row.appendChild(nameCell);
         var nameCell = document.createElement('td');
+        nameCell.textContent = "parent_result";
+        row.appendChild(nameCell);
+        var nameCell = document.createElement('td');
         nameCell.textContent = "queries";
         row.appendChild(nameCell);
         var nameCell = document.createElement('td');
@@ -192,6 +195,7 @@
 
         columns = [
             {"title": "url"},
+            {"title": "parent_result"},
             {"title": "queries"},
             {"title": "result"},
         ]
@@ -281,11 +285,15 @@
         var nameCell = document.createElement('td');
         nameCell.textContent = "result";
         row.appendChild(nameCell);
+        var nameCell = document.createElement('td');
+        nameCell.textContent = "parent_result";
+        row.appendChild(nameCell);
 
         columns = [
             {"title": "url"},
             {"title": "queries"},
             {"title": "result"},
+            {"title": "parent_result"},
         ]
 
         document.getElementById("prev").innerHTML = 0;

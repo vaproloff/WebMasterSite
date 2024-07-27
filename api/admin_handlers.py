@@ -1146,6 +1146,7 @@ async def post_info_merge(request: Request, data_request: dict):
     grouped_data = dict([(key, sorted(list(group), key=lambda x: x[0])) for key, group in
                          groupby(queries, key=lambda x: x[-1])])
     for el in urls:
+        parent_clicks, parent_position, parent_impression, parent_ctr, parent_count = 0, 0, 0, 0, 0
         url, queries = el[0], el[1]
         res = {"url":
                    f"<div style='width:355px; height: 55px; overflow: auto; white-space: nowrap;'><span>{el[0]}</span></div>",
@@ -1183,6 +1184,8 @@ async def post_info_merge(request: Request, data_request: dict):
                     if stat[1] > 0:
                         count += 1
                     if k == len(grouped_data[query]) - 1:
+                        total_position = round(position / count, 2)
+                        total_ctr = round(ctr / count, 2)
                         res["result"] = res.get("result", "")
                         if count > 0:
                             res["result"] += f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD'>
@@ -1198,10 +1201,26 @@ async def post_info_merge(request: Request, data_request: dict):
                                       <span style='font-size: 9px'>Показы:{impressions}</span>
                                       <span style='font-size: 9px'>ctr:{0}%</span>
                                       </div>"""
+                        parent_clicks += total_clicks
+                        parent_position += total_position
+                        parent_impression += impressions
+                        parent_ctr += total_ctr
+                        if total_position > 0:
+                            parent_count += 1
                 else:
                     res["result"] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: ##FDC4BD'>
                               <span style='font-size: 20px'>Нет данных</span>
                               </div>"""
+
+        if parent_count > 0:
+            parent_position = round(parent_position / parent_count, 2)
+            parent_ctr = round(parent_ctr / parent_count, 2)
+        res["parent_result"] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD'>
+                                      <span style='font-size: 15px'>Позиция:{parent_position}</span>
+                                      <span style='font-size: 15px'>Клики:{parent_clicks}</span>
+                                      <span style='font-size: 9px'>Показы:{parent_impression}</span>
+                                      <span style='font-size: 9px'>ctr:{parent_ctr}%</span>
+                                      </div>"""
 
         data.append(res)
     json_data = jsonable_encoder(data)
