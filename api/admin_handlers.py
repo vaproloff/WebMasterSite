@@ -16,7 +16,7 @@ from api.actions.indicators import _get_indicators_from_db, _get_top_query, _get
 from api.actions.query_url_merge import _get_merge_with_pagination, _get_merge_query, _get_merge_with_pagination_sort, \
     _get_merge_with_pagination_and_like, _get_merge_with_pagination_and_like_sort
 from api.actions.utils import get_day_of_week
-from api.auth.auth_config import fastapi_users
+from api.auth.auth_config import fastapi_users, current_superuser, current_user
 from api.auth.models import User
 from db.models import QueryUrlsMergeLogs
 from db.session import async_session
@@ -47,25 +47,12 @@ templates = Jinja2Templates(directory="static")
 date_format_2 = "%Y-%m-%d"
 date_format_out = "%d.%m.%Y"
 
-current_superuser = fastapi_users.current_user(active=True, superuser=True)
-
 
 def pad_list_with_zeros_excel(lst, amount):
     if len(lst) < amount:
         padding = [0] * (amount - len(lst))
         lst.extend(padding)
     return lst
-
-
-@admin_router.get("/menu")
-async def show_menu_page(request: Request):
-    return templates.TemplateResponse("menu.html", {"request": request})
-
-
-@admin_router.post("/menu")
-async def show_menu_page(request: Request):
-    return templates.TemplateResponse("menu.html", {"request": request})
-
 
 @admin_router.post("/generate_excel_url/")
 async def generate_excel(request: Request, data_request: dict, user: User = Depends(current_superuser)):
@@ -440,28 +427,18 @@ def pad_list_with_zeros(lst, amount):
 
 
 @admin_router.get("/")
-async def login_page(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
+async def login_page(request: Request, user: User = Depends(current_user)):
+    return templates.TemplateResponse("login.html", {"request": request, "user": user})
 
 
 @admin_router.get("/register")
-async def register(request: Request):
-    return templates.TemplateResponse("register.html", {"request": request})
-
-
-@admin_router.post("/")
-async def login_page(request: Request, username: str = Form(), password: str = Form()):
-    with open('users.txt', 'r') as file:
-        for line in file:
-            stored_username, stored_password = line.strip().split(':')
-            if username == stored_username and password == stored_password:
-                return RedirectResponse("/admin/info-urls", status_code=302)
-    return HTTPException(status_code=401, detail="Incorrect username or password")
+async def register(request: Request, user: User = Depends(current_user)):
+    return templates.TemplateResponse("register.html", {"request": request, "user": user})
 
 
 @admin_router.get("/info-urls")
 async def get_urls(request: Request, user: User = Depends(current_superuser)):
-    response = templates.TemplateResponse("urls-info.html", {"request": request})
+    response = templates.TemplateResponse("urls-info.html", {"request": request, "user": user})
     return response
 
 
@@ -551,7 +528,7 @@ async def get_urls(request: Request, data_request: dict, user: User = Depends(cu
 
 @admin_router.get("/info-queries")
 async def get_queries(request: Request, user: User = Depends(current_superuser)):
-    response = templates.TemplateResponse("queries-info.html", {"request": request})
+    response = templates.TemplateResponse("queries-info.html", {"request": request, "user": user})
     return response
 
 
@@ -609,7 +586,7 @@ async def get_queries(request: Request, data_request: dict, user: User = Depends
             res[stat[0].strftime(
                 date_format_2)] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: {color}'>
               <span style='font-size: 18px'>{stat[1]}</span><span style="margin-left: 5px; font-size: 10px; color: {color_text}">{abs(up)}</span><br>
-              <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 20px'>CTR {stat[4]}%</span><br>
+              <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 10px'>CTR {stat[4]}%</span><br>
               <span style='font-size: 10px'>{stat[2]}</span> <span style='font-size: 10px; margin-left: 20px'>R {int(stat[3])}</span>
               </div>"""
             total_clicks += stat[2]
@@ -624,15 +601,15 @@ async def get_queries(request: Request, data_request: dict, user: User = Depends
                     res["result"] += f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD'>
                               <span style='font-size: 15px'>Позиция:{round(position / count, 2)}</span>
                               <span style='font-size: 15px'>Клики:{total_clicks}</span>
-                              <span style='font-size: 9px'>Показы:{impressions}</span>
-                              <span style='font-size: 9px'>ctr:{round(ctr / count, 2)}%</span>
+                              <span style='font-size: 8px'>Показы:{impressions}</span>
+                              <span style='font-size: 8px'>ctr:{round(ctr / count, 2)}%</span>
                               </div>"""
                 else:
                     res["result"] += f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD'>
                               <span style='font-size: 15px'>Позиция:{0}</span>
                               <span style='font-size: 15px'>Клики:{total_clicks}</span>
-                              <span style='font-size: 9px'>Показы:{impressions}</span>
-                              <span style='font-size: 9px'>ctr:{0}%</span>
+                              <span style='font-size: 8px'>Показы:{impressions}</span>
+                              <span style='font-size: 8px'>ctr:{0}%</span>
                               </div>"""
         data.append(res)
 
@@ -644,7 +621,7 @@ async def get_queries(request: Request, data_request: dict, user: User = Depends
 
 @admin_router.get("/info-all-history")
 async def get_all_history(request: Request, user: User = Depends(current_superuser)):
-    response = templates.TemplateResponse("all-history.html", {"request": request})
+    response = templates.TemplateResponse("all-history.html", {"request": request, "user": user})
     return response
 
 
@@ -736,8 +713,8 @@ async def post_all_history(request: Request, data_request: dict, user: User = De
 
         grouped_data_sum["result"] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD'>
               <span style='font-size: 18px'>{total_position}</span><br>
-              <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 10px'>Count: {total_count}</span><br>
-              <span style='font-size: 10px'>{total_clicks}</span> <span style='font-size: 10px; margin-left: 10px'>R: {int(total_impression)}</span>
+              <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 5px'>Count: {total_count}</span><br>
+              <span style='font-size: 10px'>{total_clicks}</span> <span style='font-size: 10px; margin-left: 5px'>R: {int(total_impression)}</span>
               </div>"""
 
         query_front.append(grouped_data_sum)
@@ -771,7 +748,7 @@ async def post_all_history(request: Request, data_request: dict, user: User = De
         grouped_data_sum["result"] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD'>
               <span style='font-size: 18px'>{total_position}</span><br>
               <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 10px'>Count: {total_count}</span><br>
-              <span style='font-size: 10px'>{total_clicks}</span> <span style='font-size: 10px; margin-left: 10px'>R: {int(total_impression)}</span>
+              <span style='font-size: 10px'>{total_clicks}</span> <span style='font-size: 10px; margin-left: 7px'>R: {int(total_impression)}</span>
               </div>"""
 
         url_front.append(grouped_data_sum)
@@ -1108,13 +1085,13 @@ async def generate_excel_indicators(request: Request, data_request: dict, user: 
 @admin_router.get("/menu/merge_database/")
 async def show_menu_merge_page(request: Request, user: User = Depends(current_superuser)):
     all_dates = await get_all_dates(async_session, QueryUrlsMergeLogs)
-    return templates.TemplateResponse("merge_database.html", {"request": request, "all_dates": all_dates})
+    return templates.TemplateResponse("merge_database.html", {"request": request, "all_dates": all_dates, "user": user})
 
 
 @admin_router.get("/info-merge")
 async def get_info_merge(request: Request, user: User = Depends(current_superuser)):
     date = request.query_params.get("date")
-    response = templates.TemplateResponse("query-url-merge.html", {"request": request, "date": date})
+    response = templates.TemplateResponse("query-url-merge.html", {"request": request, "date": date, "user": user})
     return response
 
 
@@ -1475,4 +1452,12 @@ async def generate_excel(request: Request, data_request: dict, user: User = Depe
     return StreamingResponse(content=output.getvalue(),
                              headers={"Content-Disposition": "attachment;filename='data.csv'"})
 
-# test
+
+@admin_router.get("/profile/{username}")
+async def show_profile(request: Request, username: str, user=Depends(current_user)):
+    if not user:
+        raise HTTPException(status_code=401, detail="need auth")
+    if user.username != username:
+        raise HTTPException(status_code=403, detail="You do not have permission to view this profile")
+
+    return templates.TemplateResponse("profile.html", {"request": request, "user": user})

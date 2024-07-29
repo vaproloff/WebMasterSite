@@ -1,4 +1,6 @@
-<!DOCTYPE html>
+{% extends "base.html" %}
+
+{% block content %}
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -72,7 +74,7 @@
 
 </style>
 
-<a href="{{ url_for('show_menu_page') }}" class="back-to-menu">Back to Menu</a>
+<a href="{{ url_for('show_profile', username=user.username) }}" class="back-to-menu">Back to profile</a>
 <input type="date" id="start_date">
 <input type="date" id="end_date">
 <input type="text" id="search_field" style="width: 250px">
@@ -220,7 +222,7 @@
                 var table = $('#body_t');
                 empty = `<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #B9BDBC'>
             <span style='font-size: 18px'><span style='color:red'>NAN</span></span><br>
-            <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 20px'>CTR <span style='color:red'>NAN%</span></span><br>
+            <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 10px'>CTR <span style='color:red'>NAN%</span></span><br>
             <span style='font-size: 10px'><span style='color:red'>NAN</span></span> <span style='font-size: 10px; margin-left: 30px'>R <span style='color:red'>NAN%</span></span>
             </div>`
                 for (i = 0; i < 50; i++) {
@@ -307,7 +309,7 @@
                 }
                 empty = `<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #B9BDBC'>
             <span style='font-size: 18px'><span style='color:red'>NAN</span></span><br>
-            <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 20px'>CTR <span style='color:red'>NAN%</span></span><br>
+            <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 10px'>CTR <span style='color:red'>NAN%</span></span><br>
             <span style='font-size: 10px'><span style='color:red'>NAN</span></span> <span style='font-size: 10px; margin-left: 30px'>R <span style='color:red'>NAN%</span></span>
             </div>`
                 for (i = 0; i < 50; i++) {
@@ -407,7 +409,7 @@
                 }
                 empty = `<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #B9BDBC'>
             <span style='font-size: 18px'><span style='color:red'>NAN</span></span><br>
-            <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 20px'>CTR <span style='color:red'>NAN%</span></span><br>
+            <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 10px'>CTR <span style='color:red'>NAN%</span></span><br>
             <span style='font-size: 10px'><span style='color:red'>NAN</span></span> <span style='font-size: 10px; margin-left: 30px'>R <span style='color:red'>NAN%</span></span>
             </div>`
                 for (i = 0; i < 50; i++) {
@@ -503,7 +505,7 @@
                 }
                 empty = `<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #B9BDBC'>
             <span style='font-size: 18px'><span style='color:red'>NAN</span></span><br>
-            <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 20px'>CTR <span style='color:red'>NAN%</span></span><br>
+            <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 10px'>CTR <span style='color:red'>NAN%</span></span><br>
             <span style='font-size: 10px'><span style='color:red'>NAN</span></span> <span style='font-size: 10px; margin-left: 30px'>R <span style='color:red'>NAN%</span></span>
             </div>`
                 for (i = 0; i < 50; i++) {
@@ -604,3 +606,4 @@
 
 </body>
 </html>
+{% endblock %}

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #ddd;
+        }
+        .button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        .menu-button {
+            margin: 0 auto;
+        }
+        .main-page-button {
+            margin-right: auto;
+        }
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+        }
+        .dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+        .dropdown-content a:hover {
+            background-color: #f1f1f1;
+        }
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <button class="button main-page-button" onclick="main_page_button()">Main Page</button>
+        <div class="dropdown">
+            <button class="button">Config</button>
+            <div class="dropdown-content">
+                <a href="#">config1</a>
+                <a href="#">config2</a>
+                <a href="#">config3</a>
+                <a href="#">config4</a>
+            </div>
+        </div>
+        {% if user is not none %}
+            <button class="button" onclick="profile_button('{{ url_for('show_profile', username=user.username) }}')">{{ user.username }}</button>
+            <button class="button" onclick="logout_button()">Logout</button>
+        {% else %}
+            <button class="button" onclick="login_button()">Login</button>
+        {% endif %}
+    </header>
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+    <script>
+        function profile_button(url) {
+            window.location.href = url;
+        }
+        function login_button() {
+            window.location.href = '{{ url_for('login_page') }}';
+        }
+        async function logout_button() {
+            try {
+                const response = await fetch('/auth/jwt/logout', {
+                    method: 'POST',
+                });
+
+                if (response.ok) {
+                    window.location.href = '/';
+                } else {
+                    const errorData = await response.json();
+                    console.error('Error:', errorData.detail);
+                    alert('Error: ' + errorData.detail);
+                }
+            } catch (error) {
+                console.error('Error during logout:', error);
+                alert('An error occurred during logout. Please try again.');
+            }
+        }
+        function main_page_button() {
+            window.location.href = '/';
+        }
+    </script>
+</body>
+</html>

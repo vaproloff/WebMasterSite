@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block content %}
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f8f9fa;
+            color: #343a40;
+        }
+        .container {
+            margin: 0 auto;
+            width: 80%;
+            max-width: 800px;
+        }
+        .header {
+            margin-top: 20px;
+        }
+        .header h1 {
+            color: #007bff;
+        }
+        .services, .add-config, .new-block {
+            display: inline-block;
+            vertical-align: top;
+            width: 30%;
+            margin: 20px 0;
+        }
+        .services, .new-block {
+            text-align: center;
+        }
+        .add-config {
+            text-align: left;
+        }
+        .services h2, .add-config h2, .new-block h2 {
+            color: #007bff;
+        }
+        .buttons {
+            margin-top: 20px;
+        }
+        .buttons a, .buttons button {
+            display: block;
+            margin: 10px auto;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 200px; /* Одинаковый размер кнопок */
+            text-decoration: none;
+            text-align: center;
+        }
+        .buttons a:hover, .buttons button:hover {
+            background-color: #0056b3;
+        }
+        .form {
+            margin-top: 20px;
+        }
+        .form input, .form button {
+            display: block;
+            margin: 10px auto;
+            padding: 10px;
+            width: 80%;
+            font-size: 16px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+        }
+        .form button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+        .form button:hover {
+            background-color: #0056b3;
+        }
+        .add-config {
+            margin-left: 50px; /* Увеличенное расстояние между блоками */
+        }
+        .add-config h2 {
+            margin-left: 60px; /* Подвинуть надпись "add config" немного вправо */
+        }
+    </style>
+<div class="container">
+    <div class="header">
+        <h1>{{ user.username }}</h1>
+    </div>
+    <div class="new-block">
+        <h2>tables</h2>
+        <div class="buttons">
+            <a href="{{ url_for('get_queries') }}">Query Table</a>
+            <a href="{{ url_for('get_urls') }}">Url Table</a>
+            <a href="{{ url_for('get_all_history') }}">All history Table</a>
+            <a href="{{ url_for('show_menu_merge_page') }}">Query & Url Merge Table</a>
+        </div>
+    </div>
+    <div class="services">
+        <h2>services</h2>
+        <div class="buttons">
+            <button>Load All History</button>
+            <button>Load All Queries</button>
+            <button>Load All URLs</button>
+            <button>Load Query URL Merge</button>
+        </div>
+    </div>
+    <div class="add-config">
+        <h2>add config</h2>
+        <div class="form">
+            <input type="text" placeholder="DATABASE_NAME">
+            <input type="text" placeholder="ACCESS_TOKEN">
+            <input type="text" placeholder="USER_ID">
+            <input type="text" placeholder="HOST_ID">
+            <button type="submit">Add</button>
+        </div>
+    </div>
+</div>
+{% endblock %}

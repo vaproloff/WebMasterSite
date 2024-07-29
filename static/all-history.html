@@ -1,10 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>History-Info</title>
-    <link href="https://cdn.datatables.net/2.0.6/css/dataTables.dataTables.css">
-    <link href="https://cdn.datatables.net/buttons/3.0.2/css/buttons.dataTables.css">
+{% extends "base.html" %}
+{% block content %}
+<meta charset="UTF-8">
+<title>History-Info</title>
+<link href="https://cdn.datatables.net/2.0.6/css/dataTables.dataTables.css">
+<link href="https://cdn.datatables.net/buttons/3.0.2/css/buttons.dataTables.css">
 </head>
 <body>
 <style>
@@ -73,7 +72,7 @@
 
 </style>
 
-<a href="{{ url_for('show_menu_page') }}" class="back-to-menu">Back to Menu</a>
+<a href="{{ url_for('show_profile', username=user.username) }}" class="back-to-menu">Back to profile</a>
 <input type="date" id="start_date">
 <input type="date" id="end_date">
 <input type="button" value="Отфильтровать" onclick="UpdateTable();">
@@ -518,3 +517,4 @@
 
 </body>
 </html>
+{% endblock %}
