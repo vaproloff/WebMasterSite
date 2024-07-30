@@ -54,6 +54,7 @@ def pad_list_with_zeros_excel(lst, amount):
         lst.extend(padding)
     return lst
 
+
 @admin_router.post("/generate_excel_url/")
 async def generate_excel(request: Request, data_request: dict, user: User = Depends(current_superuser)):
     wb = Workbook()
@@ -106,7 +107,7 @@ async def generate_excel(request: Request, data_request: dict, user: User = Depe
         try:
             if urls:
                 urls.sort(key=lambda x: x[-1])
-            grouped_data = [(key, sorted(list(group)[:14], key=lambda x: x[0])) for key, group in
+            grouped_data = [(key, sorted(list(group), key=lambda x: x[0])) for key, group in
                             groupby(urls, key=lambda x: x[-1])]
         except TypeError as e:
             break
@@ -196,7 +197,7 @@ async def generate_excel(request: Request, data_request: dict, user: User = Depe
         try:
             if urls:
                 urls.sort(key=lambda x: x[-1])
-            grouped_data = [(key, sorted(list(group)[:14], key=lambda x: x[0])) for key, group in
+            grouped_data = [(key, sorted(list(group), key=lambda x: x[0])) for key, group in
                             groupby(urls, key=lambda x: x[-1])]
         except TypeError as e:
             break
@@ -286,7 +287,7 @@ async def generate_excel(request: Request, data_request: dict, user: User = Depe
         try:
             if urls:
                 urls.sort(key=lambda x: x[-1])
-            grouped_data = [(key, sorted(list(group)[:14], key=lambda x: x[0])) for key, group in
+            grouped_data = [(key, sorted(list(group), key=lambda x: x[0])) for key, group in
                             groupby(urls, key=lambda x: x[-1])]
         except TypeError as e:
             break
@@ -375,7 +376,7 @@ async def generate_excel(request: Request, data_request: dict, user: User = Depe
         try:
             if urls:
                 urls.sort(key=lambda x: x[-1])
-            grouped_data = [(key, sorted(list(group)[:14], key=lambda x: x[0])) for key, group in
+            grouped_data = [(key, sorted(list(group), key=lambda x: x[0])) for key, group in
                             groupby(urls, key=lambda x: x[-1])]
         except TypeError as e:
             break
@@ -1137,16 +1138,25 @@ async def post_info_merge(request: Request, data_request: dict, user: User = Dep
                    f"<div style='width:355px; height: 55px; overflow: auto; white-space: nowrap;'><span>{el[0]}</span></div>",
                "queries": "", "count": 0}
         for query in queries:
-            res["count"] += 1
-            res[
-                "queries"] += f"<div style='width:355px; height: 55px; overflow: auto; text-align: center; white-space: nowrap;'><span>{query}</span></div>"
+            query = grouped_data.get(query, None)
+            if query:
+                res["count"] += 1
+                res[
+                    "queries"] += f"<div style='width:355px; height: 55px; overflow: auto; text-align: center; white-space: nowrap;'><span>{query[0][5]}</span></div>"
 
-            total_clicks, position, impressions, ctr, count = 0, 0, 0, 0, 0
-            for k, stat in enumerate(grouped_data.get(query, [None])):
-                if stat:
-                    up = 0
-                    if k + 1 < len(grouped_data[query]):
-                        up = round(grouped_data[query][k][1] - grouped_data[query][k - 1][1], 2)
+                data_dict = {}
+                for el in query:
+                    date = el[0]  # Преобразуем дату в строку
+                    values = el  # Остальные значения кортежа
+                    data_dict[date] = values
+
+                total_clicks, position, impressions, ctr, count = 0, 0, 0, 0, 0
+                print(data_dict)
+                current_date = start_date
+                prev_stat = (-inf, -inf, -inf, -inf)
+                while current_date <= end_date:
+                    stat = data_dict.get(current_date, (-444, 0, 0, 0, 0, 0))
+                    up = round(stat[1] - prev_stat[1], 2)
                     color = "#9DE8BD"
                     color_text = "green"
                     if up > 0:
@@ -1155,20 +1165,30 @@ async def post_info_merge(request: Request, data_request: dict, user: User = Dep
                     if stat[1] <= 3:
                         color = "#B4D7ED"
                         color_text = "blue"
-                    res[stat[0].strftime(date_format_2)] = ''.join(res.get(stat[0].strftime(date_format_2), []))
-                    res[stat[0].strftime(
-                        date_format_2)] += f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: {color}'>
-                                  <span style='font-size: 18px'>{stat[1]}</span><span style="margin-left: 5px; font-size: 10px; color: {color_text}">{abs(up)}</span><br>
-                                  <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 20px'>CTR {stat[4]}%</span><br>
-                                  <span style='font-size: 10px'>{stat[2]}</span> <span style='font-size: 10px; margin-left: 20px'>R {stat[3]}%</span>
-                                  </div>"""
+                    res[current_date.strftime(date_format_2)] = ''.join(
+                        res.get(current_date.strftime(date_format_2), []))
+                    if stat[0] != -444:
+                        res[current_date.strftime(
+                            date_format_2)] += f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: {color}'>
+                                      <span style='font-size: 18px'>{stat[1]}</span><span style="margin-left: 5px; font-size: 10px; color: {color_text}">{abs(up)}</span><br>
+                                      <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 20px'>CTR {stat[4]}%</span><br>
+                                      <span style='font-size: 10px'>{stat[2]}</span> <span style='font-size: 10px; margin-left: 20px'>R {stat[3]}%</span>
+                                      </div>"""
+                    else:
+                        res[current_date.strftime(
+                            date_format_2)] += f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #B9BDBC'>
+                                        <span style='font-size: 18px'><span style='color:red'>NAN</span></span><br>
+                                        <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 10px'>CTR <span style='color:red'>NAN%</span></span><br>
+                                        <span style='font-size: 10px'><span style='color:red'>NAN</span></span> <span style='font-size: 10px; margin-left: 30px'>R <span style='color:red'>NAN%</span></span>
+                                        </div>"""
                     total_clicks += stat[2]
                     position += stat[1]
                     impressions += stat[3]
                     ctr += stat[4]
                     if stat[1] > 0:
                         count += 1
-                    if k == len(grouped_data[query]) - 1:
+                    prev_stat = (0, stat[1], stat[2], stat[3], stat[4])
+                    if current_date == end_date:
                         res["result"] = res.get("result", "")
                         if count > 0:
                             total_position = round(position / count, 2)
@@ -1189,25 +1209,23 @@ async def post_info_merge(request: Request, data_request: dict, user: User = Dep
                                       <span style='font-size: 9px'>ctr:{0}%</span>
                                       </div>"""
                         parent_clicks += total_clicks
+                        print("sum", total_position)
                         parent_position += total_position
                         parent_impression += impressions
                         parent_ctr += total_ctr
                         if total_position > 0:
                             parent_count += 1
-                else:
-                    res["result"] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: ##FDC4BD'>
-                              <span style='font-size: 20px'>Нет данных</span>
-                              </div>"""
+                    current_date += timedelta(days=1)
 
         if parent_count > 0:
             parent_position = round(parent_position / parent_count, 2)
             parent_ctr = round(parent_ctr / parent_count, 2)
-        res["parent_result"] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD'>
-                                      <span style='font-size: 15px'>Позиция:{parent_position}</span>
-                                      <span style='font-size: 15px'>Клики:{parent_clicks}</span>
-                                      <span style='font-size: 9px'>Показы:{parent_impression}</span>
-                                      <span style='font-size: 9px'>ctr:{parent_ctr}%</span>
-                                      </div>"""
+            res["parent_result"] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD'>
+                                          <span style='font-size: 15px'>Позиция:{parent_position}</span>
+                                          <span style='font-size: 15px'>Клики:{parent_clicks}</span>
+                                          <span style='font-size: 9px'>Показы:{parent_impression}</span>
+                                          <span style='font-size: 9px'>ctr:{parent_ctr}%</span>
+                                          </div>"""
 
         data.append(res)
     json_data = jsonable_encoder(data)

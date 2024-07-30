@@ -274,6 +274,8 @@
     }
 
     function UpdateTable() {
+        let row = document.getElementById("head_t");
+        row.innerHTML = ""; // Clear existing header row
 
         var nameCell = document.createElement('td');
         nameCell.textContent = "url";

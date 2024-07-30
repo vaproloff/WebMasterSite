@@ -63,7 +63,8 @@
 <body>
     <header>
         <button class="button main-page-button" onclick="main_page_button()">Main Page</button>
-        <div class="dropdown">
+        {% if user is not none %}
+            <div class="dropdown">
             <button class="button">Config</button>
             <div class="dropdown-content">
                 <a href="#">config1</a>
@@ -71,8 +72,7 @@
                 <a href="#">config3</a>
                 <a href="#">config4</a>
             </div>
-        </div>
-        {% if user is not none %}
+            </div>
             <button class="button" onclick="profile_button('{{ url_for('show_profile', username=user.username) }}')">{{ user.username }}</button>
             <button class="button" onclick="logout_button()">Logout</button>
         {% else %}
