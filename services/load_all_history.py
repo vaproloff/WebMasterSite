@@ -1,6 +1,5 @@
 import asyncio
 from datetime import datetime, timedelta
-from functools import reduce
 from itertools import groupby
 
 import requests
@@ -12,7 +11,7 @@ from api.actions.metrics_url import _get_top_data_urls
 from db.models import QueryIndicator, QueryUrlTop
 
 from db.session import async_session
-from db.utils import get_last_update_date, add_last_update_date
+from db.utils import get_last_update_date
 
 ACCESS_TOKEN = f"{config.ACCESS_TOKEN}"
 USER_ID = f"{config.USER_ID}"

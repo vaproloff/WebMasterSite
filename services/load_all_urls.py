@@ -8,7 +8,7 @@ from db.models import Metrics
 from db.session import async_session
 from api.actions.urls import _add_new_urls
 from api.actions.metrics_url import _add_new_metrics
-from db.utils import get_last_update_date, add_last_update_date
+from db.utils import get_last_update_date
 
 ACCESS_TOKEN = f"{config.ACCESS_TOKEN}"
 USER_ID = f"{config.USER_ID}"

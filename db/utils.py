@@ -1,5 +1,3 @@
-from datetime import datetime, timedelta
-
 from sqlalchemy import select, distinct, func
 
 date_format = "%Y-%m-%d"

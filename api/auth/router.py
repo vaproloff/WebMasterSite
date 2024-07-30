@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, Depends, HTTPException
+from fastapi import APIRouter, Request, Depends
 from starlette.templating import Jinja2Templates
 
 from api.auth.auth_config import current_user

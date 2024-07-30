@@ -1,7 +1,5 @@
 from typing import Callable
 
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from db.dals import IndicatorDAL
 
 

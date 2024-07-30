@@ -1,7 +1,6 @@
 import config
 import asyncio
 from datetime import datetime
-from datetime import timedelta
 import requests
 from sqlalchemy.exc import IntegrityError
 

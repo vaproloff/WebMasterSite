@@ -1,11 +1,8 @@
 from cmath import inf
-from functools import reduce
 
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi import Request
-from fastapi import Form
 from fastapi.encoders import jsonable_encoder
-from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import JSONResponse
 from datetime import datetime

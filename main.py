@@ -14,6 +14,10 @@ from api.auth.schemas import UserRead, UserCreate
 
 from api.auth.router import router as auth_router
 
+from api.services.router import router as services_router
+
+from api.config.router import router as config_router
+
 app = FastAPI(
     title="Metrics urls",
     redoc_url=None,
@@ -56,6 +60,10 @@ app.include_router(
 app.include_router(main_api_router)
 
 app.include_router(auth_router)
+
+app.include_router(services_router, prefix="/services")
+
+app.include_router(config_router, prefix="/config")
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=settings.APP_PORT, reload=True)
