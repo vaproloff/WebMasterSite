@@ -5,7 +5,8 @@ from api.auth.manager import get_user_manager
 from api.auth.models import User
 from config import SECRET
 
-cookie_transport = CookieTransport(cookie_name="bonds", cookie_max_age=31536000)
+cookie_transport = CookieTransport(cookie_name="bonds", cookie_secure=False, cookie_samesite="lax",
+                                   cookie_max_age=31536000)
 
 
 def get_jwt_strategy() -> JWTStrategy:
