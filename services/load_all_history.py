@@ -4,23 +4,18 @@ from itertools import groupby
 
 import requests
 
-import config
 from api.actions.indicators import _add_new_indicators, _add_top
 from api.actions.metrics_queries import _get_top_data_query
 from api.actions.metrics_url import _get_top_data_urls
 from db.models import QueryIndicator, QueryUrlTop
 
-from db.session import async_session
+from db.session import create_db
 from db.utils import get_last_update_date
-
-ACCESS_TOKEN = f"{config.ACCESS_TOKEN}"
-USER_ID = f"{config.USER_ID}"
-HOST_ID = f"{config.HOST_ID}"
 
 date_format = "%Y-%m-%d"
 
 
-def create_url(date_from):
+def create_url(date_from, USER_ID, HOST_ID):
     date_to = datetime.now() - timedelta(days=2)
     date_to = date_to.date()
     if date_to > date_from:
@@ -35,13 +30,13 @@ def create_url(date_from):
     return -1
 
 
-async def get_response(async_session):
+async def get_response(async_session, USER_ID, HOST_ID, ACCESS_TOKEN):
     last_update_date = await get_last_update_date(async_session, QueryIndicator)
     print("last update date:", last_update_date)
     if not last_update_date:
         last_update_date = (datetime.now() - timedelta(days=60))
     print("Начало выгрузки")
-    URL = create_url(last_update_date.date())
+    URL = create_url(last_update_date.date(), USER_ID, HOST_ID)
     if URL == -1:
         return -1
     response = requests.get(URL, headers={'Authorization': f'OAuth {ACCESS_TOKEN}',
@@ -50,7 +45,7 @@ async def get_response(async_session):
     return response
 
 
-async def add_data(response: requests.models.Response | int):
+async def add_data(response: requests.models.Response | int, async_session):
     if response == -1:
         print("Все данные Indicators уже в базе")
         return
@@ -85,7 +80,7 @@ async def add_data(response: requests.models.Response | int):
     return data_for_db
 
 
-async def add_top():
+async def add_top(async_session):
     last_update_date = await get_last_update_date(async_session, QueryUrlTop)
     print("last update date for top 3, 5, 10, 20, 30:", last_update_date)
     if not last_update_date:
@@ -127,11 +122,18 @@ async def add_top():
     await _add_top(add_values, async_session)
 
 
-async def main():
-    response = await get_response(async_session)
-    await add_data(response)
+async def main(config):
+    DATABASE_NAME, ACCESS_TOKEN, USER_ID, HOST_ID = (config['database_name'],
+                                                     config['access_token'],
+                                                     config['user_id'],
+                                                     config['host_id'])
+
+    async_session = await create_db(DATABASE_NAME)
+
+    response = await get_response(async_session, USER_ID, HOST_ID, ACCESS_TOKEN)
+    await add_data(response, async_session)
     print("Indicators загружены. Начинаем загрузку TOP")
-    await add_top()
+    await add_top(async_session)
     print("Выгрузка завершена")
 
 

@@ -1,26 +1,18 @@
 import asyncio
 from datetime import datetime
 import requests
-import config
 
 from db.models import Url
 from db.models import Metrics
-from db.session import async_session
 from api.actions.urls import _add_new_urls
 from api.actions.metrics_url import _add_new_metrics
+from db.session import create_db
 from db.utils import get_last_update_date
-
-ACCESS_TOKEN = f"{config.ACCESS_TOKEN}"
-USER_ID = f"{config.USER_ID}"
-HOST_ID = f"{config.HOST_ID}"
 
 date_format = "%Y-%m-%d"
 
-# Формируем URL для запроса мониторинга поисковых запросов
-URL = f"https://api.webmaster.yandex.net/v4/user/{USER_ID}/hosts/{HOST_ID}/query-analytics/list"
 
-
-async def add_data(data, last_update_date):
+async def add_data(data, last_update_date, async_session):
     for query in data['text_indicator_to_statistics']:
         query_name = query['text_indicator']['value']
         new_url = [Url(url=query_name)]
@@ -72,7 +64,7 @@ async def add_data(data, last_update_date):
         await _add_new_metrics(metrics, async_session)
 
 
-async def get_data_by_page(page, last_update_date):
+async def get_data_by_page(page, last_update_date, URL, ACCESS_TOKEN, async_session):
     body = {
         "offset": page,
         "limit": 500,
@@ -88,10 +80,19 @@ async def get_data_by_page(page, last_update_date):
     print(response.text[:100])
     data = response.json()
 
-    await add_data(data, last_update_date)
+    await add_data(data, last_update_date, async_session)
 
 
-async def get_all_data():
+async def get_all_data(config):
+    DATABASE_NAME, ACCESS_TOKEN, USER_ID, HOST_ID = (config['database_name'],
+                                                     config['access_token'],
+                                                     config['user_id'],
+                                                     config['host_id'])
+
+    # Формируем URL для запроса мониторинга поисковых запросов
+    URL = f"https://api.webmaster.yandex.net/v4/user/{USER_ID}/hosts/{HOST_ID}/query-analytics/list"
+
+    async_session = await create_db(DATABASE_NAME)
     body = {
         "offset": 0,
         "limit": 500,
@@ -106,14 +107,15 @@ async def get_all_data():
 
     data = response.json()
     count = data["count"]
+    print(count)
     last_update_date = await get_last_update_date(async_session, Metrics)
     print("last update date:", last_update_date)
     if not last_update_date:
         last_update_date = datetime.strptime("1900-01-01", date_format)
-    await add_data(data, last_update_date)
+    await add_data(data, last_update_date, async_session)
     for offset in range(500, count, 500):
         print(f"[INFO] PAGE{offset} DONE!")
-        await get_data_by_page(offset, last_update_date)
+        await get_data_by_page(offset, last_update_date, URL, ACCESS_TOKEN, async_session)
 
 
 if __name__ == '__main__':

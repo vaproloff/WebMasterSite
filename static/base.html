@@ -67,9 +67,9 @@
         <div class="dropdown">
           <button class="button dropbtn" id="dropdownButton">Dropdown</button>
           <div class="dropdown-content">
-            <a href="#" onclick="selectConfig('Config 1')">Config 1</a>
-            <a href="#" onclick="selectConfig('Config 2')">Config 2</a>
-            <a href="#" onclick="selectConfig('Config 3')">Config 3</a>
+            {% for config in config_names %}
+            <a href="#" onclick="selectConfig('{{ config }}')">{{ config }}</a>
+            {% endfor %}
           </div>
         </div>
             <button class="button" onclick="profile_button('{{ url_for('show_profile', username=user.username) }}')">{{ user.username }}</button>
@@ -83,6 +83,22 @@
         {% endblock %}
     </main>
     <script>
+        // Функция для получения сохраненного значения из localStorage
+        function getSelectedConfig() {
+            return localStorage.getItem('selectedConfig') || 'Dropdown';
+        }
+
+        // Функция для установки сохраненного значения в localStorage
+        function setSelectedConfig(configName) {
+            localStorage.setItem('selectedConfig', configName);
+        }
+
+        // Установка сохраненного значения при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectedConfig = getSelectedConfig();
+            document.getElementById('dropdownButton').innerText = selectedConfig;
+        });
+
         function profile_button(url) {
             window.location.href = url;
         }
@@ -96,6 +112,8 @@
                 });
 
                 if (response.ok) {
+                    // Очистка localStorage при успешном выходе
+                    localStorage.removeItem('selectedConfig');
                     window.location.href = '/';
                 } else {
                     const errorData = await response.json();
@@ -110,8 +128,31 @@
         function main_page_button() {
             window.location.href = '/';
         }
-        function selectConfig(configName) {
+        async function selectConfig(configName) {
             document.getElementById('dropdownButton').innerText = configName;
+            setSelectedConfig(configName);
+
+            // Отправка POST-запроса на эндпоинт set_config
+            try {
+                const response = await fetch('{{ url_for('set_config') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ config_name: configName })
+                });
+
+                if (response.ok) {
+                    console.log('Config set successfully');
+                } else {
+                    const errorData = await response.json();
+                    console.error('Error:', errorData.detail);
+                    alert('Error: ' + errorData.detail);
+                }
+            } catch (error) {
+                console.error('Error during setting config:', error);
+                alert('An error occurred during setting config. Please try again.');
+            }
         }
     </script>
 </body>

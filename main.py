@@ -1,4 +1,6 @@
 import uvicorn
+from starlette.middleware.sessions import SessionMiddleware
+
 import settings
 from fastapi import FastAPI, HTTPException
 from fastapi import APIRouter
@@ -17,6 +19,7 @@ from api.auth.router import router as auth_router
 from api.services.router import router as services_router
 
 from api.config.router import router as config_router
+from config import SECRET
 
 app = FastAPI(
     title="Metrics urls",
@@ -41,6 +44,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.add_middleware(SessionMiddleware, secret_key=SECRET)
 
 main_api_router = APIRouter()
 main_api_router.include_router(admin_router, prefix="/admin")

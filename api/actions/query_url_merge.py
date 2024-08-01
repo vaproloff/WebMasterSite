@@ -3,7 +3,7 @@ from typing import Callable
 from db.dals import MetricQueryDAL, MergeDAL
 
 
-async def _get_approach_query(session: Callable):
+async def _get_approach_query(session):
     async with session() as s:
         order_dal = MetricQueryDAL(s)
         queries = await order_dal.get_approach_query(

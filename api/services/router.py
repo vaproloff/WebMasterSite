@@ -14,7 +14,8 @@ router = APIRouter()
 @router.get('/load-queries-script')
 async def load_queries_script(request: Request) -> dict:
     try:
-        await get_all_data_queries()
+        config = request.session['config']
+        await get_all_data_queries(config)
     except Exception as e:
         print(e)
     return {"status": 200}
@@ -23,7 +24,8 @@ async def load_queries_script(request: Request) -> dict:
 @router.get('/load-urls-script')
 async def load_urls_script(request: Request) -> dict:
     try:
-        await get_all_data_urls()
+        config = request.session['config']
+        await get_all_data_urls(config)
     except Exception as e:
         print(e)
     return {"status": 200}
@@ -32,7 +34,8 @@ async def load_urls_script(request: Request) -> dict:
 @router.get('/load-history-script')
 async def load_history_script(request: Request) -> dict:
     try:
-        await all_history_main()
+        config = request.session['config']
+        await all_history_main(config)
     except Exception as e:
         print(e)
     return {"status": 200}
@@ -41,7 +44,8 @@ async def load_history_script(request: Request) -> dict:
 @router.get('/load-merge-script')
 async def load_merge_script(request: Request) -> dict:
     try:
-        await merge_main()
+        config = request.session['config']
+        await merge_main(config)
     except Exception as e:
         print(e)
     return {"status": 200}

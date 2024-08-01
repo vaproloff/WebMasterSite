@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.auth.models import User
-from db.session import get_db
+from db.session import get_db, get_db_general
 
 
 class CustomSQLAlchemyUserDatabase(SQLAlchemyUserDatabase):
@@ -16,6 +16,6 @@ class CustomSQLAlchemyUserDatabase(SQLAlchemyUserDatabase):
         return result.scalars().first()
 
 
-async def get_user_db(session: AsyncSession = Depends(get_db)):
+async def get_user_db(session: AsyncSession = Depends(get_db_general)):
     print("check")
     yield CustomSQLAlchemyUserDatabase(session, User)
