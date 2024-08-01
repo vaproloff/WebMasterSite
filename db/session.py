@@ -15,14 +15,6 @@ GENERAL_DATABASE_URL = f"postgresql+asyncpg://{config.DB_USER}:{config.DB_PASSWO
 # REAL_DATABASE_URL = f"postgresql+asyncpg://dn_true:1238xcnq&qaQWER@localhost:5432/dn_true_2"
 # REAL_DATABASE_URL = f"postgresql+asyncpg://dn_true:1238xcnq&qaQWER@localhost:5432/ayshotel"
 
-REAL_DATABASE_URL = f"postgresql+asyncpg://{config.DB_USER}:{config.DB_PASSWORD}@{config.DB_HOST}:{config.DB_PORT}/{config.DATABASE_NAME}"
-engine = create_async_engine(
-    REAL_DATABASE_URL,
-    future=True,
-    execution_options={"isolation_level": "AUTOCOMMIT"},
-)
-async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
-
 engine_general = create_async_engine(
     GENERAL_DATABASE_URL,
     future=True,

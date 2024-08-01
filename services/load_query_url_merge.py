@@ -5,7 +5,7 @@ from typing import Callable
 from api.actions.metrics_queries import _add_new_metrics
 from api.actions.query_url_merge import _get_approach_query
 from db.models import QueryUrlsMerge, QueryUrlsMergeLogs
-from db.session import async_session
+from db.session import create_db
 
 from db.utils import add_last_update_date, get_last_update_date
 from services.search_competitors_async import run_bash_async
@@ -17,9 +17,8 @@ START_DATE = datetime.now().date()
 
 # Получаем список подходящих запросов из бд и формируем queries.txt
 async def get_approach_query(session: Callable):
-    print(session)
     res = await _get_approach_query(session)
-    res = res[:100]
+    res = res[:300]
     with open("queries.txt", "w", encoding="utf-8") as f:
         for cursor, query in enumerate(res):
             if cursor < len(res) - 1:
@@ -40,7 +39,7 @@ async def record_to_merge_db(session: Callable):
             values[url].append(query)
         for key, value in values.items():
             values_to_db.append(QueryUrlsMerge(url=key, queries=value, date=START_DATE))
-        last_update_date = await get_last_update_date(async_session, QueryUrlsMerge)
+        last_update_date = await get_last_update_date(session, QueryUrlsMerge)
         if not last_update_date:
             last_update_date = datetime.strptime("1900-01-01", date_format)
         if START_DATE > last_update_date.date():
@@ -48,12 +47,19 @@ async def record_to_merge_db(session: Callable):
             await add_last_update_date(session, QueryUrlsMergeLogs, START_DATE)
 
 
-async def main():
+async def main(config):
+    DATABASE_NAME, ACCESS_TOKEN, USER_ID, HOST_ID = (config['database_name'],
+                                                     config['access_token'],
+                                                     config['user_id'],
+                                                     config['host_id'])
+
+    async_session = await create_db(DATABASE_NAME)
     print("Начало выполнения")
     await get_approach_query(async_session)
     curr = datetime.now()
     try:
-        await run_bash_async()
+        main_domain = HOST_ID.split(":")[1]
+        await run_bash_async(main_domain)
     except Exception as e:
         print(
             f"Произошло досрочное выключение xmlstock. Ошибка: {e}")

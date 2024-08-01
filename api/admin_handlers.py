@@ -444,8 +444,12 @@ async def register(request: Request, user: User = Depends(current_user)):
 
 
 @admin_router.get("/info-urls")
-async def get_urls(request: Request, user: User = Depends(current_superuser)):
-    response = templates.TemplateResponse("urls-info.html", {"request": request, "user": user})
+async def get_urls(request: Request,
+                   user: User = Depends(current_superuser),
+                   session: AsyncSession = Depends(get_db_general)):
+    config_names = [elem[0] for elem in (await get_config_names(session))]
+    response = templates.TemplateResponse("urls-info.html",
+                                          {"request": request, "user": user, "config_names": config_names})
     return response
 
 
@@ -536,8 +540,11 @@ async def get_urls(request: Request, data_request: dict, user: User = Depends(cu
 
 
 @admin_router.get("/info-queries")
-async def get_queries(request: Request, user: User = Depends(current_superuser)):
-    response = templates.TemplateResponse("queries-info.html", {"request": request, "user": user})
+async def get_queries(request: Request, user: User = Depends(current_superuser),
+                      session: AsyncSession = Depends(get_db_general)):
+    config_names = [elem[0] for elem in (await get_config_names(session))]
+    response = templates.TemplateResponse("queries-info.html",
+                                          {"request": request, "user": user, "config_names": config_names})
     return response
 
 
@@ -631,8 +638,11 @@ async def get_queries(request: Request, data_request: dict, user: User = Depends
 
 
 @admin_router.get("/info-all-history")
-async def get_all_history(request: Request, user: User = Depends(current_superuser)):
-    response = templates.TemplateResponse("all-history.html", {"request": request, "user": user})
+async def get_all_history(request: Request, user: User = Depends(current_superuser),
+                          session: AsyncSession = Depends(get_db_general)):
+    config_names = [elem[0] for elem in (await get_config_names(session))]
+    response = templates.TemplateResponse("all-history.html",
+                                          {"request": request, "user": user, "config_names": config_names})
     return response
 
 
@@ -1104,17 +1114,25 @@ async def generate_excel_indicators(request: Request, data_request: dict, user: 
 
 
 @admin_router.get("/menu/merge_database/")
-async def show_menu_merge_page(request: Request, user: User = Depends(current_superuser)):
+async def show_menu_merge_page(request: Request,
+                               user: User = Depends(current_superuser),
+                               session: AsyncSession = Depends(get_db_general)):
     DATABASE_NAME = request.session['config']['database_name']
     async_session = await create_db(DATABASE_NAME)
     all_dates = await get_all_dates(async_session, QueryUrlsMergeLogs)
-    return templates.TemplateResponse("merge_database.html", {"request": request, "all_dates": all_dates, "user": user})
+    config_names = [elem[0] for elem in (await get_config_names(session))]
+    return templates.TemplateResponse("merge_database.html", {"request": request, "all_dates": all_dates, "user": user,
+                                                              "config_name": config_names})
 
 
 @admin_router.get("/info-merge")
-async def get_info_merge(request: Request, user: User = Depends(current_superuser)):
+async def get_info_merge(request: Request,
+                         user: User = Depends(current_superuser),
+                         session: AsyncSession = Depends(get_db_general)):
     date = request.query_params.get("date")
-    response = templates.TemplateResponse("query-url-merge.html", {"request": request, "date": date, "user": user})
+    config_names = [elem[0] for elem in (await get_config_names(session))]
+    response = templates.TemplateResponse("query-url-merge.html", {"request": request, "date": date, "user": user,
+                                                                   "config_names": config_names})
     return response
 
 

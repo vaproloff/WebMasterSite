@@ -5,7 +5,7 @@ from db.models import Query
 from db.models import MetricsQuery
 from api.actions.queries import _add_new_urls
 from api.actions.metrics_queries import _add_new_metrics
-from db.session import create_db, async_session
+from db.session import create_db
 from db.utils import get_last_update_date
 
 date_format = "%Y-%m-%d"
@@ -103,6 +103,8 @@ async def get_all_data(config):
 
     response = requests.post(URL, json=body, headers={'Authorization': f'OAuth {ACCESS_TOKEN}',
                                                       "Content-Type": "application/json; charset=UTF-8"})
+
+    async_session = await create_db(DATABASE_NAME)
 
     data = response.json()
     count = data["count"]
