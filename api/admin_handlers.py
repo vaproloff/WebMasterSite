@@ -523,7 +523,7 @@ async def get_urls(request: Request, data_request: dict, user: User = Depends(cu
                               <span style='font-size: 15px'>Позиция:{round(position / count, 2)}</span>
                               <span style='font-size: 15px'>Клики:{total_clicks}</span>
                               <span style='font-size: 9px'>Показы:{impressions}</span>
-                              <span style='font-size: 9px'>ctr:{round(ctr / count, 2)}%</span>
+                              <span style='font-size: 7px'>ctr:{round(ctr / count, 2)}%</span>
                               </div>"""
                 else:
                     res["result"] += f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD'>
@@ -620,7 +620,7 @@ async def get_queries(request: Request, data_request: dict, user: User = Depends
                               <span style='font-size: 15px'>Позиция:{round(position / count, 2)}</span>
                               <span style='font-size: 15px'>Клики:{total_clicks}</span>
                               <span style='font-size: 8px'>Показы:{impressions}</span>
-                              <span style='font-size: 8px'>ctr:{round(ctr / count, 2)}%</span>
+                              <span style='font-size: 7px'>ctr:{round(ctr / count, 2)}%</span>
                               </div>"""
                 else:
                     res["result"] += f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD'>
@@ -1239,7 +1239,7 @@ async def post_info_merge(request: Request, data_request: dict, user: User = Dep
                                       <span style='font-size: 15px'>Позиция:{total_position}</span>
                                       <span style='font-size: 15px'>Клики:{total_clicks}</span>
                                       <span style='font-size: 9px'>Показы:{impressions}</span>
-                                      <span style='font-size: 9px'>ctr:{total_ctr}%</span>
+                                      <span style='font-size: 7px'>ctr:{total_ctr}%</span>
                                       </div>"""
                         else:
                             total_position = 0
@@ -1266,7 +1266,7 @@ async def post_info_merge(request: Request, data_request: dict, user: User = Dep
                                           <span style='font-size: 15px'>Позиция:{parent_position}</span>
                                           <span style='font-size: 15px'>Клики:{parent_clicks}</span>
                                           <span style='font-size: 9px'>Показы:{parent_impression}</span>
-                                          <span style='font-size: 9px'>ctr:{parent_ctr}%</span>
+                                          <span style='font-size: 7px'>ctr:{parent_ctr}%</span>
                                           </div>"""
 
         data.append(res)
@@ -1522,7 +1522,6 @@ async def show_profile(request: Request,
                        username: str,
                        user=Depends(current_user),
                        session: AsyncSession = Depends(get_db_general)):
-    print(request.session)
     config_names = [elem[0] for elem in (await get_config_names(session))]
     if not user:
         raise HTTPException(status_code=401, detail="need auth")
