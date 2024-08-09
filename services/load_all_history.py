@@ -9,7 +9,7 @@ from api.actions.metrics_queries import _get_top_data_query
 from api.actions.metrics_url import _get_top_data_urls
 from db.models import QueryIndicator, QueryUrlTop
 
-from db.session import create_db
+from db.session import connect_db
 from db.utils import get_last_update_date
 
 date_format = "%Y-%m-%d"
@@ -123,12 +123,13 @@ async def add_top(async_session):
 
 
 async def main(config):
-    DATABASE_NAME, ACCESS_TOKEN, USER_ID, HOST_ID = (config['database_name'],
-                                                     config['access_token'],
-                                                     config['user_id'],
-                                                     config['host_id'])
+    DATABASE_NAME, ACCESS_TOKEN, USER_ID, HOST_ID, user = (config['database_name'],
+                                                           config['access_token'],
+                                                           config['user_id'],
+                                                           config['host_id'],
+                                                           config['user'])
 
-    async_session = await create_db(DATABASE_NAME)
+    async_session = await connect_db(DATABASE_NAME, user)
 
     response = await get_response(async_session, USER_ID, HOST_ID, ACCESS_TOKEN)
     await add_data(response, async_session)

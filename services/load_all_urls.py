@@ -6,7 +6,7 @@ from db.models import Url
 from db.models import Metrics
 from api.actions.urls import _add_new_urls
 from api.actions.metrics_url import _add_new_metrics
-from db.session import create_db
+from db.session import connect_db
 from db.utils import get_last_update_date
 
 date_format = "%Y-%m-%d"
@@ -84,15 +84,16 @@ async def get_data_by_page(page, last_update_date, URL, ACCESS_TOKEN, async_sess
 
 
 async def get_all_data(config):
-    DATABASE_NAME, ACCESS_TOKEN, USER_ID, HOST_ID = (config['database_name'],
-                                                     config['access_token'],
-                                                     config['user_id'],
-                                                     config['host_id'])
+    DATABASE_NAME, ACCESS_TOKEN, USER_ID, HOST_ID, user = (config['database_name'],
+                                                           config['access_token'],
+                                                           config['user_id'],
+                                                           config['host_id'],
+                                                           config['user'])
 
     # Формируем URL для запроса мониторинга поисковых запросов
     URL = f"https://api.webmaster.yandex.net/v4/user/{USER_ID}/hosts/{HOST_ID}/query-analytics/list"
 
-    async_session = await create_db(DATABASE_NAME)
+    async_session = await connect_db(DATABASE_NAME, user)
     body = {
         "offset": 0,
         "limit": 500,

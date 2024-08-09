@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime
 import requests
 
@@ -5,7 +6,7 @@ from db.models import Query
 from db.models import MetricsQuery
 from api.actions.queries import _add_new_urls
 from api.actions.metrics_queries import _add_new_metrics
-from db.session import create_db
+from db.session import connect_db
 from db.utils import get_last_update_date
 
 date_format = "%Y-%m-%d"
@@ -83,10 +84,11 @@ async def get_data_by_page(page, last_update_date, URL, ACCESS_TOKEN, async_sess
 
 
 async def get_all_data(config):
-    DATABASE_NAME, ACCESS_TOKEN, USER_ID, HOST_ID = (config['database_name'],
-                                                     config['access_token'],
-                                                     config['user_id'],
-                                                     config['host_id'])
+    DATABASE_NAME, ACCESS_TOKEN, USER_ID, HOST_ID, user = (config['database_name'],
+                                                           config['access_token'],
+                                                           config['user_id'],
+                                                           config['host_id'],
+                                                           config['user'])
 
     # Формируем URL для запроса мониторинга поисковых запросов
     URL = f"https://api.webmaster.yandex.net/v4/user/{USER_ID}/hosts/{HOST_ID}/query-analytics/list"
@@ -104,11 +106,11 @@ async def get_all_data(config):
     response = requests.post(URL, json=body, headers={'Authorization': f'OAuth {ACCESS_TOKEN}',
                                                       "Content-Type": "application/json; charset=UTF-8"})
 
-    async_session = await create_db(DATABASE_NAME)
+    async_session = await connect_db(DATABASE_NAME, user)
 
     data = response.json()
     count = data["count"]
-    print(count)
+    print(data)
     last_update_date = await get_last_update_date(async_session, MetricsQuery)
     print("last update date:", last_update_date)
     if not last_update_date:
@@ -120,5 +122,13 @@ async def get_all_data(config):
         await get_data_by_page(offset, last_update_date, URL, ACCESS_TOKEN, async_session)
         print(datetime.now() - curr)
 
-# if __name__ == '__main__':
-#     asyncio.run(get_all_data())
+
+if __name__ == '__main__':
+    cfg = {
+        "database_name": "ayshotel",
+        "access_token": "y0_AgAAAAANVf3MAAv6lgAAAAEIBw3PAADOvzU1b_RIdY0Wpw3RbuR6PgN7Cw",
+        "user_id": "223739340",
+        "host_id": "https:ayshotel.ru:443",
+        "user": "admin"
+    }
+    asyncio.run(get_all_data(cfg))

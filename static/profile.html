@@ -175,6 +175,7 @@
             console.log('Success:', data);
             // Обработка успешного ответа
             $('.loader').hide();
+            window.location.reload();
         })
         .catch((error) => {
             console.error('Error:', error);

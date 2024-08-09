@@ -31,12 +31,15 @@ def upgrade() -> None:
     )
     op.create_index(op.f('ix_user_username'), 'user', ['username'], unique=True)
     op.create_table('config',
+            sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('name', sa.String(), nullable=False),
     sa.Column('database_name', sa.String(), nullable=False),
     sa.Column('access_token', sa.String(), nullable=False),
     sa.Column('user_id', sa.String(), nullable=False),
     sa.Column('host_id', sa.String(), nullable=False),
-    sa.PrimaryKeyConstraint('name')
+    sa.Column('user', sa.Integer(), nullable=False),
+    sa.PrimaryKeyConstraint('id')
+
     )
     # ### end Alembic commands ###
 

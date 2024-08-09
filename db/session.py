@@ -1,9 +1,14 @@
 from typing import Generator
+
+from fastapi import Depends
+
 import config
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import sessionmaker
+
+from api.auth.models import User
 
 ##############################################
 # BLOCK FOR COMMON INTERACTION WITH DATABASE #
@@ -23,8 +28,10 @@ engine_general = create_async_engine(
 
 async_session_general = sessionmaker(engine_general, expire_on_commit=False, class_=AsyncSession)
 
-async def create_db(db_name):
-    REAL_DATABASE_URL = f"postgresql+asyncpg://{config.DB_USER}:{config.DB_PASSWORD}@{config.DB_HOST}:{config.DB_PORT}/{db_name}"
+
+async def connect_db(db_name, username: str):
+    db_name_bound = f"{db_name}_{username}"
+    REAL_DATABASE_URL = f"postgresql+asyncpg://{config.DB_USER}:{config.DB_PASSWORD}@{config.DB_HOST}:{config.DB_PORT}/{db_name_bound}"
     engine = create_async_engine(
         REAL_DATABASE_URL,
         future=True,

@@ -17,5 +17,4 @@ class CustomSQLAlchemyUserDatabase(SQLAlchemyUserDatabase):
 
 
 async def get_user_db(session: AsyncSession = Depends(get_db_general)):
-    print("check")
     yield CustomSQLAlchemyUserDatabase(session, User)
