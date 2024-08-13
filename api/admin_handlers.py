@@ -714,7 +714,6 @@ async def post_all_history(request: Request, data_request: dict, user: User = De
             "query":
                 f"<div style='width:355px; height: 55px; overflow: auto; white-space: nowrap;'><span>TOP {top}</span></div>"
         }
-        print(start_date, end_date)
         query_top = await _get_top_query(start_date, end_date, top, async_session)
         query_top.sort(key=lambda x: x[-1])
         total_position, total_clicks, total_impression, total_count, count_for_avg = 0, 0, 0, 0, 0
@@ -741,7 +740,6 @@ async def post_all_history(request: Request, data_request: dict, user: User = De
               <span style='font-size: 10px'>{total_clicks}</span> <span style='font-size: 10px; margin-left: 5px'>R: {int(total_impression)}</span>
               </div>"""
 
-        print(grouped_data_sum)
         query_front.append(grouped_data_sum)
 
     url_front = []
@@ -781,7 +779,6 @@ async def post_all_history(request: Request, data_request: dict, user: User = De
     json_data = jsonable_encoder(data)
     json_query_top = jsonable_encoder(query_front)
     json_url_top = jsonable_encoder(url_front)
-    print(json_url_top)
     return JSONResponse({"data": json_data,
                          "query_top": json_query_top,
                          "url_top": json_url_top}
@@ -1383,8 +1380,6 @@ async def generate_excel(request: Request, data_request: dict, user: User = Depe
                         else:
                             res.extend([0, 0, 0, 0])
                 parent_res.append(res)
-                print(res)
-                print(parent_res)
 
             for parent in parent_res:
                 parent_true = [parent_position, parent_clicks, parent_impression, parent_ctr]
