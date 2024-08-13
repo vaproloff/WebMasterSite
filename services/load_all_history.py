@@ -15,28 +15,22 @@ from db.utils import get_last_update_date
 date_format = "%Y-%m-%d"
 
 
-def create_url(date_from, USER_ID, HOST_ID):
+def create_url(USER_ID, HOST_ID):
     date_to = datetime.now() - timedelta(days=2)
     date_to = date_to.date()
-    if date_to > date_from:
-        date_from += timedelta(days=1)
-        return (f"https://api.webmaster.yandex.net/v4/user/{USER_ID}/hosts/{HOST_ID}/search-queries/all/history?"
-                f"query_indicator=TOTAL_SHOWS&"
-                f"query_indicator=TOTAL_CLICKS&"
-                f"query_indicator=AVG_SHOW_POSITION&"
-                f"query_indicator=AVG_CLICK_POSITION&"
-                f"date_from={date_from}&"
-                f"date_to={date_to}")
-    return -1
+    date_from = date_to - timedelta(days=365)
+    return (f"https://api.webmaster.yandex.net/v4/user/{USER_ID}/hosts/{HOST_ID}/search-queries/all/history?"
+            f"query_indicator=TOTAL_SHOWS&"
+            f"query_indicator=TOTAL_CLICKS&"
+            f"query_indicator=AVG_SHOW_POSITION&"
+            f"query_indicator=AVG_CLICK_POSITION&"
+            f"date_from={date_from}&"
+            f"date_to={date_to}")
 
 
 async def get_response(async_session, USER_ID, HOST_ID, ACCESS_TOKEN):
-    last_update_date = await get_last_update_date(async_session, QueryIndicator)
-    print("last update date:", last_update_date)
-    if not last_update_date:
-        last_update_date = (datetime.now() - timedelta(days=60))
     print("Начало выгрузки")
-    URL = create_url(last_update_date.date(), USER_ID, HOST_ID)
+    URL = create_url(USER_ID, HOST_ID)
     if URL == -1:
         return -1
     response = requests.get(URL, headers={'Authorization': f'OAuth {ACCESS_TOKEN}',
@@ -45,10 +39,7 @@ async def get_response(async_session, USER_ID, HOST_ID, ACCESS_TOKEN):
     return response
 
 
-async def add_data(response: requests.models.Response | int, async_session):
-    if response == -1:
-        print("Все данные Indicators уже в базе")
-        return
+async def add_data(response: requests.models.Response, async_session):
 
     indicators = response.json()["indicators"]
 
@@ -58,7 +49,7 @@ async def add_data(response: requests.models.Response | int, async_session):
         for element in indicators[indicator]:
             date = datetime.strptime(element["date"].split("T")[0], date_format)
             data_for_db.append(QueryIndicator(indicator=indicator,
-                                              value=round(element["value"], 1),
+                                              value=round(element["value"], 2),
                                               date=date))
             if date not in data_for_total_ctr:
                 data_for_total_ctr[date] = [0, 0]

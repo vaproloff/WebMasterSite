@@ -292,6 +292,10 @@ class IndicatorDAL:
             self,
             values
     ):
+
+        await self.session.execute(text("TRUNCATE TABLE query_indicator RESTART IDENTITY CASCADE;"))
+        await self.session.commit()
+
         self.session.add_all(values)
         await self.session.commit()
 

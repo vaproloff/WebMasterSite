@@ -244,6 +244,7 @@
 
             var newRow = '<tr><td><div style="width:355px; height: 55px; overflow: auto; white-space: nowrap;"><span style="font-size: 18px;">' + 'query top:' + '</span></div></td></tr>';
             table.append(newRow);
+            console.log(query_top)
 
             for (i = 0; i < 5; i++) {
                     var newRow = '<tr>';
@@ -324,6 +325,8 @@
         })
             .then(response => response.json())
             .then(data => {
+                query_top = data.query_top;
+                url_top = data.url_top;
                 data = data.data;
                 var table = $('#body_t');
 
