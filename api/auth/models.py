@@ -1,15 +1,25 @@
 from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTable
-from sqlalchemy import Integer, String
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy import Integer, String, ForeignKey, Column
+from sqlalchemy.orm import relationship
+
+from api.config.models import Base
 
 
-class Base(DeclarativeBase):
-    pass
+class GroupUserAssociation(Base):
+    __tablename__ = 'group_user_association'
+
+    group_id = Column(Integer, ForeignKey('group.id'), primary_key=True)
+    user_id = Column(Integer, ForeignKey('user.id'), primary_key=True)
 
 
 class User(SQLAlchemyBaseUserTable[int], Base):
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    id: int = Column(Integer, primary_key=True)
     email = None
-    username: Mapped[str] = mapped_column(
+    username: str = Column(
         String(length=320), unique=True, index=True, nullable=False
     )
+
+    role: int = Column(
+        ForeignKey("roles.id"), nullable=False, default=1
+    )
+    groups = relationship("Group", secondary='group_user_association', back_populates="users")

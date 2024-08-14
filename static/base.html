@@ -33,6 +33,7 @@
         .dropdown {
             position: relative;
             display: inline-block;
+            margin-left: 10px; /* Отступ между выпадающими меню */
         }
         .dropdown-content {
             display: none;
@@ -59,12 +60,16 @@
             align-items: center;
             margin-left: auto;
         }
+        .header-right .superuser-button {
+            margin-left: 10px;
+        }
     </style>
 </head>
 <body>
     <header>
         {% if user is not none %}
         <button class="button" onclick="profile_button('{{ url_for('show_profile', username=user.username) }}')">{{ user.username }}</button>
+        <button class="button superuser-button" onclick="superuser_button('{{ url_for('show_superuser', username=user.username) }}')">Superuser</button>
         <button class="button main-page-button" onclick="main_page_button()">Main Page</button>
         <div class="header-right">
             <div class="dropdown">
@@ -72,6 +77,14 @@
               <div class="dropdown-content">
                 {% for config in config_names %}
                 <a href="#" onclick="selectConfig('{{ config }}')">{{ config }}</a>
+                {% endfor %}
+              </div>
+            </div>
+            <div class="dropdown">
+              <button class="button dropbtn" id="secondDropdownButton">Group</button>
+              <div class="dropdown-content">
+                {% for group in group_names %}
+                <a href="#" onclick="selectGroup('{{ group }}')">{{ group }}</a>
                 {% endfor %}
               </div>
             </div>
@@ -90,16 +103,25 @@
         function getSelectedConfig() {
             return localStorage.getItem('selectedConfig') || 'Dropdown';
         }
+        function getSelectedGroup() {
+            return localStorage.getItem('selectedGroup') || 'Group';
+        }
 
         // Функция для установки сохраненного значения в localStorage
         function setSelectedConfig(configName) {
             localStorage.setItem('selectedConfig', configName);
+        }
+        function setSelectedGroup(groupName) {
+            localStorage.setItem('selectedGroup', groupName);
         }
 
         // Установка сохраненного значения при загрузке страницы
         document.addEventListener('DOMContentLoaded', function() {
             const selectedConfig = getSelectedConfig();
             document.getElementById('dropdownButton').innerText = selectedConfig;
+
+            const selectedGroup = getSelectedGroup();
+            document.getElementById('secondDropdownButton').innerText = selectedGroup;
         });
 
         function profile_button(url) {
@@ -117,6 +139,7 @@
                 if (response.ok) {
                     // Очистка localStorage при успешном выходе
                     localStorage.removeItem('selectedConfig');
+                    localStorage.removeItem('selectedGroup');
                     window.location.href = '/';
                 } else {
                     const errorData = await response.json();
@@ -157,6 +180,38 @@
                 console.error('Error during setting config:', error);
                 alert('An error occurred during setting config. Please try again.');
             }
+        }
+
+        async function selectGroup(groupName) {
+            document.getElementById('secondDropdownButton').innerText = groupName;
+            setSelectedGroup(groupName);
+
+            // Отправка POST-запроса на эндпоинт set_group (предположительно)
+            try {
+                const response = await fetch('{{ url_for('set_group') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ group_name: groupName })
+                });
+
+                if (response.ok) {
+                    console.log('Group set successfully');
+                    window.location.reload();
+                } else {
+                    const errorData = await response.json();
+                    console.error('Error:', errorData.detail);
+                    alert('Error: ' + errorData.detail);
+                }
+            } catch (error) {
+                console.error('Error during setting group:', error);
+                alert('An error occurred during setting group. Please try again.');
+            }
+        }
+
+        function superuser_button(url) {
+            window.location.href = url;
         }
     </script>
 </body>

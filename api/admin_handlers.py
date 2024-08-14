@@ -15,9 +15,9 @@ from api.actions.indicators import _get_indicators_from_db, _get_top_query, _get
 from api.actions.query_url_merge import _get_merge_with_pagination, _get_merge_query, _get_merge_with_pagination_sort, \
     _get_merge_with_pagination_and_like, _get_merge_with_pagination_and_like_sort
 from api.actions.utils import get_day_of_week
-from api.auth.auth_config import current_superuser, current_user
+from api.auth.auth_config import current_user
 from api.auth.models import User
-from api.config.utils import get_config_names
+from api.config.utils import get_config_names, get_group_names
 from db.models import QueryUrlsMergeLogs
 from db.session import get_db_general, connect_db
 from api.actions.urls import _get_urls_with_pagination
@@ -54,7 +54,7 @@ def pad_list_with_zeros_excel(lst, amount):
 
 
 @admin_router.post("/generate_excel_url/")
-async def generate_excel(request: Request, data_request: dict, user: User = Depends(current_superuser)):
+async def generate_excel(request: Request, data_request: dict, user: User = Depends(current_user)):
     DATABASE_NAME = request.session['config']['database_name']
     async_session = await connect_db(DATABASE_NAME, user.username)
     wb = Workbook()
@@ -147,7 +147,7 @@ async def generate_excel(request: Request, data_request: dict, user: User = Depe
 
 
 @admin_router.post("/generate_csv_urls/")
-async def generate_excel(request: Request, data_request: dict, user: User = Depends(current_superuser)):
+async def generate_excel(request: Request, data_request: dict, user: User = Depends(current_user)):
     DATABASE_NAME = request.session['config']['database_name']
     async_session = await connect_db(DATABASE_NAME, user.username)
     ws = []
@@ -239,7 +239,7 @@ async def generate_excel(request: Request, data_request: dict, user: User = Depe
 
 
 @admin_router.post("/generate_excel_queries/")
-async def generate_excel(request: Request, data_request: dict, user: User = Depends(current_superuser)):
+async def generate_excel(request: Request, data_request: dict, user: User = Depends(current_user)):
     DATABASE_NAME = request.session['config']['database_name']
     async_session = await connect_db(DATABASE_NAME, user.username)
     wb = Workbook()
@@ -331,7 +331,7 @@ async def generate_excel(request: Request, data_request: dict, user: User = Depe
 
 
 @admin_router.post("/generate_csv_queries/")
-async def generate_excel(request: Request, data_request: dict, user: User = Depends(current_superuser)):
+async def generate_excel(request: Request, data_request: dict, user: User = Depends(current_user)):
     DATABASE_NAME = request.session['config']['database_name']
     async_session = await connect_db(DATABASE_NAME, user.username)
     ws = []
@@ -445,7 +445,7 @@ async def register(request: Request, user: User = Depends(current_user)):
 
 @admin_router.get("/info-urls")
 async def get_urls(request: Request,
-                   user: User = Depends(current_superuser),
+                   user: User = Depends(current_user),
                    session: AsyncSession = Depends(get_db_general)):
     config_names = [elem[0] for elem in (await get_config_names(session, user))]
     response = templates.TemplateResponse("urls-info.html",
@@ -454,7 +454,7 @@ async def get_urls(request: Request,
 
 
 @admin_router.post("/get-urls")
-async def get_urls(request: Request, data_request: dict, user: User = Depends(current_superuser)):
+async def get_urls(request: Request, data_request: dict, user: User = Depends(current_user)):
     DATABASE_NAME = request.session['config']['database_name']
     async_session = await connect_db(DATABASE_NAME, user.username)
     start_date = datetime.strptime(data_request["start_date"], date_format_2)
@@ -540,7 +540,7 @@ async def get_urls(request: Request, data_request: dict, user: User = Depends(cu
 
 
 @admin_router.get("/info-queries")
-async def get_queries(request: Request, user: User = Depends(current_superuser),
+async def get_queries(request: Request, user: User = Depends(current_user),
                       session: AsyncSession = Depends(get_db_general)):
     config_names = [elem[0] for elem in (await get_config_names(session, user))]
     response = templates.TemplateResponse("queries-info.html",
@@ -549,7 +549,7 @@ async def get_queries(request: Request, user: User = Depends(current_superuser),
 
 
 @admin_router.post("/get-queries")
-async def get_queries(request: Request, data_request: dict, user: User = Depends(current_superuser)):
+async def get_queries(request: Request, data_request: dict, user: User = Depends(current_user)):
     DATABASE_NAME = request.session['config']['database_name']
     async_session = await connect_db(DATABASE_NAME, user.username)
     start_date = datetime.strptime(data_request["start_date"], date_format_2)
@@ -638,7 +638,7 @@ async def get_queries(request: Request, data_request: dict, user: User = Depends
 
 
 @admin_router.get("/info-all-history")
-async def get_all_history(request: Request, user: User = Depends(current_superuser),
+async def get_all_history(request: Request, user: User = Depends(current_user),
                           session: AsyncSession = Depends(get_db_general)):
     config_names = [elem[0] for elem in (await get_config_names(session, user))]
     response = templates.TemplateResponse("all-history.html",
@@ -647,7 +647,7 @@ async def get_all_history(request: Request, user: User = Depends(current_superus
 
 
 @admin_router.post("/get-all-history")
-async def post_all_history(request: Request, data_request: dict, user: User = Depends(current_superuser)):
+async def post_all_history(request: Request, data_request: dict, user: User = Depends(current_user)):
     DATABASE_NAME = request.session['config']['database_name']
     async_session = await connect_db(DATABASE_NAME, user.username)
     start_date = datetime.strptime(data_request["start_date"], date_format_2)
@@ -786,7 +786,7 @@ async def post_all_history(request: Request, data_request: dict, user: User = De
 
 
 @admin_router.post("/generate_excel_indicators")
-async def generate_excel_indicators(request: Request, data_request: dict, user: User = Depends(current_superuser)):
+async def generate_excel_indicators(request: Request, data_request: dict, user: User = Depends(current_user)):
     DATABASE_NAME = request.session['config']['database_name']
     async_session = await connect_db(DATABASE_NAME, user.username)
     wb = Workbook()
@@ -859,7 +859,7 @@ async def generate_excel_indicators(request: Request, data_request: dict, user: 
 
 
 @admin_router.post("/generate_excel_top")
-async def generate_excel_indicators(request: Request, data_request: dict, user: User = Depends(current_superuser)):
+async def generate_excel_indicators(request: Request, data_request: dict, user: User = Depends(current_user)):
     DATABASE_NAME = request.session['config']['database_name']
     async_session = await connect_db(DATABASE_NAME, user.username)
     wb = Workbook()
@@ -952,7 +952,7 @@ async def generate_excel_indicators(request: Request, data_request: dict, user: 
 
 
 @admin_router.post("/generate_csv_indicators/")
-async def generate_excel(request: Request, data_request: dict, user: User = Depends(current_superuser)):
+async def generate_excel(request: Request, data_request: dict, user: User = Depends(current_user)):
     DATABASE_NAME = request.session['config']['database_name']
     async_session = await connect_db(DATABASE_NAME, user.username)
     ws = []
@@ -1022,7 +1022,7 @@ async def generate_excel(request: Request, data_request: dict, user: User = Depe
 
 
 @admin_router.post("/generate_csv_top")
-async def generate_excel_indicators(request: Request, data_request: dict, user: User = Depends(current_superuser)):
+async def generate_excel_indicators(request: Request, data_request: dict, user: User = Depends(current_user)):
     DATABASE_NAME = request.session['config']['database_name']
     async_session = await connect_db(DATABASE_NAME, user.username)
     ws = []
@@ -1115,7 +1115,7 @@ async def generate_excel_indicators(request: Request, data_request: dict, user: 
 
 @admin_router.get("/menu/merge_database/")
 async def show_menu_merge_page(request: Request,
-                               user: User = Depends(current_superuser),
+                               user: User = Depends(current_user),
                                session: AsyncSession = Depends(get_db_general)):
     DATABASE_NAME = request.session['config']['database_name']
     async_session = await connect_db(DATABASE_NAME, user.username)
@@ -1127,7 +1127,7 @@ async def show_menu_merge_page(request: Request,
 
 @admin_router.get("/info-merge")
 async def get_info_merge(request: Request,
-                         user: User = Depends(current_superuser),
+                         user: User = Depends(current_user),
                          session: AsyncSession = Depends(get_db_general)):
     date = request.query_params.get("date")
     config_names = [elem[0] for elem in (await get_config_names(session, user))]
@@ -1137,7 +1137,7 @@ async def get_info_merge(request: Request,
 
 
 @admin_router.post("/get-merge")
-async def post_info_merge(request: Request, data_request: dict, user: User = Depends(current_superuser)):
+async def post_info_merge(request: Request, data_request: dict, user: User = Depends(current_user)):
     DATABASE_NAME = request.session['config']['database_name']
     async_session = await connect_db(DATABASE_NAME, user.username)
     start_date = datetime.strptime(data_request["start_date"], date_format_2)
@@ -1277,7 +1277,7 @@ async def post_info_merge(request: Request, data_request: dict, user: User = Dep
 
 
 @admin_router.post("/generate_excel_merge/")
-async def generate_excel(request: Request, data_request: dict, user: User = Depends(current_superuser)):
+async def generate_excel(request: Request, data_request: dict, user: User = Depends(current_user)):
     DATABASE_NAME = request.session['config']['database_name']
     async_session = await connect_db(DATABASE_NAME, user.username)
     wb = Workbook()
@@ -1396,7 +1396,7 @@ async def generate_excel(request: Request, data_request: dict, user: User = Depe
 
 
 @admin_router.post("/generate_csv_merge/")
-async def generate_excel(request: Request, data_request: dict, user: User = Depends(current_superuser)):
+async def generate_excel(request: Request, data_request: dict, user: User = Depends(current_user)):
     DATABASE_NAME = request.session['config']['database_name']
     async_session = await connect_db(DATABASE_NAME, user.username)
     ws = []
@@ -1521,9 +1521,36 @@ async def show_profile(request: Request,
                        user=Depends(current_user),
                        session: AsyncSession = Depends(get_db_general)):
     config_names = [elem[0] for elem in (await get_config_names(session, user))]
+
+    group_names = await get_group_names(session, user)
     if not user:
         raise HTTPException(status_code=401, detail="need auth")
     if user.username != username:
         raise HTTPException(status_code=403, detail="You do not have permission to view this profile")
 
-    return templates.TemplateResponse("profile.html", {"request": request, "user": user, "config_names": config_names})
+    return templates.TemplateResponse("profile.html", {"request": request,
+                                                       "user": user,
+                                                       "config_names": config_names,
+                                                       "group_names": group_names})
+
+
+@admin_router.get("/superuser/{username}")
+async def show_superuser(
+        request: Request,
+        user=Depends(current_user),
+        session: AsyncSession = Depends(get_db_general),
+):
+    if "group" in request.session:
+        group_name = request.session["group"]["name"]
+    else:
+        group_name = ""
+    config_names = [elem[0] for elem in (await get_config_names(session, user, group_name))]
+
+    group_names = await get_group_names(session, user)
+
+
+    return templates.TemplateResponse("superuser.html",
+                                      {"request": request,
+                                       "user": user,
+                                       "config_names": config_names,
+                                       "group_names": group_names})

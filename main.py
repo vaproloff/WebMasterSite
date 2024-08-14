@@ -14,11 +14,11 @@ from api.auth.auth_config import fastapi_users, auth_backend
 from api.auth.http_exception import http_exception_handler
 from api.auth.schemas import UserRead, UserCreate
 
-from api.auth.router import router as auth_router
-
 from api.services.router import router as services_router
 
 from api.config.router import router as config_router
+
+from api.auth.router import router as auth_router
 from config import SECRET
 
 app = FastAPI(
