@@ -16,10 +16,10 @@ START_DATE = datetime.now().date()
 
 
 # Получаем список подходящих запросов из бд и формируем queries.txt
-async def get_approach_query(session: Callable, user: str):
+async def get_approach_query(session: Callable, group: str):
     res = await _get_approach_query(session)
     res = res[:300]
-    with open(f"{user}_queries.txt", "w", encoding="utf-8") as f:
+    with open(f"queries.txt", "w", encoding="utf-8") as f:
         for cursor, query in enumerate(res):
             if cursor < len(res) - 1:
                 f.write(f"{query[0]}\n")
@@ -47,25 +47,26 @@ async def record_to_merge_db(session: Callable):
             await add_last_update_date(session, QueryUrlsMergeLogs, START_DATE)
 
 
-async def main(config):
-    DATABASE_NAME, ACCESS_TOKEN, USER_ID, HOST_ID, user = (config['database_name'],
-                                                           config['access_token'],
-                                                           config['user_id'],
-                                                           config['host_id'],
-                                                           config['user'])
+async def main(request_session):
+    config, group = request_session["config"], request_session["group"]
+    DATABASE_NAME, ACCESS_TOKEN, USER_ID, HOST_ID, group = (config['database_name'],
+                                                            config['access_token'],
+                                                            config['user_id'],
+                                                            config['host_id'],
+                                                            group['name'])
 
-    async_session = await connect_db(DATABASE_NAME, user)
-    print("Начало выполнения")
-    await get_approach_query(async_session, user)
-    curr = datetime.now()
-    try:
-        main_domain = HOST_ID.split(":")[1]
-        await run_bash_async(main_domain, user)
-    except Exception as e:
-        print(
-            f"Произошло досрочное выключение xmlstock. Ошибка: {e}")
-    print(datetime.now() - curr)
-    print("result main create")
+    async_session = await connect_db(DATABASE_NAME, group)
+    # print("Начало выполнения")
+    # await get_approach_query(async_session, group)
+    # curr = datetime.now()
+    # try:
+    #     main_domain = HOST_ID.split(":")[1]
+    #     await run_bash_async(main_domain, group)
+    # except Exception as e:
+    #     print(
+    #         f"Произошло досрочное выключение xmlstock. Ошибка: {e}")
+    # print(datetime.now() - curr)
+    # print("result main create")
     await record_to_merge_db(async_session)
     print("Скрипт успешно выполнен")
 

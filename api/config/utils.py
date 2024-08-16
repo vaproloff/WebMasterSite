@@ -5,7 +5,7 @@ from api.auth.models import User, GroupUserAssociation
 from api.config.models import Config, Group, GroupConfigAssociation
 
 
-async def get_config_names(session: AsyncSession, user: User, group_name=None):
+async def get_config_names(session: AsyncSession, user: User, group_name):
     query = select(Group.id).where(Group.name == group_name)
     group_id = (await session.execute(query)).fetchone()
     if group_id:
@@ -17,7 +17,11 @@ async def get_config_names(session: AsyncSession, user: User, group_name=None):
     return res
 
 
-async def get_config_info(session: AsyncSession, config_name: str, config_user: int):
+async def get_config_info(
+        session: AsyncSession,
+        config_name: str,
+        config_user: int
+):
     query = select(Config).where(and_(Config.name == config_name))
     result = (await session.execute(query)).scalars().first()
     return result

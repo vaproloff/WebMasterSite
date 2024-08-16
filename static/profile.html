@@ -123,24 +123,18 @@
             <button onclick="sendRequest('{{ url_for('load_merge_script') }}')">Load Query URL Merge</button>
         </div>
     </div>
-    <div class="add-config">
-        <h2>add config</h2>
-        <div class="form">
-            <input type="text" id="name" placeholder="NAME">
-            <input type="text" id="database_name" placeholder="DATABASE_NAME">
-            <input type="text" id="access_token" placeholder="ACCESS_TOKEN">
-            <input type="text" id="user_id" placeholder="USER_ID">
-            <input type="text" id="host_id" placeholder="HOST_ID">
-            <button type="button" onclick="submitForm()">Add</button>
-        </div>
-    </div>
 </div>
 <div class="loader" style="display: none;"></div>
 <script>
     function sendRequest(url) {
         $('.loader').show();
         fetch(url)
-            .then(response => response.json())
+            .then(response => {
+                if (response.status === 403) {
+                    throw new Error('403 Forbidden');
+                }
+                return response.json();
+            })
             .then(data => {
                 console.log('Success:', data);
                 // Обработка успешного ответа
@@ -148,40 +142,12 @@
             })
             .catch((error) => {
                 console.error('Error:', error);
+                if (error.message === '403 Forbidden') {
+                    alert('Error: You do not have permission to perform this action.');
+                }
                 // Обработка ошибки
                 $('.loader').hide();
             });
-    }
-
-    function submitForm() {
-        $('.loader').show();
-        const formData = {
-            name: $('#name').val(),
-            database_name: $('#database_name').val(),
-            access_token: $('#access_token').val(),
-            user_id: $('#user_id').val(),
-            host_id: $('#host_id').val()
-        };
-
-        fetch('{{ url_for('add_config') }}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(formData)
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log('Success:', data);
-            // Обработка успешного ответа
-            $('.loader').hide();
-            window.location.reload();
-        })
-        .catch((error) => {
-            console.error('Error:', error);
-            // Обработка ошибки
-            $('.loader').hide();
-        });
     }
 </script>
 {% endblock %}

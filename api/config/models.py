@@ -41,5 +41,12 @@ class Group(Base):
     name = Column(String, nullable=False)
 
     # Используем строку для связи с Config и User
-    configs = relationship("Config", secondary='group_config_association', back_populates="groups")
-    users = relationship("User", secondary='group_user_association', back_populates="groups")
+    configs = relationship("Config",
+                           secondary='group_config_association',
+                           back_populates="groups",
+                           lazy="selectin"
+                           )
+    users = relationship("User",
+                         secondary='group_user_association', back_populates="groups",
+                         lazy="selectin"
+                         )

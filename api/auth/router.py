@@ -6,6 +6,7 @@ from starlette.templating import Jinja2Templates
 from api.auth.auth_config import current_user
 from api.auth.models import User
 from api.config.models import Role
+from api.config.utils import get_config_names, get_group_names
 from db.session import get_db_general
 
 router = APIRouter()
@@ -19,8 +20,26 @@ async def show_unauthorized_page(request: Request):
 
 
 @router.get("/")
-async def show_main_page(request: Request, user: User = Depends(current_user)):
-    return templates.TemplateResponse("main_page.html", {"request": request, "user": user})
+async def show_main_page(
+        request: Request,
+        user: User = Depends(current_user),
+        session: AsyncSession = Depends(get_db_general)):
+    if not user:
+        return templates.TemplateResponse("main_page.html",
+                                          {"request": request,
+                                           "user": user,
+                                           "config_names": [],
+                                           "group_names": []})
+    group_name = request.session["group"].get("name", "")
+    config_names = [elem[0] for elem in (await get_config_names(session, user, group_name))]
+
+    group_names = await get_group_names(session, user)
+
+    return templates.TemplateResponse("main_page.html",
+                                      {"request": request,
+                                       "user": user,
+                                       "config_names": config_names,
+                                       "group_names": group_names})
 
 
 @router.post("/change_user_role")
@@ -44,8 +63,6 @@ async def change_user_role(
     user = result.scalars().first()
 
     if user:
-        # Обновите роль пользователя
-        print("sdfsdfs")
         user.role = new_role_id
         await session.commit()
     else:
@@ -56,5 +73,3 @@ async def change_user_role(
         "status": "success",
         "detail": "User role updated successfully",
     }
-
-

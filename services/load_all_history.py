@@ -19,6 +19,7 @@ def create_url(USER_ID, HOST_ID):
     date_to = datetime.now() - timedelta(days=2)
     date_to = date_to.date()
     date_from = date_to - timedelta(days=365)
+    print(f"date_from: {date_from} date_to: {date_to}")
     return (f"https://api.webmaster.yandex.net/v4/user/{USER_ID}/hosts/{HOST_ID}/search-queries/all/history?"
             f"query_indicator=TOTAL_SHOWS&"
             f"query_indicator=TOTAL_CLICKS&"
@@ -40,7 +41,6 @@ async def get_response(async_session, USER_ID, HOST_ID, ACCESS_TOKEN):
 
 
 async def add_data(response: requests.models.Response, async_session):
-
     indicators = response.json()["indicators"]
 
     data_for_db = list()
@@ -113,14 +113,14 @@ async def add_top(async_session):
     await _add_top(add_values, async_session)
 
 
-async def main(config):
-    DATABASE_NAME, ACCESS_TOKEN, USER_ID, HOST_ID, user = (config['database_name'],
-                                                           config['access_token'],
-                                                           config['user_id'],
-                                                           config['host_id'],
-                                                           config['user'])
-
-    async_session = await connect_db(DATABASE_NAME, user)
+async def main(request_session):
+    config, group = request_session["config"], request_session["group"]
+    DATABASE_NAME, ACCESS_TOKEN, USER_ID, HOST_ID, group = (config['database_name'],
+                                                            config['access_token'],
+                                                            config['user_id'],
+                                                            config['host_id'],
+                                                            group['name'])
+    async_session = await connect_db(DATABASE_NAME, group)
 
     response = await get_response(async_session, USER_ID, HOST_ID, ACCESS_TOKEN)
     await add_data(response, async_session)

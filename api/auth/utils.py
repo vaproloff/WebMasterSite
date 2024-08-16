@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.auth.models import User
-from db.session import get_db, get_db_general
+from db.session import get_db_general
 
 
 class CustomSQLAlchemyUserDatabase(SQLAlchemyUserDatabase):

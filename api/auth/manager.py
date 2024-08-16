@@ -3,6 +3,7 @@ from typing import Optional
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi_users import BaseUserManager, IntegerIDMixin, exceptions
+from requests import Response
 
 from api.auth.models import User
 from api.auth.schemas import UserCreate
@@ -101,6 +102,15 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
 
     async def on_after_register(self, user: User, request: Optional[Request] = None):
         print(f"Зарегистрирован пользователь {user}")
+
+    async def on_after_login(
+        self,
+        user: User,
+        request: Optional[Request] = None,
+        response: Optional[Response] = None,
+    ) -> None:
+        request.session["config"] = {}
+        request.session["group"] = {}
 
     async def on_after_forgot_password(
 
