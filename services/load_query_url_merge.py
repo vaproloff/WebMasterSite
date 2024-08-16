@@ -55,7 +55,7 @@ async def main(request_session):
                                                             config['host_id'],
                                                             group['name'])
 
-    async_session = await connect_db(DATABASE_NAME, group)
+    async_session = await connect_db(DATABASE_NAME)
     # print("Начало выполнения")
     # await get_approach_query(async_session, group)
     # curr = datetime.now()

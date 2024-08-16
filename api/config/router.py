@@ -37,19 +37,25 @@ async def add_config(request: Request,
                                                            formData["user_id"],
                                                            formData["host_id"])
 
-    try:
-        sanitized_database_name = _sanitize_database_name(database_name)
-    except ValueError as e:
-        print(e)
-        raise HTTPException(status_code=400, detail=str(e))
-
     config = Config(name=name,
                     database_name=database_name,
                     access_token=access_token,
                     user_id=user_id,
                     host_id=host_id)
+
     session.add(config)
     await session.commit()
+
+    conn = await asyncpg.connect(user=DB_USER, password=DB_PASSWORD, host=DB_HOST, port=DB_PORT)
+    await conn.execute(f'CREATE DATABASE {database_name}')
+    print(f"CREATE DATABASE {database_name}: successfully")
+    conn.close()
+
+    # Применение миграций Alembic
+    alembic_cfg = AlembicConfig("alembic.ini")
+    alembic_cfg.set_main_option("sqlalchemy.url",
+                                f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{database_name}")
+    command.upgrade(alembic_cfg, "head")
 
     return {"status": 200}
 
@@ -118,13 +124,6 @@ async def get_configs(
     return {"configs": result}  # Возвращаем JSON объект с ключом "roles"
 
 
-def _sanitize_database_name(name):
-    # Разрешаем только буквы, цифры и подчеркивания
-    if not re.match(r'^[a-zA-Z0-9_]+$', name):
-        raise ValueError("Имя базы данных содержит недопустимые символы")
-    return name
-
-
 @router.post("/add_group")
 async def add_group(
         request: Request,
@@ -174,24 +173,6 @@ async def add_group(
     # Добавление новой группы в базу данных
     session.add(new_group)
     await session.commit()
-
-    for database_name in configs_objects:
-        database_name = database_name.database_name
-        # Подключение к PostgreSQL и создание новой базы данных
-
-        sanitized_database_name = _sanitize_database_name(database_name)
-        sanitized_database_name_user_bound = f"{sanitized_database_name}_{group_name}"
-
-        conn = await asyncpg.connect(user=DB_USER, password=DB_PASSWORD, host=DB_HOST, port=DB_PORT)
-        await conn.execute(f'CREATE DATABASE {sanitized_database_name_user_bound}')
-        print(f"CREATE DATABASE {sanitized_database_name_user_bound}: successfully")
-        conn.close()
-
-        # Применение миграций Alembic
-        alembic_cfg = AlembicConfig("alembic.ini")
-        alembic_cfg.set_main_option("sqlalchemy.url",
-                                    f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{sanitized_database_name_user_bound}")
-        command.upgrade(alembic_cfg, "head")
 
     return {"status": "success", "group": new_group.id}
 
@@ -339,29 +320,6 @@ async def add_config_to_group(
     group, config = group[0], config[0]
     group.configs.append(config)
     await session.commit()
-
-    try:
-        sanitized_database_name = _sanitize_database_name(config.database_name)
-        sanitized_database_name_user_bound = f"{sanitized_database_name}_{group_name}"
-    except ValueError as e:
-        print(e)
-        raise HTTPException(status_code=400, detail=str(e))
-
-    conn = await asyncpg.connect(user=DB_USER, password=DB_PASSWORD, host=DB_HOST, port=DB_PORT)
-    try:
-        print(sanitized_database_name_user_bound)
-        await conn.execute(f'CREATE DATABASE {sanitized_database_name_user_bound}')
-    except asyncpg.exceptions.DuplicateDatabaseError:
-        print("Database already exists")
-    finally:
-        await conn.close()
-
-    # Применение миграций Alembic
-    alembic_cfg = AlembicConfig("alembic.ini")
-    alembic_cfg.set_section_option("logger_alembic", "level", "ERROR")
-    alembic_cfg.set_main_option("sqlalchemy.url",
-                                f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{sanitized_database_name_user_bound}")
-    command.upgrade(alembic_cfg, "head")
 
     return {
         "status": "success",

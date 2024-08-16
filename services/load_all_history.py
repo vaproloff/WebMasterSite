@@ -120,7 +120,7 @@ async def main(request_session):
                                                             config['user_id'],
                                                             config['host_id'],
                                                             group['name'])
-    async_session = await connect_db(DATABASE_NAME, group)
+    async_session = await connect_db(DATABASE_NAME)
 
     response = await get_response(async_session, USER_ID, HOST_ID, ACCESS_TOKEN)
     await add_data(response, async_session)

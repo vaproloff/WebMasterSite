@@ -29,8 +29,8 @@ engine_general = create_async_engine(
 async_session_general = sessionmaker(engine_general, expire_on_commit=False, class_=AsyncSession)
 
 
-async def connect_db(db_name, group: str):
-    db_name_bound = f"{db_name}_{group}"
+async def connect_db(db_name: str):
+    db_name_bound = f"{db_name}"
     try:
         REAL_DATABASE_URL = f"postgresql+asyncpg://{config.DB_USER}:{config.DB_PASSWORD}@{config.DB_HOST}:{config.DB_PORT}/{db_name_bound}"
         engine = create_async_engine(

@@ -91,7 +91,7 @@ async def get_all_data(request_session):
                                                                   config['host_id'],
                                                                   group['name'])
 
-    async_session = await connect_db(DATABASE_NAME, group)
+    async_session = await connect_db(DATABASE_NAME)
 
     # Формируем URL для запроса мониторинга поисковых запросов
     URL = f"https://api.webmaster.yandex.net/v4/user/{USER_ID}/hosts/{HOST_ID}/query-analytics/list"
