@@ -179,21 +179,13 @@ async def add_group(
         database_name = database_name.database_name
         # Подключение к PostgreSQL и создание новой базы данных
 
-        try:
-            sanitized_database_name = _sanitize_database_name(database_name)
-            sanitized_database_name_user_bound = f"{sanitized_database_name}_{group_name}"
-        except ValueError as e:
-            print(e)
-            return {"status": 500}
+        sanitized_database_name = _sanitize_database_name(database_name)
+        sanitized_database_name_user_bound = f"{sanitized_database_name}_{group_name}"
 
         conn = await asyncpg.connect(user=DB_USER, password=DB_PASSWORD, host=DB_HOST, port=DB_PORT)
-        try:
-            await conn.execute(f'CREATE DATABASE {sanitized_database_name_user_bound}')
-            print(f"CREATE DATABASE {sanitized_database_name_user_bound}: successfully")
-        except asyncpg.exceptions.DuplicateDatabaseError:
-            print("Database already exists")
-        finally:
-            await conn.close()
+        await conn.execute(f'CREATE DATABASE {sanitized_database_name_user_bound}')
+        print(f"CREATE DATABASE {sanitized_database_name_user_bound}: successfully")
+        conn.close()
 
         # Применение миграций Alembic
         alembic_cfg = AlembicConfig("alembic.ini")
