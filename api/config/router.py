@@ -48,7 +48,7 @@ async def add_config(request: Request,
 
     conn = await asyncpg.connect(user=DB_USER, password=DB_PASSWORD, host=DB_HOST, port=DB_PORT)
     try:
-        await conn.execute(f'CREATE DATABASE {database_name}')
+        await conn.execute(f'CREATE DATABASE "{database_name}"')
         print(f"CREATE DATABASE {database_name}: successfully")
     except asyncpg.exceptions.DuplicateDatabaseError:
         print(f"CREATE DATABASE {database_name}: database already exists")
