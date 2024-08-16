@@ -47,9 +47,15 @@ async def add_config(request: Request,
     await session.commit()
 
     conn = await asyncpg.connect(user=DB_USER, password=DB_PASSWORD, host=DB_HOST, port=DB_PORT)
-    await conn.execute(f'CREATE DATABASE {database_name}')
-    print(f"CREATE DATABASE {database_name}: successfully")
-    conn.close()
+    try:
+        await conn.execute(f'CREATE DATABASE {database_name}')
+        print(f"CREATE DATABASE {database_name}: successfully")
+    except asyncpg.exceptions.DuplicateDatabaseError:
+        print(f"CREATE DATABASE {database_name}: database already exists")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    finally:
+        await conn.close()
 
     # Применение миграций Alembic
     alembic_cfg = AlembicConfig("alembic.ini")
