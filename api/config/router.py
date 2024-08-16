@@ -132,81 +132,76 @@ async def add_group(
         user=Depends(current_user),
         session: AsyncSession = Depends(get_db_general),
 ):
-    try:
-        group_name = formData['group_name']
-        usernames = formData['usernames']
-        configs = formData['configs']
+    group_name = formData['group_name']
+    usernames = formData['usernames']
+    configs = formData['configs']
 
-        res = (await session.execute(select(Group).where(Group.name == group_name))).scalar()
+    res = (await session.execute(select(Group).where(Group.name == group_name))).scalar()
 
-        if res:
-            return {
-                "status": "error",
-                "message": "group already exists"
-            }
+    if res:
+        return {
+            "status": "error",
+            "message": "group already exists"
+        }
 
-        # Создание новой группы
-        new_group = Group(name=group_name)
+    # Создание новой группы
+    new_group = Group(name=group_name)
 
-        # Добавление пользователей
-        users = []
-        for username in usernames:
-            result = await session.execute(select(User).filter_by(username=username))
-            user = result.scalars().first()
-            if user:
-                users.append(user)
-            else:
-                raise HTTPException(status_code=404, detail=f"User '{username}' not found")
+    # Добавление пользователей
+    users = []
+    for username in usernames:
+        result = await session.execute(select(User).filter_by(username=username))
+        user = result.scalars().first()
+        if user:
+            users.append(user)
+        else:
+            raise HTTPException(status_code=404, detail=f"User '{username}' not found")
 
-        new_group.users = users
+    new_group.users = users
 
-        # Добавление конфигураций
-        configs_objects = []
-        for config_name in configs:
-            result = await session.execute(select(Config).filter_by(name=config_name))
-            config = result.scalars().first()
-            if config:
-                configs_objects.append(config)
-            else:
-                raise HTTPException(status_code=404, detail=f"Config '{config_name}' not found")
+    # Добавление конфигураций
+    configs_objects = []
+    for config_name in configs:
+        result = await session.execute(select(Config).filter_by(name=config_name))
+        config = result.scalars().first()
+        if config:
+            configs_objects.append(config)
+        else:
+            raise HTTPException(status_code=404, detail=f"Config '{config_name}' not found")
 
-        new_group.configs = configs_objects
+    new_group.configs = configs_objects
 
-        # Добавление новой группы в базу данных
-        session.add(new_group)
-        await session.commit()
+    # Добавление новой группы в базу данных
+    session.add(new_group)
+    await session.commit()
 
-        for database_name in configs_objects:
-            database_name = database_name.database_name
-            # Подключение к PostgreSQL и создание новой базы данных
+    for database_name in configs_objects:
+        database_name = database_name.database_name
+        # Подключение к PostgreSQL и создание новой базы данных
 
-            try:
-                sanitized_database_name = _sanitize_database_name(database_name)
-                sanitized_database_name_user_bound = f"{sanitized_database_name}_{group_name}"
-            except ValueError as e:
-                print(e)
-                return {"status": 500}
+        try:
+            sanitized_database_name = _sanitize_database_name(database_name)
+            sanitized_database_name_user_bound = f"{sanitized_database_name}_{group_name}"
+        except ValueError as e:
+            print(e)
+            return {"status": 500}
 
-            conn = await asyncpg.connect(user=DB_USER, password=DB_PASSWORD, host=DB_HOST, port=DB_PORT)
-            try:
-                await conn.execute(f'CREATE DATABASE {sanitized_database_name_user_bound}')
-                print(f"CREATE DATABASE {sanitized_database_name_user_bound}: successfully")
-            except asyncpg.exceptions.DuplicateDatabaseError:
-                print("Database already exists")
-            finally:
-                await conn.close()
+        conn = await asyncpg.connect(user=DB_USER, password=DB_PASSWORD, host=DB_HOST, port=DB_PORT)
+        try:
+            await conn.execute(f'CREATE DATABASE {sanitized_database_name_user_bound}')
+            print(f"CREATE DATABASE {sanitized_database_name_user_bound}: successfully")
+        except asyncpg.exceptions.DuplicateDatabaseError:
+            print("Database already exists")
+        finally:
+            await conn.close()
 
-            # Применение миграций Alembic
-            alembic_cfg = AlembicConfig("alembic.ini")
-            alembic_cfg.set_main_option("sqlalchemy.url",
-                                        f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{sanitized_database_name_user_bound}")
-            command.upgrade(alembic_cfg, "head")
+        # Применение миграций Alembic
+        alembic_cfg = AlembicConfig("alembic.ini")
+        alembic_cfg.set_main_option("sqlalchemy.url",
+                                    f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{sanitized_database_name_user_bound}")
+        command.upgrade(alembic_cfg, "head")
 
-        return {"status": "success", "group": new_group.id}
-
-    except Exception as e:
-        await session.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+    return {"status": "success", "group": new_group.id}
 
 
 @router.post("/delete_group")
