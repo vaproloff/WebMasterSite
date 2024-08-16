@@ -217,7 +217,7 @@
         <h2>Add Config to Group</h2>
         <div class="form">
             <input type="text" id="group-name-add-config" placeholder="Group Name">
-            <input type="text" id="username-add-config" placeholder="Username">
+            <input type="text" id="username-add-config" placeholder="Name">
             <button type="button" onclick="AddConfigToGroup('{{ url_for('add_config_to_group') }}')">Add Config</button>
         </div>
     </div>
@@ -225,7 +225,7 @@
         <h2>Delete Config from Group</h2>
         <div class="form">
             <input type="text" id="group-name-delete-config" placeholder="Group Name">
-            <input type="text" id="username-delete-config" placeholder="Username">
+            <input type="text" id="username-delete-config" placeholder="Name">
             <button type="button" onclick="DeleteConfigFromGroup('{{ url_for('delete_config_from_group') }}')">Delete Config</button>
         </div>
     </div>

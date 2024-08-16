@@ -3,7 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.templating import Jinja2Templates
 
-from api.auth.auth_config import current_user
+from api.auth.auth_config import current_user, RoleChecker
 from api.auth.models import User
 from api.config.models import Role
 from api.config.utils import get_config_names, get_group_names
@@ -48,6 +48,7 @@ async def change_user_role(
         formData: dict,
         user=Depends(current_user),
         session: AsyncSession = Depends(get_db_general),
+        required: bool = Depends(RoleChecker(required_permissions={"Superuser"}))
 ):
     username = formData["username"]
     new_role = formData["new_role"]
