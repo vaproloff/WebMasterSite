@@ -17,8 +17,6 @@ from api.auth.models import User
 # REAL_DATABASE_URL = f"postgresql+asyncpg://mainuser:Kirill123456@5.35.81.91:5432/products"
 
 GENERAL_DATABASE_URL = f"postgresql+asyncpg://{config.DB_USER}:{config.DB_PASSWORD}@{config.DB_HOST}:{config.DB_PORT}/{config.DATABASE_GENERAL_NAME}"
-# REAL_DATABASE_URL = f"postgresql+asyncpg://dn_true:1238xcnq&qaQWER@localhost:5432/dn_true_2"
-# REAL_DATABASE_URL = f"postgresql+asyncpg://dn_true:1238xcnq&qaQWER@localhost:5432/ayshotel"
 
 engine_general = create_async_engine(
     GENERAL_DATABASE_URL,

@@ -1,8 +1,10 @@
 import asyncio
 from datetime import datetime
+from psycopg2 import IntegrityError
 import requests
+from sqlalchemy import select
 
-from db.models import Query
+from db.models import LastUpdateDate, Query
 from db.models import MetricsQuery
 from api.actions.queries import _add_new_urls
 from api.actions.metrics_queries import _add_new_metrics
@@ -93,6 +95,30 @@ async def get_all_data(request_session):
 
     async_session = await connect_db(DATABASE_NAME)
 
+    async with async_session() as session:
+
+        current_date = datetime.now()
+        last_update_date = LastUpdateDate(date=current_date)
+                
+        result = await session.execute(
+            select(LastUpdateDate).filter(LastUpdateDate.date == current_date)
+            )
+        existing_record = result.scalars().first()
+            
+        if not existing_record:
+            try:
+                # Добавляем объект в сессию
+                session.add(last_update_date)
+                # Фиксируем изменения
+                await session.commit()
+                print(f"Date {current_date} added successfully.")
+            except IntegrityError:
+                # Если запись уже существует, выполняем откат
+                await session.rollback()
+                print(f"Date {current_date} already exists.")
+        else:
+            print(f"Date {current_date} already exists.")
+
     # Формируем URL для запроса мониторинга поисковых запросов
     URL = f"https://api.webmaster.yandex.net/v4/user/{USER_ID}/hosts/{HOST_ID}/query-analytics/list"
 
@@ -116,8 +142,6 @@ async def get_all_data(request_session):
     if not last_update_date:
         last_update_date = datetime.strptime("1900-01-01", date_format)
     await add_data(data, last_update_date, async_session)
-    if count > 500:
-        return
     for offset in range(500, count, 500):
         print(f"[INFO] PAGE{offset} DONE!")
         curr = datetime.now()

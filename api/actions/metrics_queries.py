@@ -27,3 +27,13 @@ async def _delete_data(date: date, session: Callable):
     async with session() as s:
         order_dal = MetricQueryDAL(s)
         await order_dal.delete_data(date)
+
+
+async def _delete_days(days_count: int, session: Callable):
+    days_count += 4
+    async with session() as s:
+        order_dal = MetricQueryDAL(s)
+        await order_dal.delete_days(days_count)
+
+
+

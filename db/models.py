@@ -89,3 +89,10 @@ class QueryUrlTop(Base):
     impression = Column(Float, nullable=False)
     count = Column(Integer, nullable=False)
     date = Column(DateTime, nullable=False)
+
+
+class LastUpdateDate(Base):
+    __tablename__ = "last_update_date"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    date = Column(DateTime, nullable=False)

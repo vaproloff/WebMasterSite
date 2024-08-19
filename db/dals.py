@@ -1,6 +1,7 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List
 
+from fastapi import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, distinct, delete, text
 from sqlalchemy import and_
@@ -281,6 +282,23 @@ class MetricQueryDAL:
         query = delete(MetricsQuery).where(MetricsQuery.date == date)
         await self.db_session.execute(query)
         await self.db_session.commit()
+    
+
+    async def delete_days(
+            self,
+            days_count: int,
+    ):
+        target_date = datetime.now() - timedelta(days=days_count)
+
+        query = delete(MetricsQuery).where(MetricsQuery.date >= target_date)
+
+        await self.db_session.execute(query)
+
+        await self.db_session.commit()
+
+        logger.info(f"Из таблицы query были удалены данные до: {target_date}")
+
+        return 
 
 
 class IndicatorDAL:

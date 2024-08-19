@@ -34,5 +34,4 @@ async def get_group_names(session: AsyncSession, user: User):
         .where(GroupUserAssociation.user_id == user.id)
     )
     result = (await session.execute(query)).all()
-    print(result)
     return [row[0] for row in result]

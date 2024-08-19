@@ -77,6 +77,7 @@ async def set_config(request: Request,
                                  "user_id": result.user_id,
                                  "host_id": result.host_id,
                                  }
+    
     return {"status": 200, "details": request.session}
 
 

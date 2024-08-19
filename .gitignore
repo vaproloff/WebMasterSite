@@ -8,3 +8,4 @@ logs/
 *.bkp
 *.txt
 *.env
+auto_alembic.py
