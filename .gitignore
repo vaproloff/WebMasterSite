@@ -7,3 +7,5 @@ logs/
 *.ini
 queries.txt
 results_main_domain.txt
+test.py
+config.py
