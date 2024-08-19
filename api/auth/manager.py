@@ -88,7 +88,6 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
             # Inspired from Django: https://code.djangoproject.com/ticket/20760
             self.password_helper.hash(credentials.password)
             return None
-        print(user)
         verified, updated_password_hash = self.password_helper.verify_and_update(
             credentials.password, user.hashed_password
         )
@@ -101,7 +100,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
         return user
 
     async def on_after_register(self, user: User, request: Optional[Request] = None):
-        print(f"Зарегистрирован пользователь {user}")
+        print(f"Зарегистрирован пользователь {user.username}")
 
     async def on_after_login(
         self,

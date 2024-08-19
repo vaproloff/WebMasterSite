@@ -1,4 +1,9 @@
-.idea
+.idea/
 __pacache__/
-test.py
-venv
+venv/
+logs/
+*.pyc
+*.log
+*.ini
+queries.txt
+results_main_domain.txt
