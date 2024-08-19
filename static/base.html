@@ -42,6 +42,8 @@
             min-width: 160px;
             box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
             z-index: 1;
+            top: 100%; /* Расположить меню ниже кнопки */
+            left: 0; /* Выровнять меню по левому краю кнопки */
         }
         .dropdown-content a {
             color: black;
@@ -68,8 +70,16 @@
 <body>
     <header>
         {% if user is not none %}
-        <button class="button" onclick="profile_button('{{ url_for('show_profile', username=user.username) }}')">{{ user.username }}</button>
-        <button class="button superuser-button" onclick="superuser_button('{{ url_for('show_superuser', username=user.username) }}')"> Command Panel</button>
+        <div class="dropdown">
+            <button class="button">{{ user.username }}</button>
+            <div class="dropdown-content">
+                <a href="{{ url_for('get_queries') }}">Query Table</a>
+                <a href="{{ url_for('get_urls') }}">Url Table</a>
+                <a href="{{ url_for('get_all_history') }}">All history Table</a>
+                <a href="{{ url_for('show_menu_merge_page') }}">Query & Url Merge Table</a>
+            </div>
+        </div>
+        <button class="button superuser-button" onclick="superuser_button('{{ url_for('show_superuser', username=user.username) }}')">Command Panel</button>
         <button class="button main-page-button" onclick="main_page_button()">Main Page</button>
         <div class="header-right">
             <div class="dropdown">
