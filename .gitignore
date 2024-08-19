@@ -5,6 +5,7 @@ logs/
 *.pyc
 *.log
 *.ini
+*.bkp
 queries.txt
 results_main_domain.txt
 test.py
