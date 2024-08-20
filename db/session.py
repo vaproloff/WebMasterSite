@@ -21,6 +21,8 @@ GENERAL_DATABASE_URL = f"postgresql+asyncpg://{config.DB_USER}:{config.DB_PASSWO
 engine_general = create_async_engine(
     GENERAL_DATABASE_URL,
     future=True,
+    pool_size=20,
+    max_overflow=10,
     execution_options={"isolation_level": "AUTOCOMMIT"},
 )
 

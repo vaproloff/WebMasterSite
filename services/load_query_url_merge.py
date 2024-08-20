@@ -18,7 +18,6 @@ START_DATE = datetime.now().date()
 # Получаем список подходящих запросов из бд и формируем queries.txt
 async def get_approach_query(session: Callable, group: str):
     res = await _get_approach_query(session)
-    res = res[:300]
     with open(f"queries.txt", "w", encoding="utf-8") as f:
         for cursor, query in enumerate(res):
             if cursor < len(res) - 1:
@@ -56,17 +55,17 @@ async def main(request_session):
                                                             group['name'])
 
     async_session = await connect_db(DATABASE_NAME)
-    # print("Начало выполнения")
-    # await get_approach_query(async_session, group)
-    # curr = datetime.now()
-    # try:
-    #     main_domain = HOST_ID.split(":")[1]
-    #     await run_bash_async(main_domain, group)
-    # except Exception as e:
-    #     print(
-    #         f"Произошло досрочное выключение xmlstock. Ошибка: {e}")
-    # print(datetime.now() - curr)
-    # print("result main create")
+    print("Начало выполнения")
+    await get_approach_query(async_session, group)
+    curr = datetime.now()
+    try:
+        main_domain = HOST_ID.split(":")[1]
+        await run_bash_async(main_domain, group)
+    except Exception as e:
+        print(
+            f"Произошло досрочное выключение xmlstock. Ошибка: {e}")
+    print(datetime.now() - curr)
+    print("result main create")
     await record_to_merge_db(async_session)
     print("Скрипт успешно выполнен")
 
