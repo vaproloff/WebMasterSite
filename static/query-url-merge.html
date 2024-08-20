@@ -82,9 +82,61 @@
     div {
       border-bottom: 1px solid #000;
     }
+
+    .back-to-menu {
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 5px;
+            background-color: #333;
+            color: #fff;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+
+        .back-to-menu:hover {
+            background-color: #555;
+        }
+
+        .button-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .button-container input[type="button"] {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .button-container input[type="button"]:hover {
+            background-color: #0056b3;
+        }
+
+        .button-container input[type="number"] {
+            width: 80px;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        .button-container label {
+            margin-right: 5px;
+            color: #000; /* Черный цвет для надписи Last Update Date */
+        }
 </style>
 
-<a href="{{ url_for('show_profile', username=user.username) }}" class="back-to-menu">Back to profile</a>
+<div class="button-container">
+    <a href="{{ url_for('show_profile', username=user.username) }}" class="back-to-menu">Back to profile</a>
+    <input type="button" value="Update Data Merge" onclick="sendRequest('{{ url_for('load_merge_script') }}')">
+    <label for="last_update_date">Last Update Date: {{ last_update_date }}</label>
+</div>
 <input type="date" id="start_date">
 <input type="date" id="end_date">
 <label for="search_field_url">Url:</label>
@@ -243,7 +295,7 @@
             row.appendChild(nameCell);
         }
 
-        var url = "/admin/get-merge";
+        var url = "{{ url_for('get_merge')}}";
         var params = {
             length: 50, // количество отображаемых элементов
             start: 0, // номер страницы
@@ -340,7 +392,7 @@
             row.appendChild(nameCell);
         }
 
-        var url = "/admin/get-merge";
+        var url = "{{ url_for('get_merge')}}";
         var params = {
             length: 50, // количество отображаемых элементов
             start: 0, // номер страницы
@@ -454,7 +506,7 @@
         document.getElementById("next").innerHTML = CurPage;
 
 
-        var url = "/admin/get-merge";
+        var url = "{{ url_for('get_merge')}}";
         var params = {
             length: 50, // количество отображаемых элементов
             start: ((CurPage - 2) * 50) + 1, // номер страницы
@@ -558,7 +610,7 @@
         }
         var CurPage = document.getElementById("cur").innerHTML;
         CurPage = Number.parseInt(CurPage, 10)
-        var url = "/admin/get-merge";
+        var url = "{{ url_for('get_merge')}}";
 
         document.getElementById("prev").innerHTML = CurPage;
         document.getElementById("prev").disabled = false;

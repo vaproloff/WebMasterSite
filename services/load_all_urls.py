@@ -1,8 +1,10 @@
 import asyncio
 from datetime import datetime
 import requests
+from sqlalchemy import select
 
-from db.models import Url
+from api.actions.actions import add_last_load_date
+from db.models import LastUpdateDate, Url
 from db.models import Metrics
 from api.actions.urls import _add_new_urls
 from api.actions.metrics_url import _add_new_metrics
@@ -93,6 +95,8 @@ async def get_all_data(request_session):
 
     async_session = await connect_db(DATABASE_NAME)
 
+    await add_last_load_date(async_session, "url")
+
     # Формируем URL для запроса мониторинга поисковых запросов
     URL = f"https://api.webmaster.yandex.net/v4/user/{USER_ID}/hosts/{HOST_ID}/query-analytics/list"
 
@@ -116,6 +120,8 @@ async def get_all_data(request_session):
     if not last_update_date:
         last_update_date = datetime.strptime("1900-01-01", date_format)
     await add_data(data, last_update_date, async_session)
+    if count > 500:
+        return
     for offset in range(500, count, 500):
         print(f"[INFO] PAGE{offset} DONE!")
         await get_data_by_page(offset, last_update_date, URL, ACCESS_TOKEN, async_session)

@@ -69,10 +69,49 @@
   background-color: #555;
 }
 
+.button-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .button-container input[type="button"] {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .button-container input[type="button"]:hover {
+            background-color: #0056b3;
+        }
+
+        .button-container input[type="number"] {
+            width: 80px;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        .button-container label {
+            margin-right: 5px;
+            color: #000; /* Черный цвет для надписи Last Update Date */
+        }
+
 
 </style>
 
-<a href="{{ url_for('show_profile', username=user.username) }}" class="back-to-menu">Back to profile</a>
+<div class="button-container">
+    <a href="{{ url_for('show_profile', username=user.username) }}" class="back-to-menu">Back to profile</a>
+    <input type="button" value="Update Data History" onclick="sendRequest('{{ url_for('load_history_script') }}')">
+    <label for="last_update_date">Last Update Date: {{ last_update_date }}</label>
+</div>
+
 <input type="date" id="start_date">
 <input type="date" id="end_date">
 <input type="button" value="Отфильтровать" onclick="UpdateTable();">
@@ -106,6 +145,32 @@
 <script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.print.min.js"></script>
 
 <script>
+
+    function sendRequest(url) {
+        $('.loader').show();
+        fetch(url)
+            .then(response => {
+                if (response.status === 403) {
+                    throw new Error('403 Forbidden');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Success:', data);
+                // Обработка успешного ответа
+                $('.loader').hide();
+                window.location().reload()
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                if (error.message === '403 Forbidden') {
+                    alert('Error: You do not have permission to perform this action.');
+                }
+                // Обработка ошибки
+                $('.loader').hide();
+                window.location.reload()
+            });
+    }
     function getDate(minus_day) {
         var today = new Date();
         var twoWeeksAgo = new Date(today.getTime() - (minus_day * 24 * 60 * 60 * 1000));
@@ -202,7 +267,7 @@
             row.appendChild(nameCell);
         }
 
-        var url = "/admin/get-all-history";
+        var url = "{{ url_for('get_history') }}";
         var params = {
             start_date: document.getElementById('start_date').value, // Дата начала поиска
             end_date: document.getElementById('end_date').value, // Дата окончания поиска
@@ -307,7 +372,7 @@
             nameCell.innerHTML = getDayOfWeek(IncrementDate(document.getElementById('start_date').value, i)) + "<br>" + IncrementDate(document.getElementById('start_date').value, i);
             row.appendChild(nameCell);
         }
-        var url = "/admin/get-all-history";
+        var url = "{{ url_for('get_history') }}";
         var params = {
             length: 5, // количество отображаемых элементов
             start_date: document.getElementById('start_date').value, // Дата начала поиска
@@ -408,7 +473,7 @@
             "end_date": document.getElementById('end_date').value, // Дата окончания поиска
             "amount": calculateDays(),
         };
-        fetch('/admin/generate_excel_indicators/', {
+        fetch("{{ url_for('generate_excel_history') }}", {
             method: 'POST',
             headers: {
                 "Content-Type": 'application/json'
@@ -437,7 +502,7 @@
             "end_date": document.getElementById('end_date').value, // Дата окончания поиска
             "amount": calculateDays(),
         };
-        fetch('/admin/generate_excel_top/', {
+        fetch("{{ url_for('generate_excel_top') }}", {
             method: 'POST',
             headers: {
                 "Content-Type": 'application/json'
@@ -466,7 +531,7 @@
             "end_date": document.getElementById('end_date').value, // Дата окончания поиска
             "amount": calculateDays(),
         };
-        fetch('/admin/generate_csv_indicators/', {
+        fetch("{{ url_for('generate_csv_history') }}", {
             method: 'POST',
             headers: {
                 "Content-Type": 'application/json'
@@ -495,7 +560,7 @@
             "end_date": document.getElementById('end_date').value, // Дата окончания поиска
             "amount": calculateDays(),
         };
-        fetch('/admin/generate_csv_top/', {
+        fetch("{{ url_for('generate_csv_top') }}", {
             method: 'POST',
             headers: {
                 "Content-Type": 'application/json'
