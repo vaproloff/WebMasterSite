@@ -120,8 +120,6 @@ async def get_all_data(request_session):
     if not last_update_date:
         last_update_date = datetime.strptime("1900-01-01", date_format)
     await add_data(data, last_update_date, async_session)
-    if count > 500:
-        return
     for offset in range(500, count, 500):
         print(f"[INFO] PAGE{offset} DONE!")
         await get_data_by_page(offset, last_update_date, URL, ACCESS_TOKEN, async_session)
