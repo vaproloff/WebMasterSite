@@ -27,7 +27,7 @@ app = FastAPI(
     docs_url="/docs",
 )
 
-app.mount("/static", StaticFiles(directory=Path(__file__).parent.absolute() / "static"), name="static")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # CORS
 
