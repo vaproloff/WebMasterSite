@@ -36,7 +36,7 @@
 <h1>Навигация</h1>
 <ul>
       {% for date in all_dates %}
-        <li><a href="{{ url_for('get_info_merge') }}?date={{ date[0] }}">{{ date[0] }}</a></li>
+        <li><a href="{{ url_for('get_merge') }}?date={{ date[0] }}">{{ date[0] }}</a></li>
       {% endfor %}
 </ul>
 {% endblock %}

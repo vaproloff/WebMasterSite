@@ -4,9 +4,11 @@ from itertools import groupby
 
 import requests
 
+from api.actions.actions import add_last_load_date
 from api.actions.indicators import _add_new_indicators, _add_top
 from api.actions.metrics_queries import _get_top_data_query
 from api.actions.metrics_url import _get_top_data_urls
+from api.actions.top import get_last_date_update_for
 from db.models import QueryIndicator, QueryUrlTop
 
 from db.session import connect_db
@@ -72,10 +74,8 @@ async def add_data(response: requests.models.Response, async_session):
 
 
 async def add_top(async_session):
-    last_update_date = await get_last_update_date(async_session, QueryUrlTop)
-    print("last update date for top 3, 5, 10, 20, 30:", last_update_date)
-    if not last_update_date:
-        last_update_date = (datetime.now() - timedelta(days=60))
+    last_update_date_query = await get_last_date_update_for(async_session, "query")
+    print("last update date for query top 3, 5, 10, 20, 30:", last_update_date_query)
 
     top_position = 3, 5, 10, 20, 30
     add_values = []
@@ -85,7 +85,7 @@ async def add_top(async_session):
             queries_top.sort(key=lambda x: x[-1])
         grouped_data = {k: list(v) for k, v in groupby(queries_top, key=lambda x: x[-1])}
         for key, value in grouped_data.items():
-            if key > last_update_date:
+            if key > last_update_date_query:
                 impression_sum = sum(x[0] for x in value)
                 clicks_sum = sum(x[1] for x in value)
                 position_sum = round(sum(x[2] for x in value) / len(value), 2)
@@ -94,6 +94,9 @@ async def add_top(async_session):
                                 impression=impression_sum, count=len(value),
                                 date=key))
 
+    last_update_date_url = await get_last_date_update_for(async_session, "url")
+    print("last update date for query top 3, 5, 10, 20, 30:", last_update_date_url)
+
     top_position = 3, 5, 10, 20, 30
     for top in top_position:
         urls_top = await _get_top_data_urls(top, async_session)
@@ -101,7 +104,7 @@ async def add_top(async_session):
             urls_top.sort(key=lambda x: x[-1])
         grouped_data = {k: list(v) for k, v in groupby(urls_top, key=lambda x: x[-1])}
         for key, value in grouped_data.items():
-            if key > last_update_date:
+            if key > last_update_date_url:
                 impression_sum = sum(x[0] for x in value)
                 clicks_sum = sum(x[1] for x in value)
                 position_sum = round(sum(x[2] for x in value) / len(value), 2)
@@ -121,6 +124,8 @@ async def main(request_session):
                                                             config['host_id'],
                                                             group['name'])
     async_session = await connect_db(DATABASE_NAME)
+
+    await add_last_load_date(async_session, "history")
 
     response = await get_response(async_session, USER_ID, HOST_ID, ACCESS_TOKEN)
     await add_data(response, async_session)

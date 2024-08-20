@@ -96,3 +96,4 @@ class LastUpdateDate(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     date = Column(DateTime, nullable=False)
+    metrics_type = Column(String, nullable=False)

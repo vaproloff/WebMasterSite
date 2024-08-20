@@ -32,7 +32,7 @@ app.mount("/static", StaticFiles(directory=Path(__file__).parent.absolute() / "s
 # CORS
 
 origins = [
-    "http://192.168.1.79:8000",
+    "http://192.168.1.79:8001",
 ]
 
 app.add_exception_handler(HTTPException, http_exception_handler)

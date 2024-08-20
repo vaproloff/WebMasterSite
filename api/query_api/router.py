@@ -1,12 +1,16 @@
+import csv
 from datetime import datetime, timedelta
+import io
 from itertools import groupby
 import logging
 import sys
 from fastapi import APIRouter, Depends, Request
 from fastapi.encoders import jsonable_encoder
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
+from openpyxl import Workbook
 from sqlalchemy import delete, select
+from api.actions.actions import get_last_load_date
 from api.actions.queries import _get_urls_with_pagination_and_like_query, _get_urls_with_pagination_and_like_sort_query, _get_urls_with_pagination_query, _get_urls_with_pagination_sort_query
 from api.auth.models import User
 from api.config.utils import get_config_names, get_group_names
@@ -17,9 +21,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.auth.auth_config import current_user
 
-from db.utils import get_last_update_date
-
-from const import date_format_2
+from const import date_format_2, date_format_out
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -47,22 +49,7 @@ async def get_queries(request: Request,
     if DATABASE_NAME:
         async_session = await connect_db(DATABASE_NAME)
 
-    last_load_time = None
-    
-    async with async_session() as s:
-        # Создаем запрос для получения записи с максимальным ID
-        stmt = (
-            select(LastUpdateDate)
-            .order_by(LastUpdateDate.id.desc())
-            .limit(1)
-        )
-            
-        result = await s.execute(stmt)
-        record = result.scalars().first()
-
-        if record:
-            last_load_time = record.date.strftime(date_format_2)
-
+    last_load_time = await get_last_load_date(async_session, "query")
 
     group_names = await get_group_names(session, user)
 
@@ -177,11 +164,9 @@ async def delete_query(
 
     session = await connect_db(DATABASE_NAME)
 
-    last_update_date = await get_last_update_date(session, MetricsQuery)
-
     async with session() as async_session:
 
-        target_date = last_update_date - timedelta(days=days)
+        target_date = datetime.now() - timedelta(days=days)
 
         query = delete(MetricsQuery).where(MetricsQuery.date >= target_date)
 
@@ -195,3 +180,189 @@ async def delete_query(
         "status:": "success",
         "message": "delete data for None days",
         }
+
+
+@router.post("/generate_excel_queries/")
+async def generate_excel_query(request: Request, data_request: dict, user: User = Depends(current_user)):
+    DATABASE_NAME = request.session['config'].get('database_name', "")
+    group = request.session['group'].get('name', '')
+    async_session = await connect_db(DATABASE_NAME)
+    wb = Workbook()
+    ws = wb.active
+    start_date = datetime.strptime(data_request["start_date"], date_format_2)
+    end_date = datetime.strptime(data_request["end_date"], date_format_2)
+    main_header = []
+    for i in range(int(data_request["amount"]) + 1):
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+    main_header = main_header[::-1]
+    main_header.insert(0, "Url")
+    for i in range(4):
+        main_header.insert(1, "Result")
+    ws.append(main_header)
+    header = ["Position", "Click", "R", "CTR"] * (int(data_request["amount"]) + 4)
+    header.insert(0, "")
+    ws.append(header)
+    start = 0
+    main_header = []
+    for i in range(int(data_request["amount"]) + 1):
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+    main_header.append("Result")
+    main_header = main_header[::-1]
+    while True:
+        start_el = (start * 50) + 1
+        if data_request["sort_result"]:
+            if data_request["search_text"] == "":
+                urls = await _get_urls_with_pagination_sort_query(start_el, data_request["length"], start_date,
+                                                                  end_date, data_request["sort_desc"],
+                                                                  async_session)
+            else:
+                urls = await _get_urls_with_pagination_and_like_sort_query(start_el, data_request["length"],
+                                                                           start_date, end_date,
+                                                                           data_request["search_text"],
+                                                                           data_request["sort_desc"],
+                                                                           async_session)
+        else:
+            if data_request["search_text"] == "":
+                urls = await _get_urls_with_pagination_query(start_el, data_request["length"], start_date,
+                                                             end_date, async_session)
+            else:
+                urls = await _get_urls_with_pagination_and_like_query(start_el, data_request["length"],
+                                                                      start_date, end_date, data_request["search_text"],
+                                                                      async_session)
+        start += 1
+        try:
+            if urls:
+                urls.sort(key=lambda x: x[-1])
+            grouped_data = [(key, sorted(list(group), key=lambda x: x[0])) for key, group in
+                            groupby(urls, key=lambda x: x[-1])]
+        except TypeError as e:
+            break
+        if len(grouped_data) == 0:
+            break
+        for el in grouped_data:
+            info = {}
+            res = []
+            total_clicks, position, impressions, ctr, count = 0, 0, 0, 0, 0
+            for k, stat in enumerate(el[1]):
+                info[stat[0].strftime(date_format_out)] = [stat[1], stat[2], stat[3], stat[4]]
+                total_clicks += stat[2]
+                position += stat[1]
+                impressions += stat[3]
+                ctr += stat[4]
+                if stat[1] > 0:
+                    count += 1
+            if count > 0:
+                info["Result"] = [round(position / count, 2), total_clicks, impressions, round(ctr / count, 2)]
+            else:
+                info["Result"] = [0, total_clicks, impressions, 0]
+            res.append(el[0])
+            for el in main_header:
+                if el in info:
+                    res.extend(info[el])
+                else:
+                    res.extend([0, 0, 0, 0])
+            ws.append(res)
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    
+    return StreamingResponse(io.BytesIO(output.getvalue()),
+                             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                             headers={"Content-Disposition": "attachment;filename='data.xlsx'"})
+
+
+@router.post("/generate_csv_queries/")
+async def generate_csv_query(request: Request, data_request: dict, user: User = Depends(current_user)):
+    DATABASE_NAME = request.session['config'].get('database_name', "")
+    group = request.session['group'].get('name', '')
+    async_session = await connect_db(DATABASE_NAME)
+    ws = []
+    start_date = datetime.strptime(data_request["start_date"], date_format_2)
+    end_date = datetime.strptime(data_request["end_date"], date_format_2)
+    main_header = []
+    for i in range(int(data_request["amount"]) + 1):
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+    main_header = main_header[::-1]
+    main_header.insert(0, "Url")
+    for i in range(4):
+        main_header.insert(1, "Result")
+    ws.append(main_header)
+    header = ["Position", "Click", "R", "CTR"] * (int(data_request["amount"]) + 4)
+    header.insert(0, "")
+    ws.append(header)
+    start = 0
+    main_header = []
+    for i in range(int(data_request["amount"]) + 1):
+        main_header.append((start_date + timedelta(days=i)).strftime(date_format_out))
+    main_header.append("Result")
+    main_header = main_header[::-1]
+    while True:
+        start_el = (start * 50) + 1
+        if data_request["sort_result"]:
+            if data_request["search_text"] == "":
+                urls = await _get_urls_with_pagination_sort_query(start_el, data_request["length"], start_date,
+                                                                  end_date, data_request["sort_desc"],
+                                                                  async_session)
+            else:
+                urls = await _get_urls_with_pagination_and_like_sort_query(start_el, data_request["length"],
+                                                                           start_date, end_date,
+                                                                           data_request["search_text"],
+                                                                           data_request["sort_desc"],
+                                                                           async_session)
+        else:
+            if data_request["search_text"] == "":
+                urls = await _get_urls_with_pagination_query(start_el, data_request["length"], start_date,
+                                                             end_date, async_session)
+            else:
+                urls = await _get_urls_with_pagination_and_like_query(start_el, data_request["length"],
+                                                                      start_date, end_date, data_request["search_text"],
+                                                                      async_session)
+        start += 1
+        try:
+            if urls:
+                urls.sort(key=lambda x: x[-1])
+            grouped_data = [(key, sorted(list(group), key=lambda x: x[0])) for key, group in
+                            groupby(urls, key=lambda x: x[-1])]
+        except TypeError as e:
+            break
+        if len(grouped_data) == 0:
+            break
+        for el in grouped_data:
+            res = []
+            info = {}
+            total_clicks, position, impressions, ctr, count = 0, 0, 0, 0, 0
+            for k, stat in enumerate(el[1]):
+                info[stat[0].strftime(date_format_out)] = [stat[1], stat[2], stat[3], stat[4]]
+                total_clicks += stat[2]
+                position += stat[1]
+                impressions += stat[3]
+                ctr += stat[4]
+                if stat[1] > 0:
+                    count += 1
+            if count > 0:
+                info["Result"] = [round(position / count, 2), total_clicks, impressions, round(ctr / count, 2)]
+            else:
+                info["Result"] = [0, total_clicks, impressions, 0]
+            res.append(el[0])
+            for el in main_header:
+                if el in info:
+                    res.extend(info[el])
+                else:
+                    res.extend([0, 0, 0, 0])
+
+            ws.append(res)
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerows(ws)
+    output.seek(0)
+
+    return StreamingResponse(content=output.getvalue(),
+                             headers={"Content-Disposition": "attachment;filename='data.csv'"})

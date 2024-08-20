@@ -11,7 +11,9 @@ from api.actions.metrics_queries import _add_new_metrics
 from db.session import connect_db
 from db.utils import get_last_update_date
 
-date_format = "%Y-%m-%d"
+from api.actions.actions import add_last_load_date
+
+from const import date_format
 
 
 async def add_data(data, last_update_date, async_session):
@@ -95,29 +97,7 @@ async def get_all_data(request_session):
 
     async_session = await connect_db(DATABASE_NAME)
 
-    async with async_session() as session:
-
-        current_date = datetime.now()
-        last_update_date = LastUpdateDate(date=current_date)
-                
-        result = await session.execute(
-            select(LastUpdateDate).filter(LastUpdateDate.date == current_date)
-            )
-        existing_record = result.scalars().first()
-            
-        if not existing_record:
-            try:
-                # Добавляем объект в сессию
-                session.add(last_update_date)
-                # Фиксируем изменения
-                await session.commit()
-                print(f"Date {current_date} added successfully.")
-            except IntegrityError:
-                # Если запись уже существует, выполняем откат
-                await session.rollback()
-                print(f"Date {current_date} already exists.")
-        else:
-            print(f"Date {current_date} already exists.")
+    await add_last_load_date(async_session, "query")
 
     # Формируем URL для запроса мониторинга поисковых запросов
     URL = f"https://api.webmaster.yandex.net/v4/user/{USER_ID}/hosts/{HOST_ID}/query-analytics/list"
@@ -142,6 +122,8 @@ async def get_all_data(request_session):
     if not last_update_date:
         last_update_date = datetime.strptime("1900-01-01", date_format)
     await add_data(data, last_update_date, async_session)
+    if count > 500:
+        return
     for offset in range(500, count, 500):
         print(f"[INFO] PAGE{offset} DONE!")
         curr = datetime.now()
