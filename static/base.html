@@ -71,7 +71,9 @@
     <header>
         {% if user is not none %}
         <div class="dropdown">
-            <button class="button">{{ user.username }}</button>
+            <a href="{{ url_for('show_profile', username=user.username) }}">
+                <button class="button">{{ user.username }}</button>
+            </a>
             <div class="dropdown-content">
                 <a href="{{ url_for('get_queries') }}">Query Table</a>
                 <a href="{{ url_for('get_urls') }}">Url Table</a>
