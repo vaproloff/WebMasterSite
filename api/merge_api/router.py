@@ -191,14 +191,14 @@ async def get_merge(
                     prev_stat = (0, stat[1], stat[2], stat[3], stat[4])
                     if current_date == end_date:
                         res["result"] = res.get("result", "")
-                        if count > 0:
+                        if total_clicks > 0:
                             total_position = round(position / count, 2)
                             total_ctr = round(ctr / count, 2)
                             res["result"] += f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD'>
                                       <span style='font-size: 15px'>Позиция:{total_position}</span>
                                       <span style='font-size: 15px'>Клики:{total_clicks}</span>
                                       <span style='font-size: 9px'>Показы:{impressions}</span>
-                                      <span style='font-size: 7px'>ctr:{total_ctr}%</span>
+                                      <span style='font-size: 7px'>ctr:{round(total_clicks * 100 / impressions, 2)}%</span>
                                       </div>"""
                         else:
                             total_position = 0
@@ -217,14 +217,14 @@ async def get_merge(
                             parent_count += 1
                     current_date += timedelta(days=1)
 
-        if parent_count > 0:
+        if parent_clicks > 0:
             parent_position = round(parent_position / parent_count, 2)
             parent_ctr = round(parent_ctr / parent_count, 2)
             res["parent_result"] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD'>
                                           <span style='font-size: 15px'>Позиция:{parent_position}</span>
                                           <span style='font-size: 15px'>Клики:{parent_clicks}</span>
                                           <span style='font-size: 9px'>Показы:{parent_impression}</span>
-                                          <span style='font-size: 7px'>ctr:{parent_ctr}%</span>
+                                          <span style='font-size: 7px'>ctr:{round(parent_clicks * 100 / parent_impression, 2)}%</span>
                                           </div>"""
 
         data.append(res)
@@ -321,14 +321,14 @@ async def generate_excel_merge(request: Request, data_request: dict, user: User 
                         ctr += stat[4]
                         if stat[1] > 0:
                             count += 1
-                    if count > 0:
+                    if total_clicks > 0:
                         total_position = round(position / count, 2)
                         total_ctr = round(ctr / count, 2)
-                        info["Result"] = [total_position, total_clicks, impressions, total_ctr]
+                        info["Result"] = [total_position, total_clicks, impressions, round(total_clicks * 100 / impressions, 2)]
                     else:
                         total_position = 0
                         total_ctr = 0
-                        info["Result"] = [total_position, total_clicks, impressions, total_ctr]
+                        info["Result"] = [total_position, total_clicks, impressions, 0]
                     parent_impression += impressions
                     parent_position += total_position
                     parent_clicks += total_clicks
@@ -441,14 +441,14 @@ async def generate_csv_merge(request: Request, data_request: dict, user: User = 
                         ctr += stat[4]
                         if stat[1] > 0:
                             count += 1
-                    if count > 0:
+                    if total_clicks > 0:
                         total_position = round(position / count, 2)
                         total_ctr = round(ctr / count, 2)
-                        info["Result"] = [total_position, total_clicks, impressions, total_ctr]
+                        info["Result"] = [total_position, total_clicks, impressions, round(total_clicks * 100 / impressions, 2)]
                     else:
                         total_position = 0
                         total_ctr = 0
-                        info["Result"] = [total_position, total_clicks, impressions, total_ctr]
+                        info["Result"] = [total_position, total_clicks, impressions, 0]
                     parent_impression += impressions
                     parent_position += total_position
                     parent_clicks += total_clicks

@@ -126,17 +126,16 @@ async def get_queries(request: Request, data_request: dict, user: User = Depends
             total_clicks += stat[2]
             position += stat[1]
             impressions += stat[3]
-            ctr += stat[4]
             if stat[1] > 0:
                 count += 1
             if k == len(el[1]) - 1:
                 res["result"] = res.get("result", "")
-                if count > 0:
+                if total_clicks > 0:
                     res["result"] += f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD'>
                               <span style='font-size: 15px'>Позиция:{round(position / count, 2)}</span>
                               <span style='font-size: 15px'>Клики:{total_clicks}</span>
                               <span style='font-size: 8px'>Показы:{impressions}</span>
-                              <span style='font-size: 7px'>ctr:{round(ctr / count, 2)}%</span>
+                              <span style='font-size: 7px'>ctr:{round(total_clicks * 100 / impressions, 2)}%</span>
                               </div>"""
                 else:
                     res["result"] += f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD'>
@@ -251,11 +250,10 @@ async def generate_excel_query(request: Request, data_request: dict, user: User 
                 total_clicks += stat[2]
                 position += stat[1]
                 impressions += stat[3]
-                ctr += stat[4]
                 if stat[1] > 0:
                     count += 1
-            if count > 0:
-                info["Result"] = [round(position / count, 2), total_clicks, impressions, round(ctr / count, 2)]
+            if impressions > 0:
+                info["Result"] = [round(position / count, 2), total_clicks, impressions, round(total_clicks * 100 / impressions, 2)]
             else:
                 info["Result"] = [0, total_clicks, impressions, 0]
             res.append(el[0])
@@ -343,11 +341,10 @@ async def generate_csv_query(request: Request, data_request: dict, user: User = 
                 total_clicks += stat[2]
                 position += stat[1]
                 impressions += stat[3]
-                ctr += stat[4]
                 if stat[1] > 0:
                     count += 1
-            if count > 0:
-                info["Result"] = [round(position / count, 2), total_clicks, impressions, round(ctr / count, 2)]
+            if impressions > 0:
+                info["Result"] = [round(position / count, 2), total_clicks, impressions, round(total_clicks * 100 / impressions, 2)]
             else:
                 info["Result"] = [0, total_clicks, impressions, 0]
             res.append(el[0])
