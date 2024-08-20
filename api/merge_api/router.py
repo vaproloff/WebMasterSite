@@ -125,7 +125,7 @@ async def get_merge(
         return JSONResponse({"data": []})
     data = []
     all_queries = list()
-    print(urls)
+
     for el in urls:
         all_queries.extend(el[1])
     queries = await _get_merge_query(start_date, end_date, all_queries, async_session)
@@ -153,7 +153,6 @@ async def get_merge(
                     data_dict[date] = values
 
                 total_clicks, position, impressions, ctr, count = 0, 0, 0, 0, 0
-                print(data_dict)
                 current_date = start_date
                 prev_stat = (-inf, -inf, -inf, -inf)
                 while current_date <= end_date:
@@ -211,7 +210,6 @@ async def get_merge(
                                       <span style='font-size: 9px'>ctr:{0}%</span>
                                       </div>"""
                         parent_clicks += total_clicks
-                        print("sum", total_position)
                         parent_position += total_position
                         parent_impression += impressions
                         parent_ctr += total_ctr
@@ -237,7 +235,7 @@ async def get_merge(
 
 
 @router.post("/generate_excel_merge/")
-async def generate_excel(request: Request, data_request: dict, user: User = Depends(current_user)):
+async def generate_excel_merge(request: Request, data_request: dict, user: User = Depends(current_user)):
     DATABASE_NAME = request.session['config'].get('database_name', "")
     group = request.session['group'].get('name', '')
     async_session = await connect_db(DATABASE_NAME)
@@ -345,6 +343,7 @@ async def generate_excel(request: Request, data_request: dict, user: User = Depe
             for parent in parent_res:
                 parent_true = [parent_position, parent_clicks, parent_impression, parent_ctr]
                 parent_true.extend(parent)
+                parent_true[0], parent_true[4] = parent_true[4], parent_true[0]
                 ws.append(parent_true)
 
     output = io.BytesIO()
@@ -357,7 +356,7 @@ async def generate_excel(request: Request, data_request: dict, user: User = Depe
 
 
 @router.post("/generate_csv_merge/")
-async def generate_excel(request: Request, data_request: dict, user: User = Depends(current_user)):
+async def generate_csv_merge(request: Request, data_request: dict, user: User = Depends(current_user)):
     DATABASE_NAME = request.session['config'].get('database_name', "")
     group = request.session['group'].get('name', '')
     async_session = await connect_db(DATABASE_NAME)
@@ -460,12 +459,11 @@ async def generate_excel(request: Request, data_request: dict, user: User = Depe
                         else:
                             res.extend([0, 0, 0, 0])
                 parent_res.append(res)
-                print(res)
-                print(parent_res)
 
             for parent in parent_res:
                 parent_true = [parent_position, parent_clicks, parent_impression, parent_ctr]
                 parent_true.extend(parent)
+                parent_true[0], parent_true[4] = parent_true[4], parent_true[0]
                 ws.append(parent_true)
 
     output = io.StringIO()

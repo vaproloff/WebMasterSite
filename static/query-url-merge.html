@@ -705,7 +705,7 @@
             "sort_desc": document.getElementById("input_desc").checked,
             "date": '{{ date }}',
         };
-        fetch('/admin/generate_excel_merge/', {
+        fetch("{{ url_for('generate_excel_merge')}}", {
             method: 'POST',
             headers: {
                 "Content-Type": 'application/json'
@@ -741,7 +741,7 @@
             "sort_desc": document.getElementById("input_desc").checked,
             "date": '{{ date }}',
         };
-        fetch('/admin/generate_csv_merge/', {
+        fetch("{{ url_for('generate_csv_merge')}}", {
             method: 'POST',
             headers: {
                 "Content-Type": 'application/json'
