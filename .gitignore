@@ -10,3 +10,5 @@ logs/
 *.env
 *.pyc
 auto_alembic.py
+run.sh
+settings.py
