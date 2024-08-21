@@ -252,40 +252,79 @@ async def get_urls(request: Request,
 
 
 @router.post("/")
-async def get_urls(request: Request, data_request: dict, user: User = Depends(current_user)):
+async def get_urls(
+    request: Request, 
+    data_request: dict, 
+    user: User = Depends(current_user)
+    ):
     DATABASE_NAME = request.session['config'].get('database_name', "")
     group = request.session['group'].get('name', '')
     async_session = await connect_db(DATABASE_NAME)
+
     start_date = datetime.strptime(data_request["start_date"], date_format_2)
     end_date = datetime.strptime(data_request["end_date"], date_format_2)
+    state_date = None
+    if data_request["button_date"]:
+        state_date = datetime.strptime(data_request["button_date"], date_format_2)
+
+    logger.info(f"connect to database: {DATABASE_NAME}")
     if data_request["sort_result"]:
         if data_request["search_text"] == "":
             urls = await _get_urls_with_pagination_sort(data_request["start"], data_request["length"], start_date,
-                                                        end_date, data_request["sort_desc"], async_session)
+                                                              end_date, data_request["sort_desc"],
+                                                              async_session)
         else:
             urls = await _get_urls_with_pagination_and_like_sort(data_request["start"], data_request["length"],
-                                                                 start_date, end_date, data_request["search_text"],
-                                                                 data_request["sort_desc"],
-                                                                 async_session)
+                                                                       start_date, end_date,
+                                                                       data_request["search_text"],
+                                                                       data_request["sort_desc"],
+                                                                       async_session)
     else:
         if data_request["search_text"] == "":
-            urls = await _get_urls_with_pagination(data_request["start"], data_request["length"], start_date, end_date,
-                                                   async_session)
+            urls = await _get_urls_with_pagination(
+                data_request["start"], 
+                data_request["length"], 
+                start_date,
+                end_date, 
+                data_request["button_state"], 
+                state_date,
+                data_request["metric_type"],
+                async_session
+                )
         else:
-            urls = await _get_urls_with_pagination_and_like(data_request["start"], data_request["length"], start_date,
-                                                            end_date, data_request["search_text"],
-                                                            async_session)
+            urls = await _get_urls_with_pagination_and_like(
+                data_request["start"], 
+                data_request["length"],
+                start_date, 
+                end_date, 
+                data_request["search_text"],
+                data_request["button_state"], 
+                state_date,
+                data_request["metric_type"],
+                async_session)
     try:
         if urls:
             urls.sort(key=lambda x: x[-1])
+        
         grouped_data = [(key, sorted(list(group), key=lambda x: x[0])) for key, group in
                         groupby(urls, key=lambda x: x[-1])]
+
+        if state_date and data_request["button_state"]:
+            if data_request["metric_type"] == "P":
+                grouped_data.sort(key=lambda x: next((sub_item[1] for sub_item in x[1] if sub_item[0] == state_date), float('-inf')), reverse=data_request["button_state"] == "decrease")
+            elif data_request["metric_type"] == "K":
+                grouped_data.sort(key=lambda x: next((sub_item[2] for sub_item in x[1] if sub_item[0] == state_date), float('-inf')), reverse=data_request["button_state"] == "decrease")
+            elif data_request["metric_type"] == "R":
+                grouped_data.sort(key=lambda x: next((sub_item[3] for sub_item in x[1] if sub_item[0] == state_date), float('-inf')), reverse=data_request["button_state"] == "decrease")
+            elif data_request["metric_type"] == "C":
+                grouped_data.sort(key=lambda x: next((sub_item[4] for sub_item in x[1] if sub_item[0] == state_date), float('-inf')), reverse=data_request["button_state"] == "decrease")
+        
     except TypeError as e:
-        if urls is None:
-            pass
         return JSONResponse({"data": []})
+
     if len(grouped_data) == 0:
         return JSONResponse({"data": []})
+
     data = []
     for el in grouped_data:
         res = {"url":
@@ -305,35 +344,36 @@ async def get_urls(request: Request, data_request: dict, user: User = Depends(cu
                 color_text = "blue"
             res[stat[0].strftime(
                 date_format_2)] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: {color}'>
-            <span style='font-size: 18px'>{stat[1]}</span><span style="margin-left: 5px; font-size: 10px; color: {color_text}">{abs(up)}</span><br>
-            <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 20px'>CTR {stat[4]}%</span><br>
-            <span style='font-size: 10px'>{stat[2]}</span> <span style='font-size: 10px; margin-left: 20px'>R {int(stat[3])}</span>
-            </div>"""
+              <span style='font-size: 18px'>{stat[1]}</span><span style="margin-left: 5px; font-size: 10px; color: {color_text}">{abs(up)}</span><br>
+              <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 10px'>CTR {stat[4]}%</span><br>
+              <span style='font-size: 10px'>{stat[2]}</span> <span style='font-size: 10px; margin-left: 20px'>R {int(stat[3])}</span>
+              </div>"""
             total_clicks += stat[2]
             position += stat[1]
             impressions += stat[3]
-            ctr += stat[4]
             if stat[1] > 0:
                 count += 1
             if k == len(el[1]) - 1:
                 res["result"] = res.get("result", "")
-                if impressions > 0:
+                if total_clicks > 0:
                     res["result"] += f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD'>
                               <span style='font-size: 15px'>Позиция:{round(position / count, 2)}</span>
                               <span style='font-size: 15px'>Клики:{total_clicks}</span>
-                              <span style='font-size: 9px'>Показы:{impressions}</span>
+                              <span style='font-size: 8px'>Показы:{impressions}</span>
                               <span style='font-size: 7px'>ctr:{round(total_clicks * 100 / impressions, 2)}%</span>
                               </div>"""
                 else:
                     res["result"] += f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD'>
                               <span style='font-size: 15px'>Позиция:{0}</span>
                               <span style='font-size: 15px'>Клики:{total_clicks}</span>
-                              <span style='font-size: 9px'>Показы:{impressions}</span>
-                              <span style='font-size: 9px'>ctr:{0}%</span>
+                              <span style='font-size: 8px'>Показы:{impressions}</span>
+                              <span style='font-size: 8px'>ctr:{0}%</span>
                               </div>"""
         data.append(res)
+
     json_data = jsonable_encoder(data)
-    
+
+    logger.info("get url data success")
     # return JSONResponse({"data": json_data, "recordsTotal": limit, "recordsFiltered": 50000})
     return JSONResponse({"data": json_data})
 
