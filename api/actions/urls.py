@@ -10,20 +10,20 @@ async def _add_new_urls(urls, session):
         return order_id
 
 
-async def _get_urls_with_pagination(page, per_page, date_start, date_end, session):
+async def _get_urls_with_pagination(page, per_page, date_start, date_end, state, state_date, metric_type, session):
     async with session() as s:
         url_dal = UrlDAL(s)
         urls = await url_dal.get_urls_with_pagination(
-            page, per_page, date_start, date_end
+            page, per_page, date_start, date_end, state, state_date, metric_type,
         )
         return urls
 
 
-async def _get_urls_with_pagination_and_like(page, per_page, date_start, date_end, search_text, session):
+async def _get_urls_with_pagination_and_like(page, per_page, date_start, date_end, search_text, state, state_date, metric_type, session):
     async with session() as s:
         url_dal = UrlDAL(s)
         urls = await url_dal.get_urls_with_pagination_and_like(
-            page, per_page, date_start, date_end, search_text
+            page, per_page, date_start, date_end, search_text, state, state_date, metric_type
         )
         return urls
 

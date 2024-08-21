@@ -63,12 +63,21 @@ async def get_queries(request: Request,
                                        )
 
 @router.post("/")
-async def get_queries(request: Request, data_request: dict, user: User = Depends(current_user)):
+async def get_queries(
+    request: Request, 
+    data_request: dict, 
+    user: User = Depends(current_user)
+    ):
     DATABASE_NAME = request.session['config'].get('database_name', "")
     group = request.session['group'].get('name', '')
     async_session = await connect_db(DATABASE_NAME)
+
     start_date = datetime.strptime(data_request["start_date"], date_format_2)
     end_date = datetime.strptime(data_request["end_date"], date_format_2)
+    state_date = None
+    if data_request["button_date"]:
+        state_date = datetime.strptime(data_request["button_date"], date_format_2)
+
     logger.info(f"connect to database: {DATABASE_NAME}")
     if data_request["sort_result"]:
         if data_request["search_text"] == "":
@@ -83,17 +92,44 @@ async def get_queries(request: Request, data_request: dict, user: User = Depends
                                                                        async_session)
     else:
         if data_request["search_text"] == "":
-            urls = await _get_urls_with_pagination_query(data_request["start"], data_request["length"], start_date,
-                                                         end_date, async_session)
+            urls = await _get_urls_with_pagination_query(
+                data_request["start"], 
+                data_request["length"], 
+                start_date,
+                end_date, 
+                data_request["button_state"], 
+                state_date,
+                data_request["metric_type"],
+                async_session
+                )
         else:
-            urls = await _get_urls_with_pagination_and_like_query(data_request["start"], data_request["length"],
-                                                                  start_date, end_date, data_request["search_text"],
-                                                                  async_session)
+            urls = await _get_urls_with_pagination_and_like_query(
+                data_request["start"], 
+                data_request["length"],
+                start_date, 
+                end_date, 
+                data_request["search_text"],
+                data_request["button_state"], 
+                state_date,
+                data_request["metric_type"],
+                async_session)
     try:
         if urls:
             urls.sort(key=lambda x: x[-1])
+        
         grouped_data = [(key, sorted(list(group), key=lambda x: x[0])) for key, group in
                         groupby(urls, key=lambda x: x[-1])]
+
+        if state_date and data_request["button_state"]:
+            if data_request["metric_type"] == "P":
+                grouped_data.sort(key=lambda x: next((sub_item[1] for sub_item in x[1] if sub_item[0] == state_date), float('-inf')), reverse=data_request["button_state"] == "decrease")
+            elif data_request["metric_type"] == "K":
+                grouped_data.sort(key=lambda x: next((sub_item[2] for sub_item in x[1] if sub_item[0] == state_date), float('-inf')), reverse=data_request["button_state"] == "decrease")
+            elif data_request["metric_type"] == "R":
+                grouped_data.sort(key=lambda x: next((sub_item[3] for sub_item in x[1] if sub_item[0] == state_date), float('-inf')), reverse=data_request["button_state"] == "decrease")
+            elif data_request["metric_type"] == "C":
+                grouped_data.sort(key=lambda x: next((sub_item[4] for sub_item in x[1] if sub_item[0] == state_date), float('-inf')), reverse=data_request["button_state"] == "decrease")
+        
     except TypeError as e:
         return JSONResponse({"data": []})
 
