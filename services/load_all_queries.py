@@ -18,7 +18,7 @@ from fastapi import HTTPException
 from const import date_format
 
 
-async def add_data(data, last_update_date, async_session, mx_date):
+async def add_data(data, last_update_date, async_session, mx_date=None):
     for query in data['text_indicator_to_statistics']:
         query_name = query['text_indicator']['value']
         new_url = [Query(query=query_name)]
@@ -35,7 +35,8 @@ async def add_data(data, last_update_date, async_session, mx_date):
         for el in query['statistics']:
             if date != el['date']:
                 date = datetime.strptime(date, date_format)
-                mx_date[0] = max(mx_date[0], date)
+                if mx_date:
+                    mx_date[0] = max(mx_date[0], date)
                 if date > last_update_date:
                     metrics.append(MetricsQuery(
                         query=query_name,
