@@ -289,6 +289,7 @@ async def get_urls(
                 data_request["button_state"], 
                 state_date,
                 data_request["metric_type"],
+                data_request["state_type"],
                 async_session
                 )
         else:
@@ -301,6 +302,7 @@ async def get_urls(
                 data_request["button_state"], 
                 state_date,
                 data_request["metric_type"],
+                data_request["state_type"],
                 async_session)
     try:
         if urls:
@@ -309,15 +311,31 @@ async def get_urls(
         grouped_data = [(key, sorted(list(group), key=lambda x: x[0])) for key, group in
                         groupby(urls, key=lambda x: x[-1])]
 
-        if state_date and data_request["button_state"]:
-            if data_request["metric_type"] == "P":
-                grouped_data.sort(key=lambda x: next((sub_item[1] for sub_item in x[1] if sub_item[0] == state_date), float('-inf')), reverse=data_request["button_state"] == "decrease")
-            elif data_request["metric_type"] == "K":
-                grouped_data.sort(key=lambda x: next((sub_item[2] for sub_item in x[1] if sub_item[0] == state_date), float('-inf')), reverse=data_request["button_state"] == "decrease")
-            elif data_request["metric_type"] == "R":
-                grouped_data.sort(key=lambda x: next((sub_item[3] for sub_item in x[1] if sub_item[0] == state_date), float('-inf')), reverse=data_request["button_state"] == "decrease")
-            elif data_request["metric_type"] == "C":
-                grouped_data.sort(key=lambda x: next((sub_item[4] for sub_item in x[1] if sub_item[0] == state_date), float('-inf')), reverse=data_request["button_state"] == "decrease")
+        if data_request["button_state"]:
+            if state_date and data_request["state_type"] == "date":
+                if data_request["metric_type"] == "P":
+                    grouped_data.sort(key=lambda x: next((sub_item[1] for sub_item in x[1] if sub_item[0] == state_date), float('inf')), reverse=data_request["button_state"] == "decrease")
+                elif data_request["metric_type"] == "K":
+                    grouped_data.sort(key=lambda x: next((sub_item[2] for sub_item in x[1] if sub_item[0] == state_date), float('-inf')), reverse=data_request["button_state"] == "decrease")
+                elif data_request["metric_type"] == "R":
+                    grouped_data.sort(key=lambda x: next((sub_item[3] for sub_item in x[1] if sub_item[0] == state_date), float('-inf')), reverse=data_request["button_state"] == "decrease")
+                elif data_request["metric_type"] == "C":
+                    grouped_data.sort(key=lambda x: next((sub_item[4] for sub_item in x[1] if sub_item[0] == state_date), float('-inf')), reverse=data_request["button_state"] == "decrease")
+            else:
+                if data_request["metric_type"] == "P":
+                    grouped_data.sort( key=lambda x: (
+                        (total := sum(sub_item[1] for sub_item in x[1] if start_date <= sub_item[0] <= end_date and sub_item[1] != 0),
+                        count := sum(1 for sub_item in x[1] if start_date <= sub_item[0] <= end_date and sub_item[1] != 0),
+                        total / count if count > 0 else float('inf'))[2]), reverse=data_request["button_state"] == "decrease")
+                elif data_request["metric_type"] == "K":
+                    grouped_data.sort( key=lambda x: (sum(sub_item[2] for sub_item in x[1] if start_date <= sub_item[0] <= end_date)), reverse=data_request["button_state"] == "decrease"),
+                elif data_request["metric_type"] == "R":
+                    grouped_data.sort( key=lambda x: (sum(sub_item[3] for sub_item in x[1] if start_date <= sub_item[0] <= end_date)), reverse=data_request["button_state"] == "decrease"),
+                elif data_request["metric_type"] == "C":
+                    grouped_data.sort( key=lambda x: (
+                        (total := sum(sub_item[4] for sub_item in x[1] if start_date <= sub_item[0] <= end_date and sub_item[1] != 0),
+                        count := sum(1 for sub_item in x[1] if start_date <= sub_item[0] <= end_date and sub_item[1] != 0),
+                        total / count if count > 0 else float('inf'))[2]), reverse=data_request["button_state"] == "decrease")
         
     except TypeError as e:
         return JSONResponse({"data": []})
@@ -355,7 +373,7 @@ async def get_urls(
                 count += 1
             if k == len(el[1]) - 1:
                 res["result"] = res.get("result", "")
-                if total_clicks > 0:
+                if count > 0 and impressions > 0:
                     res["result"] += f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD'>
                               <span style='font-size: 15px'>Позиция:{round(position / count, 2)}</span>
                               <span style='font-size: 15px'>Клики:{total_clicks}</span>

@@ -62,6 +62,7 @@
     var state = null;
     var global_date = null;
     var metric_type = null;
+    var state_type = "date";
 
     function getDayOfWeek(dateString) {
       const dateParts = dateString.split("-");
@@ -146,8 +147,131 @@
         nameCell.textContent = "url";
         row.appendChild(nameCell);
         var nameCell = document.createElement('td');
-        nameCell.textContent = "result";
-        row.appendChild(nameCell);
+        nameCell.textContent = "result"; // Добавляем основной текст
+        var lineBreak = document.createElement('br'); // Создаем элемент <br> для переноса строки
+        nameCell.appendChild(lineBreak); // Добавляем перенос строки
+        nameCell.appendChild(document.createTextNode("None")); // Добавляем текст "None"
+        row.appendChild(nameCell); // Добавляем ячейку в строку
+
+        let pButton = document.createElement('button');
+            pButton.style.width = '20px';  // Ширина кнопки
+            pButton.style.height = '20px'; // Высота кнопки
+            pButton.style.fontSize = '12px'; // Размер шрифта
+            pButton.style.padding = '2px 2px'; // Отступы внутри кнопки
+            pButton.innerHTML = "P";
+            let kButton = document.createElement('button');
+            kButton.style.width = '20px';  // Ширина кнопки
+            kButton.style.height = '20px'; // Высота кнопки
+            kButton.style.fontSize = '12px'; // Размер шрифта
+            kButton.style.padding = '2px 2px'; // Отступы внутри кнопки
+            kButton.innerHTML = "K";
+            let rButton = document.createElement('button');
+            rButton.style.width = '20px';  // Ширина кнопки
+            rButton.style.height = '20px'; // Высота кнопки
+            rButton.style.fontSize = '12px'; // Размер шрифта
+            rButton.style.padding = '2px 2px'; // Отступы внутри кнопки
+            rButton.innerHTML = "R";
+            let cButton = document.createElement('button');
+            cButton.style.width = '20px';  // Ширина кнопки
+            cButton.style.height = '20px'; // Высота кнопки
+            cButton.style.fontSize = '12px'; // Размер шрифта
+            cButton.style.padding = '2px 2px'; // Отступы внутри кнопки
+            cButton.innerHTML = "C";
+
+            pButton.addEventListener('click', function() {
+                resetButtons([pButton, kButton, rButton, cButton], pButton);
+                state_type = "result";
+
+                if (this.innerHTML === "P") {
+                    this.innerHTML = "P↓";
+                    state = "decrease";
+                } else if (this.innerHTML === "P↓") {
+                    this.innerHTML = "P↑";
+                    state = "increase";
+                } else if (this.innerHTML === "P↑") {
+                    this.innerHTML = "P";
+                    state = null;
+                }
+
+                metric_type = "P";
+
+                UpdateTable();
+            });
+
+            kButton.addEventListener('click', function() {
+                resetButtons([pButton, kButton, rButton, cButton], kButton);
+                state_type = "result";
+
+                if (this.innerHTML === "K") {
+                    this.innerHTML = "K↓";
+                    state = "decrease";
+                } else if (this.innerHTML === "K↓") {
+                    this.innerHTML = "K↑";
+                    state = "increase";
+                } else if (this.innerHTML === "K↑") {
+                    this.innerHTML = "K";
+                    state = null;
+                }
+
+                metric_type = "K";
+
+                UpdateTable();
+            });
+
+            rButton.addEventListener('click', function() {
+                resetButtons([pButton, kButton, rButton, cButton], rButton);
+                state_type = "result";
+
+                if (this.innerHTML === "R") {
+                    this.innerHTML = "R↓";
+                    state = "decrease";
+                } else if (this.innerHTML === "R↓") {
+                    this.innerHTML = "R↑";
+                    state = "increase";
+                } else if (this.innerHTML === "R↑") {
+                    this.innerHTML = "R";
+                    state = null;
+                }
+
+                metric_type = "R";
+
+                UpdateTable();
+            });
+
+            cButton.addEventListener('click', function() {
+                resetButtons([pButton, kButton, rButton, cButton], cButton);
+                state_type = "result";
+
+                if (this.innerHTML === "C") {
+                    this.innerHTML = "C↓";
+                    state = "decrease";
+                } else if (this.innerHTML === "C↓") {
+                    this.innerHTML = "C↑";
+                    state = "increase";
+                } else if (this.innerHTML === "C↑") {
+                    this.innerHTML = "C";
+                    state = null;
+                }
+
+                metric_type = "C";
+
+                UpdateTable();
+            });
+
+            let buttonContainer = document.createElement('div');
+            buttonContainer.style.display = 'flex'; // Выравнивание кнопок в одну строку
+            buttonContainer.style.gap = '5px'; // Расстояние между кнопками
+
+            // Добавляем кнопки в контейнер
+            buttonContainer.appendChild(pButton);
+            buttonContainer.appendChild(kButton);
+            buttonContainer.appendChild(rButton);
+            buttonContainer.appendChild(cButton);
+
+// Добавляем контейнер в ячейку
+            nameCell.appendChild(buttonContainer);
+
+            row.appendChild(nameCell);
 
         columns = [
             {"title": "url"},
@@ -271,6 +395,7 @@
 
             // Функция для сброса состояния всех кнопок
             function resetButtons(buttons, activeButton) {
+                state_type = "date";
                 buttons.forEach(function(button) {
                     if (button !== activeButton) {
                         button.innerHTML = button.innerHTML.charAt(0); // Сброс до "P", "K", "R", "C"
@@ -306,7 +431,8 @@
             sort_desc: document.getElementById("input_desc").checked,
             button_date: global_date,
             button_state: state,
-            metric_type: metric_type
+            metric_type: metric_type,
+            state_type: state_type,
         };
 
         fetch(url, {
@@ -321,7 +447,6 @@
             .then(data => {
                 // Обработка ответа
                 data = data.data;
-                console.log(data)
                 var table = $('#body_t');
                 empty = `<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #B9BDBC'>
             <span style='font-size: 18px'><span style='color:red'>NAN</span></span><br>
@@ -350,7 +475,7 @@
     }
 
     function UpdateTable() {
-
+        console.log(state_type, state)
         let row = document.getElementById("head_t");
         row.innerHTML = "";
 
@@ -358,8 +483,163 @@
         nameCell.textContent = "url";
         row.appendChild(nameCell);
         var nameCell = document.createElement('td');
-        nameCell.textContent = "result";
-        row.appendChild(nameCell);
+        nameCell.textContent = "result"; // Добавляем основной текст
+        var lineBreak = document.createElement('br'); // Создаем элемент <br> для переноса строки
+        nameCell.appendChild(lineBreak); // Добавляем перенос строки
+        nameCell.appendChild(document.createTextNode("None")); // Добавляем текст "None"
+        row.appendChild(nameCell); // Добавляем ячейку в строку
+
+        let pButton = document.createElement('button');
+            pButton.style.width = '20px';  // Ширина кнопки
+            pButton.style.height = '20px'; // Высота кнопки
+            pButton.style.fontSize = '12px'; // Размер шрифта
+            pButton.style.padding = '2px 2px'; // Отступы внутри кнопки
+            pButton.innerHTML = "P";
+            let kButton = document.createElement('button');
+            kButton.style.width = '20px';  // Ширина кнопки
+            kButton.style.height = '20px'; // Высота кнопки
+            kButton.style.fontSize = '12px'; // Размер шрифта
+            kButton.style.padding = '2px 2px'; // Отступы внутри кнопки
+            kButton.innerHTML = "K";
+            let rButton = document.createElement('button');
+            rButton.style.width = '20px';  // Ширина кнопки
+            rButton.style.height = '20px'; // Высота кнопки
+            rButton.style.fontSize = '12px'; // Размер шрифта
+            rButton.style.padding = '2px 2px'; // Отступы внутри кнопки
+            rButton.innerHTML = "R";
+            let cButton = document.createElement('button');
+            cButton.style.width = '20px';  // Ширина кнопки
+            cButton.style.height = '20px'; // Высота кнопки
+            cButton.style.fontSize = '12px'; // Размер шрифта
+            cButton.style.padding = '2px 2px'; // Отступы внутри кнопки
+            cButton.innerHTML = "C";
+        
+            if (state === "decrease" && state_type == "result") {
+                if (metric_type == "P") {
+                    pButton.innerHTML = metric_type + "↓";
+                } else if (metric_type == "K") {
+                    kButton.innerHTML = metric_type + "↓";
+                } else if (metric_type == "R") {
+                    rButton.innerHTML = metric_type + "↓";
+                } else if (metric_type == "C") {
+                    cButton.innerHTML = metric_type + "↓";
+                } 
+            } else if (state === "increase" && state_type == "result") {
+                if (metric_type == "P") {
+                    pButton.innerHTML = metric_type + "↑";
+                } else if (metric_type == "K") {
+                    kButton.innerHTML = metric_type + "↑";
+                } else if (metric_type == "R") {
+                    rButton.innerHTML = metric_type + "↑";
+                } else if (metric_type == "C") {
+                    cButton.innerHTML = metric_type + "↑";
+                } 
+            } else {
+                if (metric_type == "P") {
+                    pButton.innerHTML = metric_type;
+                } else if (metric_type == "K") {
+                    kButton.innerHTML = metric_type;
+                } else if (metric_type == "R") {
+                    rButton.innerHTML = metric_type;
+                } else if (metric_type == "C") {
+                    cButton.innerHTML = metric_type;
+                } 
+                }
+
+                pButton.addEventListener('click', function() {
+                resetButtons([pButton, kButton, rButton, cButton], pButton);
+                state_type = "result";
+
+                if (this.innerHTML === "P") {
+                    this.innerHTML = "P↓";
+                    state = "decrease";
+                } else if (this.innerHTML === "P↓") {
+                    this.innerHTML = "P↑";
+                    state = "increase";
+                } else if (this.innerHTML === "P↑") {
+                    this.innerHTML = "P";
+                    state = null;
+                }
+
+                metric_type = "P";
+
+                UpdateTable();
+            });
+
+            kButton.addEventListener('click', function() {
+                resetButtons([pButton, kButton, rButton, cButton], kButton);
+                state_type = "result";
+
+                if (this.innerHTML === "K") {
+                    this.innerHTML = "K↓";
+                    state = "decrease";
+                } else if (this.innerHTML === "K↓") {
+                    this.innerHTML = "K↑";
+                    state = "increase";
+                } else if (this.innerHTML === "K↑") {
+                    this.innerHTML = "K";
+                    state = null;
+                }
+
+                metric_type = "K";
+
+                UpdateTable();
+            });
+
+            rButton.addEventListener('click', function() {
+                resetButtons([pButton, kButton, rButton, cButton], rButton);
+                state_type = "result";
+
+                if (this.innerHTML === "R") {
+                    this.innerHTML = "R↓";
+                    state = "decrease";
+                } else if (this.innerHTML === "R↓") {
+                    this.innerHTML = "R↑";
+                    state = "increase";
+                } else if (this.innerHTML === "R↑") {
+                    this.innerHTML = "R";
+                    state = null;
+                }
+
+                metric_type = "R";
+
+                UpdateTable();
+            });
+
+            cButton.addEventListener('click', function() {
+                resetButtons([pButton, kButton, rButton, cButton], cButton);
+                state_type = "result";
+
+                if (this.innerHTML === "C") {
+                    this.innerHTML = "C↓";
+                    state = "decrease";
+                } else if (this.innerHTML === "C↓") {
+                    this.innerHTML = "C↑";
+                    state = "increase";
+                } else if (this.innerHTML === "C↑") {
+                    this.innerHTML = "C";
+                    state = null;
+                }
+
+                metric_type = "C";
+
+                UpdateTable();
+            });
+
+            let buttonContainer = document.createElement('div');
+            buttonContainer.style.display = 'flex'; // Выравнивание кнопок в одну строку
+            buttonContainer.style.gap = '5px'; // Расстояние между кнопками
+
+            // Добавляем кнопки в контейнер
+            buttonContainer.appendChild(pButton);
+            buttonContainer.appendChild(kButton);
+            buttonContainer.appendChild(rButton);
+            buttonContainer.appendChild(cButton);
+
+// Добавляем контейнер в ячейку
+            nameCell.appendChild(buttonContainer);
+
+            row.appendChild(nameCell);
 
         columns = [
             {"title": "url"},
@@ -513,6 +793,7 @@
 
             // Функция для сброса состояния всех кнопок
             function resetButtons(buttons, activeButton) {
+                state_type = "date";
                 buttons.forEach(function(button) {
                     if (button !== activeButton) {
                         button.innerHTML = button.innerHTML.charAt(0); // Сброс до "P", "K", "R", "C"
@@ -548,7 +829,8 @@
             sort_desc: document.getElementById("input_desc").checked,
             button_date: global_date,
             button_state: state,
-            metric_type: metric_type
+            metric_type: metric_type,
+            state_type: state_type,
         };
 
         fetch(url, {
@@ -610,8 +892,163 @@
         nameCell.textContent = "url";
         row.appendChild(nameCell);
         var nameCell = document.createElement('td');
-        nameCell.textContent = "result";
-        row.appendChild(nameCell);
+        nameCell.textContent = "result"; // Добавляем основной текст
+        var lineBreak = document.createElement('br'); // Создаем элемент <br> для переноса строки
+        nameCell.appendChild(lineBreak); // Добавляем перенос строки
+        nameCell.appendChild(document.createTextNode("None")); // Добавляем текст "None"
+        row.appendChild(nameCell); // Добавляем ячейку в строку
+
+        let pButton = document.createElement('button');
+            pButton.style.width = '20px';  // Ширина кнопки
+            pButton.style.height = '20px'; // Высота кнопки
+            pButton.style.fontSize = '12px'; // Размер шрифта
+            pButton.style.padding = '2px 2px'; // Отступы внутри кнопки
+            pButton.innerHTML = "P";
+            let kButton = document.createElement('button');
+            kButton.style.width = '20px';  // Ширина кнопки
+            kButton.style.height = '20px'; // Высота кнопки
+            kButton.style.fontSize = '12px'; // Размер шрифта
+            kButton.style.padding = '2px 2px'; // Отступы внутри кнопки
+            kButton.innerHTML = "K";
+            let rButton = document.createElement('button');
+            rButton.style.width = '20px';  // Ширина кнопки
+            rButton.style.height = '20px'; // Высота кнопки
+            rButton.style.fontSize = '12px'; // Размер шрифта
+            rButton.style.padding = '2px 2px'; // Отступы внутри кнопки
+            rButton.innerHTML = "R";
+            let cButton = document.createElement('button');
+            cButton.style.width = '20px';  // Ширина кнопки
+            cButton.style.height = '20px'; // Высота кнопки
+            cButton.style.fontSize = '12px'; // Размер шрифта
+            cButton.style.padding = '2px 2px'; // Отступы внутри кнопки
+            cButton.innerHTML = "C";
+
+            if (state === "decrease" && state_type == "result") {
+                if (metric_type == "P") {
+                    pButton.innerHTML = metric_type + "↓";
+                } else if (metric_type == "K") {
+                    kButton.innerHTML = metric_type + "↓";
+                } else if (metric_type == "R") {
+                    rButton.innerHTML = metric_type + "↓";
+                } else if (metric_type == "C") {
+                    cButton.innerHTML = metric_type + "↓";
+                } 
+            } else if (state === "increase" && state_type == "result") {
+                if (metric_type == "P") {
+                    pButton.innerHTML = metric_type + "↑";
+                } else if (metric_type == "K") {
+                    kButton.innerHTML = metric_type + "↑";
+                } else if (metric_type == "R") {
+                    rButton.innerHTML = metric_type + "↑";
+                } else if (metric_type == "C") {
+                    cButton.innerHTML = metric_type + "↑";
+                } 
+            } else {
+                if (metric_type == "P") {
+                    pButton.innerHTML = metric_type;
+                } else if (metric_type == "K") {
+                    kButton.innerHTML = metric_type;
+                } else if (metric_type == "R") {
+                    rButton.innerHTML = metric_type;
+                } else if (metric_type == "C") {
+                    cButton.innerHTML = metric_type;
+                } 
+                }
+
+            pButton.addEventListener('click', function() {
+                resetButtons([pButton, kButton, rButton, cButton], pButton);
+                state_type = "result";
+
+                if (this.innerHTML === "P") {
+                    this.innerHTML = "P↓";
+                    state = "decrease";
+                } else if (this.innerHTML === "P↓") {
+                    this.innerHTML = "P↑";
+                    state = "increase";
+                } else if (this.innerHTML === "P↑") {
+                    this.innerHTML = "P";
+                    state = null;
+                }
+
+                metric_type = "P";
+
+                UpdateTable();
+            });
+
+            kButton.addEventListener('click', function() {
+                resetButtons([pButton, kButton, rButton, cButton], kButton);
+                state_type = "result";
+
+                if (this.innerHTML === "K") {
+                    this.innerHTML = "K↓";
+                    state = "decrease";
+                } else if (this.innerHTML === "K↓") {
+                    this.innerHTML = "K↑";
+                    state = "increase";
+                } else if (this.innerHTML === "K↑") {
+                    this.innerHTML = "K";
+                    state = null;
+                }
+
+                metric_type = "K";
+
+                UpdateTable();
+            });
+
+            rButton.addEventListener('click', function() {
+                resetButtons([pButton, kButton, rButton, cButton], rButton);
+                state_type = "result";
+
+                if (this.innerHTML === "R") {
+                    this.innerHTML = "R↓";
+                    state = "decrease";
+                } else if (this.innerHTML === "R↓") {
+                    this.innerHTML = "R↑";
+                    state = "increase";
+                } else if (this.innerHTML === "R↑") {
+                    this.innerHTML = "R";
+                    state = null;
+                }
+
+                metric_type = "R";
+
+                UpdateTable();
+            });
+
+            cButton.addEventListener('click', function() {
+                resetButtons([pButton, kButton, rButton, cButton], cButton);
+                state_type = "result";
+
+                if (this.innerHTML === "C") {
+                    this.innerHTML = "C↓";
+                    state = "decrease";
+                } else if (this.innerHTML === "C↓") {
+                    this.innerHTML = "C↑";
+                    state = "increase";
+                } else if (this.innerHTML === "C↑") {
+                    this.innerHTML = "C";
+                    state = null;
+                }
+
+                metric_type = "C";
+
+                UpdateTable();
+            });
+
+            let buttonContainer = document.createElement('div');
+            buttonContainer.style.display = 'flex'; // Выравнивание кнопок в одну строку
+            buttonContainer.style.gap = '5px'; // Расстояние между кнопками
+
+            // Добавляем кнопки в контейнер
+            buttonContainer.appendChild(pButton);
+            buttonContainer.appendChild(kButton);
+            buttonContainer.appendChild(rButton);
+            buttonContainer.appendChild(cButton);
+
+// Добавляем контейнер в ячейку
+            nameCell.appendChild(buttonContainer);
+
+            row.appendChild(nameCell);
 
         columns = [
             {"title": "url"},
@@ -765,6 +1202,7 @@
 
             // Функция для сброса состояния всех кнопок
             function resetButtons(buttons, activeButton) {
+                state_type = "date";
                 buttons.forEach(function(button) {
                     if (button !== activeButton) {
                         button.innerHTML = button.innerHTML.charAt(0); // Сброс до "P", "K", "R", "C"
@@ -812,7 +1250,8 @@
             sort_desc: document.getElementById("input_desc").checked,
             button_date: global_date,
             button_state: state,
-            metric_type: metric_type
+            metric_type: metric_type,
+            state_type: state_type,
         };
 
         fetch(url, {
@@ -874,8 +1313,164 @@
         nameCell.textContent = "url";
         row.appendChild(nameCell);
         var nameCell = document.createElement('td');
-        nameCell.textContent = "result";
-        row.appendChild(nameCell);
+        nameCell.textContent = "result"; // Добавляем основной текст
+        var lineBreak = document.createElement('br'); // Создаем элемент <br> для переноса строки
+        nameCell.appendChild(lineBreak); // Добавляем перенос строки
+        nameCell.appendChild(document.createTextNode("None")); // Добавляем текст "None"
+        row.appendChild(nameCell); // Добавляем ячейку в строку
+
+        let pButton = document.createElement('button');
+            pButton.style.width = '20px';  // Ширина кнопки
+            pButton.style.height = '20px'; // Высота кнопки
+            pButton.style.fontSize = '12px'; // Размер шрифта
+            pButton.style.padding = '2px 2px'; // Отступы внутри кнопки
+            pButton.innerHTML = "P";
+            let kButton = document.createElement('button');
+            kButton.style.width = '20px';  // Ширина кнопки
+            kButton.style.height = '20px'; // Высота кнопки
+            kButton.style.fontSize = '12px'; // Размер шрифта
+            kButton.style.padding = '2px 2px'; // Отступы внутри кнопки
+            kButton.innerHTML = "K";
+            let rButton = document.createElement('button');
+            rButton.style.width = '20px';  // Ширина кнопки
+            rButton.style.height = '20px'; // Высота кнопки
+            rButton.style.fontSize = '12px'; // Размер шрифта
+            rButton.style.padding = '2px 2px'; // Отступы внутри кнопки
+            rButton.innerHTML = "R";
+            let cButton = document.createElement('button');
+            cButton.style.width = '20px';  // Ширина кнопки
+            cButton.style.height = '20px'; // Высота кнопки
+            cButton.style.fontSize = '12px'; // Размер шрифта
+            cButton.style.padding = '2px 2px'; // Отступы внутри кнопки
+            cButton.innerHTML = "C";
+
+            if (state === "decrease" && state_type == "result") {
+                if (metric_type == "P") {
+                    pButton.innerHTML = metric_type + "↓";
+                } else if (metric_type == "K") {
+                    kButton.innerHTML = metric_type + "↓";
+                } else if (metric_type == "R") {
+                    rButton.innerHTML = metric_type + "↓";
+                } else if (metric_type == "C") {
+                    cButton.innerHTML = metric_type + "↓";
+                } 
+            } else if (state === "increase" && state_type == "result") {
+                if (metric_type == "P") {
+                    pButton.innerHTML = metric_type + "↑";
+                } else if (metric_type == "K") {
+                    kButton.innerHTML = metric_type + "↑";
+                } else if (metric_type == "R") {
+                    rButton.innerHTML = metric_type + "↑";
+                } else if (metric_type == "C") {
+                    cButton.innerHTML = metric_type + "↑";
+                } 
+            } else {
+                if (metric_type == "P") {
+                    pButton.innerHTML = metric_type;
+                } else if (metric_type == "K") {
+                    kButton.innerHTML = metric_type;
+                } else if (metric_type == "R") {
+                    rButton.innerHTML = metric_type;
+                } else if (metric_type == "C") {
+                    cButton.innerHTML = metric_type;
+                } 
+                }
+
+            pButton.addEventListener('click', function() {
+                resetButtons([pButton, kButton, rButton, cButton], pButton);
+                state_type = "result";
+
+                if (this.innerHTML === "P") {
+                    this.innerHTML = "P↓";
+                    state = "decrease";
+                } else if (this.innerHTML === "P↓") {
+                    this.innerHTML = "P↑";
+                    state = "increase";
+                } else if (this.innerHTML === "P↑") {
+                    this.innerHTML = "P";
+                    state = null;
+                }
+
+                metric_type = "P";
+
+                UpdateTable();
+            });
+
+            kButton.addEventListener('click', function() {
+                resetButtons([pButton, kButton, rButton, cButton], kButton);
+                state_type = "result";
+
+                if (this.innerHTML === "K") {
+                    this.innerHTML = "K↓";
+                    state = "decrease";
+                } else if (this.innerHTML === "K↓") {
+                    this.innerHTML = "K↑";
+                    state = "increase";
+                } else if (this.innerHTML === "K↑") {
+                    this.innerHTML = "K";
+                    state = null;
+                }
+
+                metric_type = "K";
+
+                UpdateTable();
+            });
+
+            rButton.addEventListener('click', function() {
+                resetButtons([pButton, kButton, rButton, cButton], rButton);
+                state_type = "result";
+
+                if (this.innerHTML === "R") {
+                    this.innerHTML = "R↓";
+                    state = "decrease";
+                } else if (this.innerHTML === "R↓") {
+                    this.innerHTML = "R↑";
+                    state = "increase";
+                } else if (this.innerHTML === "R↑") {
+                    this.innerHTML = "R";
+                    state = null;
+                }
+
+                metric_type = "R";
+
+                UpdateTable();
+            });
+
+            cButton.addEventListener('click', function() {
+                resetButtons([pButton, kButton, rButton, cButton], cButton);
+                state_type = "result";
+
+                if (this.innerHTML === "C") {
+                    this.innerHTML = "C↓";
+                    state = "decrease";
+                } else if (this.innerHTML === "C↓") {
+                    this.innerHTML = "C↑";
+                    state = "increase";
+                } else if (this.innerHTML === "C↑") {
+                    this.innerHTML = "C";
+                    state = null;
+                }
+
+                metric_type = "C";
+
+                UpdateTable();
+            });
+
+
+            let buttonContainer = document.createElement('div');
+            buttonContainer.style.display = 'flex'; // Выравнивание кнопок в одну строку
+            buttonContainer.style.gap = '5px'; // Расстояние между кнопками
+
+            // Добавляем кнопки в контейнер
+            buttonContainer.appendChild(pButton);
+            buttonContainer.appendChild(kButton);
+            buttonContainer.appendChild(rButton);
+            buttonContainer.appendChild(cButton);
+
+// Добавляем контейнер в ячейку
+            nameCell.appendChild(buttonContainer);
+
+            row.appendChild(nameCell);
 
         columns = [
             {"title": "url"},
@@ -1029,6 +1624,7 @@
 
             // Функция для сброса состояния всех кнопок
             function resetButtons(buttons, activeButton) {
+                state_type = "date";
                 buttons.forEach(function(button) {
                     if (button !== activeButton) {
                         button.innerHTML = button.innerHTML.charAt(0); // Сброс до "P", "K", "R", "C"
@@ -1071,7 +1667,8 @@
             sort_desc: document.getElementById("input_desc").checked,
             button_date: global_date,
             button_state: state,
-            metric_type: metric_type
+            metric_type: metric_type,
+            state_type: state_type,
         };
 
         fetch(url, {

@@ -191,7 +191,7 @@ async def get_merge(
                     prev_stat = (0, stat[1], stat[2], stat[3], stat[4])
                     if current_date == end_date:
                         res["result"] = res.get("result", "")
-                        if total_clicks > 0:
+                        if impressions > 0:
                             total_position = round(position / count, 2)
                             total_ctr = round(ctr / count, 2)
                             res["result"] += f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD'>
@@ -321,7 +321,7 @@ async def generate_excel_merge(request: Request, data_request: dict, user: User 
                         ctr += stat[4]
                         if stat[1] > 0:
                             count += 1
-                    if total_clicks > 0:
+                    if impressions > 0:
                         total_position = round(position / count, 2)
                         total_ctr = round(ctr / count, 2)
                         info["Result"] = [total_position, total_clicks, impressions, round(total_clicks * 100 / impressions, 2)]
@@ -441,7 +441,7 @@ async def generate_csv_merge(request: Request, data_request: dict, user: User = 
                         ctr += stat[4]
                         if stat[1] > 0:
                             count += 1
-                    if total_clicks > 0:
+                    if impressions > 0:
                         total_position = round(position / count, 2)
                         total_ctr = round(ctr / count, 2)
                         info["Result"] = [total_position, total_clicks, impressions, round(total_clicks * 100 / impressions, 2)]
