@@ -13,10 +13,12 @@ from db.utils import get_last_update_date
 
 from api.actions.actions import add_last_load_date
 
+from fastapi import HTTPException
+
 from const import date_format
 
 
-async def add_data(data, last_update_date, async_session):
+async def add_data(data, last_update_date, async_session, mx_date):
     for query in data['text_indicator_to_statistics']:
         query_name = query['text_indicator']['value']
         new_url = [Query(query=query_name)]
@@ -33,6 +35,7 @@ async def add_data(data, last_update_date, async_session):
         for el in query['statistics']:
             if date != el['date']:
                 date = datetime.strptime(date, date_format)
+                mx_date[0] = max(mx_date[0], date)
                 if date > last_update_date:
                     metrics.append(MetricsQuery(
                         query=query_name,
@@ -121,12 +124,22 @@ async def get_all_data(request_session):
     print("last update date:", last_update_date)
     if not last_update_date:
         last_update_date = datetime.strptime("1900-01-01", date_format)
-    await add_data(data, last_update_date, async_session)
+    mx_date = [datetime.strptime("1900-01-01", date_format)]
+    await add_data(data, last_update_date, async_session, mx_date)
+    if mx_date[0] <= last_update_date:
+        print("qq")
+        return {"status": 400,
+                "detail": "Data is not up-to-date. Please refresh data before executing the script."
+                }
     for offset in range(500, count, 500):
         print(f"[INFO] PAGE{offset} DONE!")
         curr = datetime.now()
         await get_data_by_page(offset, last_update_date, URL, ACCESS_TOKEN, async_session)
         print(datetime.now() - curr)
+    
+    return {"status": 200,
+            "detail": "Ok"
+            }
 
 
 if __name__ == '__main__':

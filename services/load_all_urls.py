@@ -1,5 +1,6 @@
 import asyncio
 from datetime import datetime
+from psycopg2 import IntegrityError
 import requests
 from sqlalchemy import select
 
@@ -11,10 +12,14 @@ from api.actions.metrics_url import _add_new_metrics
 from db.session import connect_db
 from db.utils import get_last_update_date
 
-date_format = "%Y-%m-%d"
+from api.actions.actions import add_last_load_date
+
+from fastapi import HTTPException
+
+from const import date_format
 
 
-async def add_data(data, last_update_date, async_session):
+async def add_data(data, last_update_date, async_session, mx_date):
     for query in data['text_indicator_to_statistics']:
         query_name = query['text_indicator']['value']
         new_url = [Url(url=query_name)]
@@ -31,6 +36,7 @@ async def add_data(data, last_update_date, async_session):
         for el in query['statistics']:
             if date != el['date']:
                 date = datetime.strptime(date, date_format)
+                mx_date[0] = max(mx_date[0], date)
                 if date > last_update_date:
                     metrics.append(Metrics(
                         url=query_name,
@@ -79,7 +85,7 @@ async def get_data_by_page(page, last_update_date, URL, ACCESS_TOKEN, async_sess
     response = requests.post(URL, json=body, headers={'Authorization': f'OAuth {ACCESS_TOKEN}',
                                                       "Content-Type": "application/json; charset=UTF-8"})
 
-    print(response.text[:100])
+    # print(response.text[:100])
     data = response.json()
 
     await add_data(data, last_update_date, async_session)
@@ -100,6 +106,7 @@ async def get_all_data(request_session):
     # Формируем URL для запроса мониторинга поисковых запросов
     URL = f"https://api.webmaster.yandex.net/v4/user/{USER_ID}/hosts/{HOST_ID}/query-analytics/list"
 
+    # async_session = await create_db(DATABASE_NAME)
     body = {
         "offset": 0,
         "limit": 500,
@@ -119,11 +126,30 @@ async def get_all_data(request_session):
     print("last update date:", last_update_date)
     if not last_update_date:
         last_update_date = datetime.strptime("1900-01-01", date_format)
-    await add_data(data, last_update_date, async_session)
+    mx_date = [datetime.strptime("1900-01-01", date_format)]
+    await add_data(data, last_update_date, async_session, mx_date)
+    if mx_date[0] <= last_update_date:
+        print("qq")
+        return {"status": 400,
+                "detail": "Data is not up-to-date. Please refresh data before executing the script."
+                }
     for offset in range(500, count, 500):
         print(f"[INFO] PAGE{offset} DONE!")
+        curr = datetime.now()
         await get_data_by_page(offset, last_update_date, URL, ACCESS_TOKEN, async_session)
+        print(datetime.now() - curr)
+    
+    return {"status": 200,
+            "detail": "Ok"
+            }
 
 
 if __name__ == '__main__':
-    asyncio.run(get_all_data())
+    cfg = {
+        "database_name": "ayshotel",
+        "access_token": "y0_AgAAAAANVf3MAAv6lgAAAAEIBw3PAADOvzU1b_RIdY0Wpw3RbuR6PgN7Cw",
+        "user_id": "223739340",
+        "host_id": "https:ayshotel.ru:443",
+        "user": "admin"
+    }
+    asyncio.run(get_all_data(cfg))

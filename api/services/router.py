@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, Depends
+from fastapi import APIRouter, HTTPException, Request, Depends
 
 from api.auth.auth_config import RoleChecker
 from services.load_all_queries import get_all_data as get_all_data_queries
@@ -11,17 +11,15 @@ from services.load_query_url_merge import main as merge_main
 
 router = APIRouter()
 
-
 @router.get('/load-queries-script')
 async def load_queries_script(
         request: Request,
         required: bool = Depends(RoleChecker(required_permissions={"Administrator", "Superuser"}))
-) -> dict:
-    try:
-        request_session = request.session
-        await get_all_data_queries(request_session)
-    except Exception as e:
-        print(e)
+):
+    request_session = request.session
+    res = await get_all_data_queries(request_session)
+    if res["status"] == 400:
+        raise HTTPException(status_code=400, detail="Нет новых обновлений")
     return {"status": 200}
 
 
@@ -29,12 +27,11 @@ async def load_queries_script(
 async def load_urls_script(
         request: Request,
         required: bool = Depends(RoleChecker(required_permissions={"Administrator", "Superuser"}))
-) -> dict:
-    try:
-        request_session = request.session
-        await get_all_data_urls(request_session)
-    except Exception as e:
-        print(e)
+):
+    request_session = request.session
+    res = await get_all_data_urls(request_session)
+    if res["status"] == 400:
+        raise HTTPException(status_code=400, detail="Нет новых обновлений")
     return {"status": 200}
 
 

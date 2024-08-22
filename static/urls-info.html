@@ -1814,31 +1814,34 @@ function generateCsv(url_f) {
     });
 }
 
-    function sendRequest(url) {
-        $('.loader').show();
-        fetch(url)
-            .then(response => {
-                if (response.status === 403) {
-                    throw new Error('403 Forbidden');
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log('Success:', data);
-                // Обработка успешного ответа
-                $('.loader').hide();
-                window.location().reload()
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-                if (error.message === '403 Forbidden') {
-                    alert('Error: You do not have permission to perform this action.');
-                }
-                // Обработка ошибки
-                $('.loader').hide();
-                window.location.reload()
-            });
-    }
+function sendRequest(url) {
+    $('.loader').show();
+    fetch(url)
+        .then(response => {
+            // Проверяем статус ответа
+            if (!response.ok) {
+                console.log("qqq")
+                return response.json().then(errData => {
+                    // Обработка ошибки в зависимости от статуса
+                    if (response.status === 400) {
+                        throw new Error(errData.detail || 'Bad Request');
+                    }
+                });
+            }
+            return response.json();  // Если статус успешный, возвращаем JSON
+        })
+        .then(data => {
+            console.log('Success:', data);
+            // Обработка успешного ответа
+            $('.loader').hide();
+            window.location.reload();  // Обновление страницы
+        })
+        .catch((error) => {
+            alert(error.message);
+            // Обработка ошибки
+            $('.loader').hide();
+        });
+}
 
     async function deleteDataForLast(url) {
             // Получить значение из поля ввода
