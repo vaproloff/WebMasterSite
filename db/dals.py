@@ -93,6 +93,11 @@ class UrlDAL:
                 ).having(and_(Metrics.date <= date_end, Metrics.date >= date_start))
         
         elif state == "increase":
+            if pointer == Metrics.position:
+                    pointer = case(
+                        (pointer == 0, float('inf')),  # если pointer == 0, заменяем на float('inf')
+                        else_=pointer  # иначе используем значение pointer
+                    )
             if state_type == "date":
                 sub = select(Metrics.url).where(Metrics.date == state_date).order_by(asc(pointer)).offset(page).limit(per_page).subquery()
 
@@ -185,6 +190,11 @@ class UrlDAL:
                 ).having(and_(Metrics.date <= date_end, Metrics.date >= date_start))
         
         elif state == "increase":
+            if pointer == Metrics.position:
+                    pointer = case(
+                        (pointer == 0, float('inf')),  # если pointer == 0, заменяем на float('inf')
+                        else_=pointer  # иначе используем значение pointer
+                    )
             if state_type == "date":
                 sub = select(Metrics.url).filter(Metrics.url.like(f"%{search_text.strip()}%")).where(Metrics.date == state_date).order_by(asc(pointer)).offset(page).limit(per_page).subquery()
 
@@ -369,6 +379,11 @@ class QueryDAL:
         
         elif state == "increase":
             if state_type == "date":
+                if pointer == MetricsQuery.position:
+                    pointer = case(
+                        (pointer == 0, float('inf')),  # если pointer == 0, заменяем на float('inf')
+                        else_=pointer  # иначе используем значение pointer
+                    )
                 sub = select(MetricsQuery.query).where(MetricsQuery.date == state_date).order_by(asc(pointer)).offset(page).limit(per_page).subquery()
 
                 query = select(MetricsQuery.date, MetricsQuery.position, MetricsQuery.clicks, MetricsQuery.impression,
@@ -460,6 +475,11 @@ class QueryDAL:
                 ).having(and_(MetricsQuery.date <= date_end, MetricsQuery.date >= date_start))
         
         elif state == "increase":
+            if pointer == MetricsQuery.position:
+                    pointer = case(
+                        (pointer == 0, float('inf')),  # если pointer == 0, заменяем на float('inf')
+                        else_=pointer  # иначе используем значение pointer
+                    )
             if state_type == "date":
                 sub = select(MetricsQuery.query).filter(MetricsQuery.query.like(f"%{search_text.strip()}%")).where(MetricsQuery.date == state_date).order_by(asc(pointer)).offset(page).limit(per_page).subquery()
 

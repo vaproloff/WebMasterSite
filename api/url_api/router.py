@@ -314,7 +314,7 @@ async def get_urls(
         if data_request["button_state"]:
             if state_date and data_request["state_type"] == "date":
                 if data_request["metric_type"] == "P":
-                    grouped_data.sort(key=lambda x: next((sub_item[1] for sub_item in x[1] if sub_item[0] == state_date), float('inf')), reverse=data_request["button_state"] == "decrease")
+                    grouped_data.sort(key=lambda x: next((sub_item[1] if sub_item[1] > 0 else float('inf') for sub_item in x[1] if sub_item[0] == state_date), float('inf')), reverse=data_request["button_state"] == "decrease")
                 elif data_request["metric_type"] == "K":
                     grouped_data.sort(key=lambda x: next((sub_item[2] for sub_item in x[1] if sub_item[0] == state_date), float('-inf')), reverse=data_request["button_state"] == "decrease")
                 elif data_request["metric_type"] == "R":
