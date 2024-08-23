@@ -5,7 +5,7 @@ from itertools import groupby
 import logging
 import sys
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Query, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
@@ -17,6 +17,7 @@ from api.actions.urls import _get_urls_with_pagination, _get_urls_with_paginatio
 from api.auth.models import User
 
 from api.auth.auth_config import current_user
+from api.config.models import List
 from api.config.utils import get_config_names, get_group_names
 from db.models import Metrics
 from db.session import connect_db, get_db_general
@@ -227,8 +228,10 @@ async def generate_csv_url(request: Request, data_request: dict, user: User = De
 
 @router.get("/")
 async def get_urls(request: Request,
+                   list_name: str = Query(None),
                    user: User = Depends(current_user),
                    session: AsyncSession = Depends(get_db_general)):
+
     group_name = request.session["group"].get("name", "")
     config_names = [elem[0] for elem in (await get_config_names(session, user, group_name))]
 
@@ -246,7 +249,8 @@ async def get_urls(request: Request,
                                        "user": user,
                                        "config_names": config_names,
                                        "group_names": group_names,
-                                       "last_update_date": last_load_time
+                                       "last_update_date": last_load_time,
+                                       "list_name": list_name,
                                        }
                                        )
 
@@ -255,7 +259,8 @@ async def get_urls(request: Request,
 async def get_urls(
     request: Request, 
     data_request: dict, 
-    user: User = Depends(current_user)
+    user: User = Depends(current_user),
+    general_session: AsyncSession = Depends(get_db_general)
     ):
     DATABASE_NAME = request.session['config'].get('database_name', "")
     group = request.session['group'].get('name', '')
@@ -290,7 +295,9 @@ async def get_urls(
                 state_date,
                 data_request["metric_type"],
                 data_request["state_type"],
-                async_session
+                data_request["list_name"],
+                async_session,
+                general_session,
                 )
         else:
             urls = await _get_urls_with_pagination_and_like(

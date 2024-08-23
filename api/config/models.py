@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, ForeignKey
+from sqlalchemy import Boolean, Column, String, Integer, ForeignKey
 from sqlalchemy.orm import DeclarativeBase, relationship
 
 
@@ -50,3 +50,23 @@ class Group(Base):
                          secondary='group_user_association', back_populates="groups",
                          lazy="selectin"
                          )
+
+class List(Base):
+    __tablename__ = "list"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String, nullable=False)
+    author = Column(Integer,ForeignKey("user.id"), nullable=False)
+    is_public = Column(Boolean, nullable=False, default=False)
+
+    uris = relationship("ListURI", back_populates="list")
+
+class ListURI(Base):
+    __tablename__ = "list_uri"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    uri = Column(String, nullable=False)
+    list_id = Column(Integer, ForeignKey("list.id"), nullable=False)
+
+    # Связь с List
+    list = relationship("List", back_populates="uris")

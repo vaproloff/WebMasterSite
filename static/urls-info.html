@@ -12,10 +12,14 @@
 <body>
     <div class="button-container">
         <a href="{{ url_for('show_profile', username=user.username) }}" class="back-to-menu">Back to profile</a>
-        <input type="button" value="Update Data Url" onclick="sendRequest('{{ url_for('load_urls_script') }}')">
+        {% if not list_name %}
+            <input type="button" value="Update Data Url" onclick="sendRequest('{{ url_for('load_urls_script') }}')">
+        {% endif %}
         <label for="last_update_date">Last Update Date: {{ last_update_date }}</label>
+        {% if not list_name %}
         <input type="number" id="days" placeholder="Days" min="1" max="13">
-        <input type="button" value="Delete Data for the Last" onclick="deleteDataForLast('{{ url_for('delete_url') }}');">
+            <input type="button" value="Delete Data for the Last" onclick="deleteDataForLast('{{ url_for('delete_url') }}');">
+        {% endif %}
     </div>
 
     <!-- Existing filters and buttons -->
@@ -433,6 +437,7 @@
             button_state: state,
             metric_type: metric_type,
             state_type: state_type,
+            list_name: "{{ list_name }}",
         };
 
         fetch(url, {
@@ -831,6 +836,7 @@
             button_state: state,
             metric_type: metric_type,
             state_type: state_type,
+            list_name: "{{ list_name }}",
         };
 
         fetch(url, {
@@ -1252,6 +1258,7 @@
             button_state: state,
             metric_type: metric_type,
             state_type: state_type,
+            list_name: "{{ list_name }}",
         };
 
         fetch(url, {
@@ -1669,6 +1676,7 @@
             button_state: state,
             metric_type: metric_type,
             state_type: state_type,
+            list_name: "{{ list_name }}",
         };
 
         fetch(url, {

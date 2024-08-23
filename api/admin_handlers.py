@@ -1,18 +1,22 @@
 from fastapi import APIRouter, Depends
 from fastapi import Request
+from fastapi.responses import JSONResponse
 from fastapi.templating import Jinja2Templates
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.auth.auth_config import current_user, RoleChecker
 from api.auth.models import User
-from api.config.utils import get_config_names, get_group_names
+from api.config.models import List, ListURI
+from api.config.utils import get_config_names, get_group_names, get_lists_names
 from db.session import get_db_general
 
 from api.query_api.router import router as query_router
 from api.url_api.router import router as url_router
 from api.history_api.router import router as history_router
 from api.merge_api.router import router as merge_router
+
+from sqlalchemy.exc import IntegrityError
 
 admin_router = APIRouter()
 
@@ -86,3 +90,72 @@ async def show_superuser(
                                        "user": user,
                                        "config_names": config_names,
                                        "group_names": group_names})
+
+
+@admin_router.get("/list/{username}")
+async def show_list(
+    request: Request,
+    user=Depends(current_user),
+    session: AsyncSession = Depends(get_db_general),
+    required: bool = Depends(RoleChecker(required_permissions={"User", "Administrator", "Superuser"}))
+):
+    group_name = request.session["group"].get("name", "")
+    config_names = [elem[0] for elem in (await get_config_names(session, user, group_name))]
+
+    group_names = await get_group_names(session, user)
+
+    list_names = await get_lists_names(session, user, request.session["group"].get("name", ""))
+
+    print(list_names)
+
+    return templates.TemplateResponse("lists.html",
+                                      {"request": request,
+                                       "user": user,
+                                       "config_names": config_names,
+                                       "group_names": group_names,
+                                       "list_names": list_names})
+
+
+@admin_router.post("/list/")
+async def add_list(
+    request: Request,
+    data: dict,
+    user=Depends(current_user),
+    session: AsyncSession = Depends(get_db_general),
+    required: bool = Depends(RoleChecker(required_permissions={"Administrator", "Superuser"}))
+):
+    list_name, uri_list, is_public = data.values()
+
+    new_list = List(
+        name=list_name,
+        author=user.id,
+        is_public=is_public,
+    )
+
+    new_uris = [ListURI(uri=uri, list=new_list) for uri in uri_list]
+
+    try:
+        session.add(new_list)
+        session.add_all(new_uris)
+        await session.commit()
+    except IntegrityError:
+        await session.rollback()
+        return JSONResponse(
+            status_code=400,
+            content={"error": "An error occurred while adding the list. Possibly due to database constraints."}
+        )
+    except Exception as e:
+        await session.rollback()
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"An unexpected error occurred: {str(e)}"}
+        )
+
+    return {
+        "status": "success",
+        "message": f"List '{list_name}' created successfully",
+        "list_id": new_list.id
+    }
+
+
+

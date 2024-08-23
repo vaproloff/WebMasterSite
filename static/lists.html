@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+{% block content %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        background-color: #f8f9fa;
+        color: #343a40;
+    }
+    .container {
+        margin: 0 auto;
+        width: 80%;
+        max-width: 800px;
+        display: flex; /* Используем flexbox для выравнивания по горизонтали */
+        justify-content: space-between; /* Пространство между колонками */
+        align-items: flex-start; /* Выравнивание по верхнему краю */
+        margin-top: 30px; /* Увеличение отступа сверху для общего контейнера */
+    }
+    .header {
+        width: 100%; /* Ширина 100% для блока с именем пользователя */
+        margin-bottom: 20px; /* Добавлен отступ снизу для разделения */
+    }
+    .header h1 {
+        color: #007bff;
+        margin: 0; /* Убираем отступы для заголовка */
+    }
+    .services, .add-config, .new-block, .current-list {
+        display: inline-block;
+        vertical-align: top;
+        margin: 20px 10px; /* Добавление горизонтальных отступов между блоками */
+        text-align: center;
+    }
+    .new-block {
+        width: 65%; /* Увеличиваем ширину блока Add List */
+    }
+    .current-list {
+        width: 30%; /* Уменьшаем ширину блока Current List */
+    }
+    .services h2, .add-config h2, .new-block h2, .current-list h2 {
+        color: #007bff;
+    }
+    .buttons {
+        margin-top: 20px;
+    }
+    .buttons a, .buttons button {
+        display: block;
+        margin: 10px auto;
+        padding: 10px 20px;
+        font-size: 16px;
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        width: 200px;
+        text-decoration: none;
+        text-align: center;
+    }
+    .buttons a:hover, .buttons button:hover {
+        background-color: #0056b3;
+    }
+    .form {
+        margin-top: 20px;
+    }
+    .form input, .form button, .form textarea {
+        display: block;
+        margin: 10px auto;
+        padding: 10px;
+        width: 95%; /* Увеличение ширины текстового поля */
+        font-size: 16px;
+        border: 1px solid #ced4da;
+        border-radius: 5px;
+    }
+    .form textarea {
+        height: 150px; /* Увеличение высоты текстового поля */
+    }
+    .form button {
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+    }
+    .form button:hover {
+        background-color: #0056b3;
+    }
+    .checkbox-container {
+        display: flex;
+        align-items: center;
+        margin-top: 10px;
+        margin-left: 10px; /* Отступ слева для выравнивания с текстом */
+        margin-right: 10px; /* Отступ справа для выравнивания с текстом */
+    }
+    .checkbox-container input {
+        margin-right: 5px; /* Уменьшенный отступ справа от чекбокса */
+    }
+    .checkbox-container label {
+        font-size: 14px;
+        color: #343a40;
+    }
+
+    .loader {
+        position: fixed;
+        z-index: 9999;
+        top: 10%;
+        left: 40%;
+        transform: translate(-50%, -50%);
+        border: 4px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 4px solid #3498db;
+        width: 50px;
+        height: 50px;
+        -webkit-animation: spin 2s linear infinite; /* Safari */
+        animation: spin 2s linear infinite;
+    }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .current-list {
+        text-align: left; /* Выравнивание текста влево */
+    }
+    .current-list ul {
+        list-style-type: none; /* Убираем маркеры списка */
+        padding: 0; /* Убираем отступы */
+    }
+    .current-list li {
+        background-color: #f8f9fa;
+        padding: 10px;
+        margin-bottom: 5px;
+        border: 1px solid #ced4da;
+        border-radius: 5px;
+    }
+
+    .current-list a {
+    display: inline-block; /* Делает ссылку блочным элементом, чтобы применить стили кнопки */
+    padding: 10px 20px; /* Отступы внутри кнопки */
+    font-size: 16px; /* Размер шрифта */
+    background-color: #007bff; /* Цвет фона кнопки */
+    color: #fff; /* Цвет текста кнопки */
+    text-decoration: none; /* Убираем подчеркивание текста ссылки */
+    border-radius: 5px; /* Скругление углов кнопки */
+    border: 1px solid #007bff; /* Граница кнопки того же цвета, что и фон */
+    margin-bottom: 10px; /* Отступ снизу между кнопками */
+    text-align: center; /* Центрируем текст внутри кнопки */
+}
+
+    .current-list a:hover {
+        background-color: #0056b3; /* Цвет фона кнопки при наведении */
+        border-color: #0056b3; /* Цвет границы кнопки при наведении */
+    }
+</style>
+
+<div class="header">
+    <h1>{{ user.username }}</h1>
+</div>
+
+<div class="container">
+    <!-- Новый блок Add List -->
+    <div class="new-block">
+        <h2>Add List</h2>
+        <form class="form" id="add-list-form">
+            <input type="text" id="list-name" placeholder="Name" required>
+            <textarea id="list-content" placeholder="Enter text here" rows="4" required></textarea>
+            <!-- Добавлен чекбокс для настройки видимости списка -->
+            <div class="checkbox-container">
+                <input type="checkbox" id="make-public">
+                <label for="make-public">Сделать список публичным?</label>
+            </div>
+            <button type="button" onclick="addList()">Add</button>
+        </form>
+    </div>
+    <!-- Новый блок Current List -->
+    <div class="current-list">
+        <h2>Current List</h2>
+        <ul>
+            {% for name in list_names %}
+                <a href="{{ url_for('get_urls').include_query_params(list_name=name) }}">{{ name }}</a> <!-- Обернем ссылку в <li> элемент списка -->
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+<div class="loader" style="display: none;"></div>
+
+<script>
+    function sendRequest(url) {
+        $('.loader').show();
+        fetch(url)
+            .then(response => {
+                if (response.status === 403) {
+                    throw new Error('403 Forbidden');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Success:', data);
+                $('.loader').hide();
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                if (error.message === '403 Forbidden') {
+                    alert('Error: You do not have permission to perform this action.');
+                }
+                $('.loader').hide();
+            });
+    }
+
+    function addList() {
+    const name = $('#list-name').val();
+    const content = $('#list-content').val();
+    const isPublic = $('#make-public').is(':checked');
+    
+    // Проверяем заполнены ли все поля
+    if (name && content) {
+        $('.loader').show();
+
+        // Создаем объект данных
+        const data = {
+            name: name,
+            uri_list: content.split('\n').filter(uri => uri.trim() !== ''), // Преобразуем содержание в список URI
+            is_public: isPublic
+        };
+
+        fetch('{{ url_for('add_list') }}', { // предполагается, что существует соответствующий маршрут
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (!response.ok) {
+                // Если сервер возвращает ошибку
+                return response.json().then(err => Promise.reject(err));
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('List added:', data);
+            $('.loader').hide();
+            // Очистить форму после успешного добавления
+            $('#add-list-form')[0].reset();
+            // Можно добавить дополнительное действие, например, обновить UI
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+            $('.loader').hide();
+            alert(`Error: ${error.error || 'Unable to add list.'}`);
+        });
+    } else {
+        alert('Please fill in all fields.');
+    }
+}
+</script>
+{% endblock %}

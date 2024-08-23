@@ -13,6 +13,8 @@ from db.models import Query
 from db.models import MetricsQuery
 from db.utils import get_last_update_date
 
+from api.config.models import List as List_model, ListURI
+
 from const import date_format
 
 ###########################################################
@@ -35,7 +37,32 @@ class UrlDAL:
         await self.db_session.flush()
         return
 
-    async def get_urls_with_pagination(self, page, per_page, date_start, date_end, state, state_date, metric_type, state_type):
+    async def get_urls_with_pagination(
+            self, 
+            page, 
+            per_page, 
+            date_start, 
+            date_end, 
+            state, 
+            state_date, 
+            metric_type, 
+            state_type, 
+            list_name,
+            general_db):
+        
+        filter_query = None
+
+        if list_name != "None":
+            list_id = (await general_db.execute(
+                select(List_model.id).where(List_model.name == list_name)
+            )).fetchone()[0]
+
+            uri_list = (await general_db.execute(
+                select(ListURI.uri).where(ListURI.list_id == list_id)
+            )).scalars().all()
+
+            filter_query = Url.url.in_(uri_list)
+
         if metric_type == "P":
             pointer = Metrics.position
             result_pointer = func.avg(Metrics.position)
@@ -49,13 +76,17 @@ class UrlDAL:
             pointer = Metrics.ctr
             result_pointer = func.avg(Metrics.ctr)
         if not state:
-            sub = select(Url).offset(page).limit(
-                per_page).subquery()
+            sub_query = select(Url)
+            
+            if filter_query is not None:
+                sub_query = sub_query.filter(filter_query)
+            
+            sub = sub_query.offset(page).limit(per_page).subquery()
             query = select(Metrics.date, Metrics.position, Metrics.clicks, Metrics.impression,
                         Metrics.ctr, sub).join(sub,
                                                     Metrics.url == sub.c.url).group_by(
                 sub.c.url,
-                Metrics.date,
+                Metrics.date,   
                 Metrics.position,
                 Metrics.clicks,
                 Metrics.impression,

@@ -15,12 +15,13 @@
             </a>
             <div class="dropdown-content">
                 <a href="{{ url_for('get_queries') }}">Query Table</a>
-                <a href="{{ url_for('get_urls') }}">Url Table</a>
+                <a href="{{ url_for('get_urls')}}">Url Table</a>
                 <a href="{{ url_for('get_history') }}">All history Table</a>
                 <a href="{{ url_for('show_menu_merge_page') }}">Query & Url Merge Table</a>
             </div>
         </div>
         <button class="button superuser-button" onclick="superuser_button('{{ url_for('show_superuser', username=user.username) }}')">Command Panel</button>
+        <button class="button superuser-button" onclick="superuser_button('{{ url_for('show_list', username=user.username) }}')">List Panel</button>
         <button class="button main-page-button" onclick="main_page_button()">Main Page</button>
         <div class="header-right">
             <div class="dropdown">
