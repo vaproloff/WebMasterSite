@@ -31,29 +31,59 @@ async def _get_urls_with_pagination(
         return urls
 
 
-async def _get_urls_with_pagination_and_like(page, per_page, date_start, date_end, search_text, state, state_date, metric_type, state_type, session):
+async def _get_urls_with_pagination_and_like(
+        page, 
+        per_page, 
+        date_start, 
+        date_end, 
+        search_text, 
+        state, 
+        state_date, 
+        metric_type, 
+        state_type,
+        list_name, 
+        session,
+        general_session,
+        ):
     async with session() as s:
         url_dal = UrlDAL(s)
         urls = await url_dal.get_urls_with_pagination_and_like(
-            page, per_page, date_start, date_end, search_text, state, state_date, metric_type, state_type,
+            page, per_page, date_start, date_end, search_text, state, state_date, metric_type, state_type, list_name, general_session,
         )
         return urls
 
 
-async def _get_urls_with_pagination_sort(page, per_page, date_start, date_end, sort_desc, session):
+async def _get_urls_with_pagination_sort(
+        page, 
+        per_page, 
+        date_start, 
+        date_end, 
+        sort_desc,
+        list_name, 
+        session,
+        general_session):
     async with session() as s:
         url_dal = UrlDAL(s)
         urls = await url_dal.get_urls_with_pagination_sort(
-            page, per_page, date_start, date_end, sort_desc
+            page, per_page, date_start, date_end, sort_desc, list_name, general_session,
         )
         return urls
 
 
-async def _get_urls_with_pagination_and_like_sort(page, per_page, date_start, date_end, search_text, sort_desc,
-                                                  session):
+async def _get_urls_with_pagination_and_like_sort(
+        page, 
+        per_page, 
+        date_start, 
+        date_end, 
+        search_text, 
+        sort_desc,
+        list_name,
+        session,
+        general_session,
+        ):
     async with session() as s:
         url_dal = UrlDAL(s)
         urls = await url_dal.get_urls_with_pagination_and_like_sort(
-            page, per_page, date_start, date_end, search_text, sort_desc
+            page, per_page, date_start, date_end, search_text, sort_desc, list_name, general_session
         )
         return urls

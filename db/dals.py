@@ -48,7 +48,8 @@ class UrlDAL:
             metric_type, 
             state_type, 
             list_name,
-            general_db):
+            general_db
+            ):
         
         filter_query = None
 
@@ -61,7 +62,10 @@ class UrlDAL:
                 select(ListURI.uri).where(ListURI.list_id == list_id)
             )).scalars().all()
 
+
             filter_query = Url.url.in_(uri_list)
+
+            filter_query_result = Metrics.url.in_(uri_list)
 
         if metric_type == "P":
             pointer = Metrics.position
@@ -75,11 +79,17 @@ class UrlDAL:
         if metric_type == "C":
             pointer = Metrics.ctr
             result_pointer = func.avg(Metrics.ctr)
-        if not state:
-            sub_query = select(Url)
+        
+        sub_query = select(Url)
+
+        sub_query_result = select(Metrics.url)
             
-            if filter_query is not None:
-                sub_query = sub_query.filter(filter_query)
+        if filter_query is not None:
+            sub_query = sub_query.filter(filter_query)
+
+            sub_query_result = sub_query_result.filter(filter_query_result)
+
+        if not state:
             
             sub = sub_query.offset(page).limit(per_page).subquery()
             query = select(Metrics.date, Metrics.position, Metrics.clicks, Metrics.impression,
@@ -95,7 +105,8 @@ class UrlDAL:
 
         elif state == "decrease":
             if state_type == "date":
-                sub = select(Metrics.url).where(Metrics.date == state_date).order_by(desc(pointer)).offset(page).limit(per_page).subquery()
+
+                sub = sub_query.where(Metrics.date == state_date).order_by(desc(pointer)).offset(page).limit(per_page).subquery()
 
                 query = select(Metrics.date, Metrics.position, Metrics.clicks, Metrics.impression,
                             Metrics.ctr, sub).join(sub,
@@ -108,8 +119,9 @@ class UrlDAL:
                     Metrics.ctr,
                 ).having(and_(Metrics.date <= date_end, Metrics.date >= date_start))
             else:
-                sub = select(Metrics.url).where(
-                    and_(Metrics.date >= date_start, Metrics.date <= date_end, Metrics.position != 0)).group_by(Metrics.url).order_by(
+
+                sub = sub_query_result.where(
+                    and_(Metrics.date >= date_start, Metrics.date <= date_end)).group_by(Metrics.url).order_by(
                     desc(result_pointer)).offset(page).limit(per_page).subquery()
 
                 query = select(Metrics.date, Metrics.position, Metrics.clicks, Metrics.impression,
@@ -130,7 +142,8 @@ class UrlDAL:
                         else_=pointer  # иначе используем значение pointer
                     )
             if state_type == "date":
-                sub = select(Metrics.url).where(Metrics.date == state_date).order_by(asc(pointer)).offset(page).limit(per_page).subquery()
+
+                sub = sub_query.where(Metrics.date == state_date).order_by(asc(pointer)).offset(page).limit(per_page).subquery()
 
                 query = select(Metrics.date, Metrics.position, Metrics.clicks, Metrics.impression,
                             Metrics.ctr, sub).join(sub,
@@ -143,8 +156,9 @@ class UrlDAL:
                     Metrics.ctr,
                 ).having(and_(Metrics.date <= date_end, Metrics.date >= date_start))
             else:
-                sub = select(Metrics.url).where(
-                    and_(Metrics.date >= date_start, Metrics.date <= date_end, Metrics.position != 0)).group_by(Metrics.url).order_by(
+
+                sub = sub_query_result.where(
+                    and_(Metrics.date >= date_start, Metrics.date <= date_end)).group_by(Metrics.url).order_by(
                     asc(result_pointer)).offset(page).limit(per_page).subquery()
 
                 query = select(Metrics.date, Metrics.position, Metrics.clicks, Metrics.impression,
@@ -160,10 +174,41 @@ class UrlDAL:
 
         res = await self.db_session.execute(query)
         product_row = res.fetchall()
+        print(len(product_row))
         if len(product_row) != 0:
             return product_row
 
-    async def get_urls_with_pagination_and_like(self, page, per_page, date_start, date_end, search_text, state, state_date, metric_type, state_type):
+    async def get_urls_with_pagination_and_like(
+            self, 
+            page, 
+            per_page, 
+            date_start, 
+            date_end, 
+            search_text, 
+            state, 
+            state_date, 
+            metric_type, 
+            state_type,
+            list_name,
+            general_db,
+            ):
+        
+        filter_query = None
+
+        if list_name != "None":
+            list_id = (await general_db.execute(
+                select(List_model.id).where(List_model.name == list_name)
+            )).fetchone()[0]
+
+            uri_list = (await general_db.execute(
+                select(ListURI.uri).where(ListURI.list_id == list_id)
+            )).scalars().all()
+
+
+            filter_query = Url.url.in_(uri_list)
+
+            filter_query_result = Metrics.url.in_(uri_list)
+
         if metric_type == "P":
             pointer = Metrics.position
             result_pointer = func.avg(Metrics.position)
@@ -176,8 +221,18 @@ class UrlDAL:
         if metric_type == "C":
             pointer = Metrics.ctr
             result_pointer = func.avg(Metrics.ctr)
+        
+        sub_query = select(Url)
+
+        sub_query_result = select(Metrics.url)
+            
+        if filter_query is not None:
+            sub_query = sub_query.filter(filter_query)
+
+            sub_query_result = sub_query_result.filter(filter_query_result)
+
         if not state:
-            sub = select(Url).filter(Url.url.like(f"%{search_text.strip()}%")).offset(page).limit(
+            sub = sub_query.filter(Url.url.like(f"%{search_text.strip()}%")).offset(page).limit(
                 per_page).subquery()
             query = select(Metrics.date, Metrics.position, Metrics.clicks, Metrics.impression,
                         Metrics.ctr, sub).join(sub,
@@ -192,7 +247,8 @@ class UrlDAL:
 
         elif state == "decrease":
             if state_type == "date":
-                sub = select(Metrics.url).filter(Metrics.url.like(f"%{search_text.strip()}%")).where(Metrics.date == state_date).order_by(desc(pointer)).offset(page).limit(per_page).subquery()
+
+                sub = sub_query.filter(Metrics.url.like(f"%{search_text.strip()}%")).where(Metrics.date == state_date).order_by(desc(pointer)).offset(page).limit(per_page).subquery()
 
                 query = select(Metrics.date, Metrics.position, Metrics.clicks, Metrics.impression,
                             Metrics.ctr, sub).join(sub,
@@ -205,8 +261,9 @@ class UrlDAL:
                     Metrics.ctr,
                 ).having(and_(Metrics.date <= date_end, Metrics.date >= date_start))
             else:
-                sub = select(Metrics.url).filter(Metrics.url.like(f"%{search_text.strip()}%")).where(
-                    and_(Metrics.date >= date_start, Metrics.date <= date_end, Metrics.position != 0)).group_by(Metrics.url).order_by(
+
+                sub = sub_query_result.filter(Metrics.url.like(f"%{search_text.strip()}%")).where(
+                    and_(Metrics.date >= date_start, Metrics.date <= date_end)).group_by(Metrics.url).order_by(
                     desc(result_pointer)).offset(page).limit(per_page).subquery()
 
                 query = select(Metrics.date, Metrics.position, Metrics.clicks, Metrics.impression,
@@ -227,7 +284,8 @@ class UrlDAL:
                         else_=pointer  # иначе используем значение pointer
                     )
             if state_type == "date":
-                sub = select(Metrics.url).filter(Metrics.url.like(f"%{search_text.strip()}%")).where(Metrics.date == state_date).order_by(asc(pointer)).offset(page).limit(per_page).subquery()
+
+                sub = sub_query.filter(Metrics.url.like(f"%{search_text.strip()}%")).where(Metrics.date == state_date).order_by(asc(pointer)).offset(page).limit(per_page).subquery()
 
                 query = select(Metrics.date, Metrics.position, Metrics.clicks, Metrics.impression,
                             Metrics.ctr, sub).join(sub,
@@ -240,8 +298,9 @@ class UrlDAL:
                     Metrics.ctr,
                 ).having(and_(Metrics.date <= date_end, Metrics.date >= date_start))
             else:
-                sub = select(Metrics.url).filter(Metrics.url.like(f"%{search_text.strip()}%")).where(
-                    and_(Metrics.date >= date_start, Metrics.date <= date_end, Metrics.position != 0)).group_by(Metrics.url).order_by(
+
+                sub = sub_query_result.filter(Metrics.url.like(f"%{search_text.strip()}%")).where(
+                    and_(Metrics.date >= date_start, Metrics.date <= date_end)).group_by(Metrics.url).order_by(
                     asc(result_pointer)).offset(page).limit(per_page).subquery()
 
                 query = select(Metrics.date, Metrics.position, Metrics.clicks, Metrics.impression,
@@ -260,12 +319,40 @@ class UrlDAL:
         if len(product_row) != 0:
             return product_row
 
-    async def get_urls_with_pagination_sort(self, page, per_page, date_start, date_end, sort_desc):
+    async def get_urls_with_pagination_sort(
+            self, 
+            page, 
+            per_page, 
+            date_start, 
+            date_end, 
+            sort_desc,
+            list_name,
+            general_db,
+            ):
+
+        filter_query = None
+
+        if list_name != "None":
+            list_id = (await general_db.execute(
+                select(List_model.id).where(List_model.name == list_name)
+            )).fetchone()[0]
+
+            uri_list = (await general_db.execute(
+                select(ListURI.uri).where(ListURI.list_id == list_id)
+            )).scalars().all()
+
+            filter_query = Url.url.in_(uri_list)
+        
+        sub_query = select(Url)
+            
+        if filter_query is not None:
+            sub_query = sub_query.filter(filter_query)
+            
         if sort_desc:
-            sub = select(Url).order_by(desc(Url.url)).offset(page).limit(
+            sub = sub_query.order_by(desc(Url.url)).offset(page).limit(
                 per_page).subquery()
         else:
-            sub = select(Url).order_by(Url.url).offset(page).limit(
+            sub = sub_query.order_by(Url.url).offset(page).limit(
                 per_page).subquery()
         query = select(Metrics.date, Metrics.position, Metrics.clicks, Metrics.impression, Metrics.ctr, sub).join(sub,
                                                                                                                   Metrics.url == sub.c.url).group_by(
@@ -281,13 +368,41 @@ class UrlDAL:
         if len(product_row) != 0:
             return product_row
 
-    async def get_urls_with_pagination_and_like_sort(self, page, per_page, date_start, date_end, search_text,
-                                                     sort_desc):
+    async def get_urls_with_pagination_and_like_sort(
+            self, 
+            page, 
+            per_page, 
+            date_start, 
+            date_end, 
+            search_text,
+            sort_desc,
+            list_name,
+            general_db,
+            ):
+
+        filter_query = None
+
+        if list_name != "None":
+            list_id = (await general_db.execute(
+                select(List_model.id).where(List_model.name == list_name)
+            )).fetchone()[0]
+
+            uri_list = (await general_db.execute(
+                select(ListURI.uri).where(ListURI.list_id == list_id)
+            )).scalars().all()
+
+            filter_query = Url.url.in_(uri_list)
+        
+        sub_query = select(Url)
+            
+        if filter_query is not None:
+            sub_query = sub_query.filter(filter_query)
+
         if sort_desc:
-            sub = select(Url).filter(Url.url.like(f"%{search_text.strip()}%")).order_by(desc(Url.url)).offset(
+            sub = sub_query.filter(Url.url.like(f"%{search_text.strip()}%")).order_by(desc(Url.url)).offset(
                 page).limit(per_page).subquery()
         else:
-            sub = select(Url).filter(Url.url.like(f"%{search_text.strip()}%")).order_by(Url.url).offset(page).limit(
+            sub = sub_query.filter(Url.url.like(f"%{search_text.strip()}%")).order_by(Url.url).offset(page).limit(
                 per_page).subquery()
         query = select(Metrics.date, Metrics.position, Metrics.clicks, Metrics.impression, Metrics.ctr, sub).join(sub,
                                                                                                                   Metrics.url == sub.c.url).group_by(
@@ -394,7 +509,7 @@ class QueryDAL:
                 ).having(and_(MetricsQuery.date <= date_end, MetricsQuery.date >= date_start))
             else:
                 sub = select(MetricsQuery.query).where(
-                    and_(MetricsQuery.date >= date_start, MetricsQuery.date <= date_end, MetricsQuery.position != 0)).group_by(MetricsQuery.query).order_by(
+                    and_(MetricsQuery.date >= date_start, MetricsQuery.date <= date_end)).group_by(MetricsQuery.query).order_by(
                     desc(result_pointer)).offset(page).limit(per_page).subquery()
 
                 query = select(MetricsQuery.date, MetricsQuery.position, MetricsQuery.clicks, MetricsQuery.impression,
@@ -429,7 +544,7 @@ class QueryDAL:
                 ).having(and_(MetricsQuery.date <= date_end, MetricsQuery.date >= date_start))
             else:
                 sub = select(MetricsQuery.query).where(
-                    and_(MetricsQuery.date >= date_start, MetricsQuery.date <= date_end, MetricsQuery.position != 0)).group_by(MetricsQuery.query).order_by(
+                    and_(MetricsQuery.date >= date_start, MetricsQuery.date <= date_end)).group_by(MetricsQuery.query).order_by(
                     asc(result_pointer)).offset(page).limit(per_page).subquery()
 
                 query = select(MetricsQuery.date, MetricsQuery.position, MetricsQuery.clicks, MetricsQuery.impression,
@@ -491,7 +606,7 @@ class QueryDAL:
                 ).having(and_(MetricsQuery.date <= date_end, MetricsQuery.date >= date_start))
             else:
                 sub = select(MetricsQuery.query).filter(MetricsQuery.query.like(f"%{search_text.strip()}%")).where(
-                    and_(MetricsQuery.date >= date_start, MetricsQuery.date <= date_end, MetricsQuery.position != 0)).group_by(MetricsQuery.query).order_by(
+                    and_(MetricsQuery.date >= date_start, MetricsQuery.date <= date_end)).group_by(MetricsQuery.query).order_by(
                     desc(result_pointer)).offset(page).limit(per_page).subquery()
 
                 query = select(MetricsQuery.date, MetricsQuery.position, MetricsQuery.clicks, MetricsQuery.impression,
@@ -526,7 +641,7 @@ class QueryDAL:
                 ).having(and_(MetricsQuery.date <= date_end, MetricsQuery.date >= date_start))
             else:
                 sub = select(MetricsQuery.query).filter(MetricsQuery.query.like(f"%{search_text.strip()}%")).where(
-                    and_(MetricsQuery.date >= date_start, MetricsQuery.date <= date_end, MetricsQuery.position != 0)).group_by(MetricsQuery.query).order_by(
+                    and_(MetricsQuery.date >= date_start, MetricsQuery.date <= date_end)).group_by(MetricsQuery.query).order_by(
                     asc(result_pointer)).offset(page).limit(per_page).subquery()
 
                 query = select(MetricsQuery.date, MetricsQuery.position, MetricsQuery.clicks, MetricsQuery.impression,

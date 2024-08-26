@@ -12,7 +12,7 @@ from fastapi.templating import Jinja2Templates
 from openpyxl import Workbook
 from sqlalchemy import delete
 
-from api.actions.actions import get_last_load_date
+from api.actions.actions import get_last_date, get_last_load_date
 from api.actions.urls import _get_urls_with_pagination, _get_urls_with_pagination_and_like, _get_urls_with_pagination_and_like_sort, _get_urls_with_pagination_sort
 from api.auth.models import User
 
@@ -244,6 +244,8 @@ async def get_urls(request: Request,
 
     last_load_time = await get_last_load_date(async_session, "url")
 
+    last_date = await get_last_date(async_session, Metrics)
+
     return templates.TemplateResponse("urls-info.html",
                                       {"request": request,
                                        "user": user,
@@ -251,6 +253,7 @@ async def get_urls(request: Request,
                                        "group_names": group_names,
                                        "last_update_date": last_load_time,
                                        "list_name": list_name,
+                                       "last_date": last_date,
                                        }
                                        )
 
@@ -275,15 +278,26 @@ async def get_urls(
     logger.info(f"connect to database: {DATABASE_NAME}")
     if data_request["sort_result"]:
         if data_request["search_text"] == "":
-            urls = await _get_urls_with_pagination_sort(data_request["start"], data_request["length"], start_date,
-                                                              end_date, data_request["sort_desc"],
-                                                              async_session)
+            urls = await _get_urls_with_pagination_sort(
+                data_request["start"], 
+                data_request["length"], 
+                start_date,
+                end_date, 
+                data_request["sort_desc"],
+                data_request["list_name"],
+                async_session,
+                general_session,)
         else:
-            urls = await _get_urls_with_pagination_and_like_sort(data_request["start"], data_request["length"],
-                                                                       start_date, end_date,
-                                                                       data_request["search_text"],
-                                                                       data_request["sort_desc"],
-                                                                       async_session)
+            urls = await _get_urls_with_pagination_and_like_sort(
+                data_request["start"], 
+                data_request["length"],
+                start_date, 
+                end_date,
+                data_request["search_text"],
+                data_request["sort_desc"],
+                data_request["list_name"],
+                async_session,
+                general_session,)
     else:
         if data_request["search_text"] == "":
             urls = await _get_urls_with_pagination(
@@ -310,7 +324,9 @@ async def get_urls(
                 state_date,
                 data_request["metric_type"],
                 data_request["state_type"],
-                async_session)
+                data_request["list_name"],
+                async_session,
+                general_session,)
     try:
         if urls:
             urls.sort(key=lambda x: x[-1])
@@ -321,28 +337,62 @@ async def get_urls(
         if data_request["button_state"]:
             if state_date and data_request["state_type"] == "date":
                 if data_request["metric_type"] == "P":
-                    grouped_data.sort(key=lambda x: next((sub_item[1] if sub_item[1] > 0 else float('inf') for sub_item in x[1] if sub_item[0] == state_date), float('inf')), reverse=data_request["button_state"] == "decrease")
+                    grouped_data.sort(
+                        key=lambda x: next(
+                            (
+                                sub_item[1] if sub_item[1] != 0 else 
+                                (-float('inf') if data_request["button_state"] == "decrease" else float('inf'))
+                                for sub_item in x[1]
+                                if sub_item[0] == state_date
+                            ),
+                            -float('inf') if data_request["button_state"] == "decrease" else float('inf')
+                        ),
+                        reverse=data_request["button_state"] == "decrease"
+                    )
                 elif data_request["metric_type"] == "K":
                     grouped_data.sort(key=lambda x: next((sub_item[2] for sub_item in x[1] if sub_item[0] == state_date), float('-inf')), reverse=data_request["button_state"] == "decrease")
                 elif data_request["metric_type"] == "R":
                     grouped_data.sort(key=lambda x: next((sub_item[3] for sub_item in x[1] if sub_item[0] == state_date), float('-inf')), reverse=data_request["button_state"] == "decrease")
                 elif data_request["metric_type"] == "C":
-                    grouped_data.sort(key=lambda x: next((sub_item[4] for sub_item in x[1] if sub_item[0] == state_date), float('-inf')), reverse=data_request["button_state"] == "decrease")
+                    grouped_data.sort(
+                        key=lambda x: next(
+                            (
+                                sub_item[4] if sub_item[4] != 0 else 
+                                (-float('inf') if data_request["button_state"] == "decrease" else float('inf'))
+                                for sub_item in x[1]
+                                if sub_item[0] == state_date
+                            ),
+                            -float('inf') if data_request["button_state"] == "decrease" else float('inf')
+                        ),
+                        reverse=data_request["button_state"] == "decrease"
+                    )
             else:
                 if data_request["metric_type"] == "P":
-                    grouped_data.sort( key=lambda x: (
-                        (total := sum(sub_item[1] for sub_item in x[1] if start_date <= sub_item[0] <= end_date and sub_item[1] != 0),
-                        count := sum(1 for sub_item in x[1] if start_date <= sub_item[0] <= end_date and sub_item[1] != 0),
-                        total / count if count > 0 else float('inf'))[2]), reverse=data_request["button_state"] == "decrease")
+                    grouped_data.sort(
+                        key=lambda x: (
+                            (total := sum(sub_item[1] for sub_item in x[1] if start_date <= sub_item[0] <= end_date and sub_item[1] != 0),
+                            count := sum(1 for sub_item in x[1] if start_date <= sub_item[0] <= end_date and sub_item[1] != 0),
+                            total / count if count > 0 else (
+                                -float('inf') if data_request["button_state"] == "decrease" else float('inf')
+                            ))[2]
+                        ),
+                        reverse=data_request["button_state"] == "decrease"
+                    )
                 elif data_request["metric_type"] == "K":
                     grouped_data.sort( key=lambda x: (sum(sub_item[2] for sub_item in x[1] if start_date <= sub_item[0] <= end_date)), reverse=data_request["button_state"] == "decrease"),
                 elif data_request["metric_type"] == "R":
                     grouped_data.sort( key=lambda x: (sum(sub_item[3] for sub_item in x[1] if start_date <= sub_item[0] <= end_date)), reverse=data_request["button_state"] == "decrease"),
                 elif data_request["metric_type"] == "C":
-                    grouped_data.sort( key=lambda x: (
-                        (total := sum(sub_item[4] for sub_item in x[1] if start_date <= sub_item[0] <= end_date and sub_item[1] != 0),
-                        count := sum(1 for sub_item in x[1] if start_date <= sub_item[0] <= end_date and sub_item[1] != 0),
-                        total / count if count > 0 else float('inf'))[2]), reverse=data_request["button_state"] == "decrease")
+                    grouped_data.sort(
+                        key=lambda x:(
+                            (clicks := (sum(sub_item[2] for sub_item in x[1] if start_date <= sub_item[0] <= end_date)),
+                            immersions := (sum(sub_item[3] for sub_item in x[1] if start_date <= sub_item[0] <= end_date)),
+                            clicks / immersions if immersions > 0 else (
+                                -float('inf') if data_request["button_state"] == "decrease" else float('inf')
+                            ))[2]
+                        ),
+                        reverse=data_request["button_state"] == "decrease"
+                    )   
         
     except TypeError as e:
         return JSONResponse({"data": []})

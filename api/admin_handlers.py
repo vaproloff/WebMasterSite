@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.templating import Jinja2Templates
 
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.auth.auth_config import current_user, RoleChecker
@@ -106,8 +107,6 @@ async def show_list(
 
     list_names = await get_lists_names(session, user, request.session["group"].get("name", ""))
 
-    print(list_names)
-
     return templates.TemplateResponse("lists.html",
                                       {"request": request,
                                        "user": user,
@@ -116,7 +115,7 @@ async def show_list(
                                        "list_names": list_names})
 
 
-@admin_router.post("/list/")
+@admin_router.post("/list")
 async def add_list(
     request: Request,
     data: dict,
@@ -156,6 +155,72 @@ async def add_list(
         "message": f"List '{list_name}' created successfully",
         "list_id": new_list.id
     }
+
+
+@admin_router.put("/list")
+async def change_list_visibility(
+    request: Request,
+    data: dict,
+    user=Depends(current_user),
+    session: AsyncSession = Depends(get_db_general),
+    required: bool = Depends(RoleChecker(required_permissions={"Administrator", "Superuser"}))
+):
+    
+    is_public = data["is_public"]
+    list_name = data["name"]
+
+    if is_public is None or list_name is None:
+        raise HTTPException(status_code=400, detail="Both 'is_public' and 'name' must be provided")
+
+    # Выполнение запроса для получения списка с указанным именем
+    result = await session.execute(select(List).where(List.name == list_name))
+    list_item = result.scalars().first()
+
+    # Проверяем, существует ли список
+    if not list_item:
+        raise HTTPException(status_code=404, detail="List not found")
+
+    # Обновление is_public в зависимости от входных данных
+    list_item.is_public = is_public
+    await session.commit()
+
+    return {
+        "status": 200,
+        "message": f"Changed 'is_public' for {list_item.name} to {is_public}"
+    }
+
+
+@admin_router.delete("/list")
+async def delete_list(
+    request: Request,
+    data: dict,
+    user=Depends(current_user),
+    session: AsyncSession = Depends(get_db_general),
+    required: bool = Depends(RoleChecker(required_permissions={"Administrator", "Superuser"}))
+):
+    list_name = data["name"]
+
+    # Получаем объект списка
+    result = await session.execute(select(List).where(List.name == list_name))
+    list_to_delete = result.scalars().first()
+
+    if list_to_delete:
+        # Удаляем все связанные записи в list_uri
+        await session.execute(delete(ListURI).where(ListURI.list_id == list_to_delete.id))
+
+        # Удаляем объект списка
+        await session.delete(list_to_delete)
+        await session.commit()  # Сохраняем изменения
+
+        return {
+            "status": 200,
+            "message": f"Successfully deleted list '{list_name}'"
+        }
+    else:
+        return {
+            "status": 404,
+            "message": f"List '{list_name}' not found"
+        }
 
 
 

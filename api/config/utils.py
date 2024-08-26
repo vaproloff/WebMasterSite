@@ -64,7 +64,7 @@ async def get_lists_names(
 
 
     # Основной запрос
-    stmt = select(List.name).filter(
+    stmt = select(List).filter(
         or_(
             List.author == user.id,
             and_(

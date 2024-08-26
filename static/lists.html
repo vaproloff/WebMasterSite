@@ -11,7 +11,7 @@
     .container {
         margin: 0 auto;
         width: 80%;
-        max-width: 800px;
+        max-width: 1000px; /* Увеличено для размещения дополнительного блока */
         display: flex; /* Используем flexbox для выравнивания по горизонтали */
         justify-content: space-between; /* Пространство между колонками */
         align-items: flex-start; /* Выравнивание по верхнему краю */
@@ -25,19 +25,23 @@
         color: #007bff;
         margin: 0; /* Убираем отступы для заголовка */
     }
-    .services, .add-config, .new-block, .current-list {
+    .services, .add-config, .new-block, .current-list, .delete-list { /* Добавлен новый класс delete-list */
         display: inline-block;
         vertical-align: top;
         margin: 20px 10px; /* Добавление горизонтальных отступов между блоками */
         text-align: center;
     }
     .new-block {
-        width: 65%; /* Увеличиваем ширину блока Add List */
+        width: 55%; /* Сужаем ширину блока Add List */
     }
     .current-list {
         width: 30%; /* Уменьшаем ширину блока Current List */
     }
-    .services h2, .add-config h2, .new-block h2, .current-list h2 {
+    .delete-list {
+        width: 15%; /* Устанавливаем ширину блока Delete List */
+        margin-right: 10px; /* Добавляем отступ справа для Delete List */
+    }
+    .services h2, .add-config h2, .new-block h2, .current-list h2, .delete-list h2 { /* Добавлен новый класс delete-list */
         color: #007bff;
     }
     .buttons {
@@ -134,17 +138,17 @@
     }
 
     .current-list a {
-    display: inline-block; /* Делает ссылку блочным элементом, чтобы применить стили кнопки */
-    padding: 10px 20px; /* Отступы внутри кнопки */
-    font-size: 16px; /* Размер шрифта */
-    background-color: #007bff; /* Цвет фона кнопки */
-    color: #fff; /* Цвет текста кнопки */
-    text-decoration: none; /* Убираем подчеркивание текста ссылки */
-    border-radius: 5px; /* Скругление углов кнопки */
-    border: 1px solid #007bff; /* Граница кнопки того же цвета, что и фон */
-    margin-bottom: 10px; /* Отступ снизу между кнопками */
-    text-align: center; /* Центрируем текст внутри кнопки */
-}
+        display: inline-block; /* Делает ссылку блочным элементом, чтобы применить стили кнопки */
+        padding: 10px 20px; /* Отступы внутри кнопки */
+        font-size: 16px; /* Размер шрифта */
+        background-color: #007bff; /* Цвет фона кнопки */
+        color: #fff; /* Цвет текста кнопки */
+        text-decoration: none; /* Убираем подчеркивание текста ссылки */
+        border-radius: 5px; /* Скругление углов кнопки */
+        border: 1px solid #007bff; /* Граница кнопки того же цвета, что и фон */
+        margin-bottom: 10px; /* Отступ снизу между кнопками */
+        text-align: center; /* Центрируем текст внутри кнопки */
+    }
 
     .current-list a:hover {
         background-color: #0056b3; /* Цвет фона кнопки при наведении */
@@ -171,14 +175,31 @@
             <button type="button" onclick="addList()">Add</button>
         </form>
     </div>
+
     <!-- Новый блок Current List -->
     <div class="current-list">
         <h2>Current List</h2>
         <ul>
             {% for name in list_names %}
-                <a href="{{ url_for('get_urls').include_query_params(list_name=name) }}">{{ name }}</a> <!-- Обернем ссылку в <li> элемент списка -->
+                <!-- Добавление чекбокса перед названием списка -->
+                <div class="checkbox-container">
+                    <input type="checkbox" id="public-{{ loop.index }}" 
+                           {% if name.is_public %}checked{% endif %} 
+                           onchange="togglePublic('{{ name.name }}', this.checked)">
+                    <label for="public-{{ loop.index }}">Public</label>
+                </div>
+                <a href="{{ url_for('get_urls').include_query_params(list_name=name.name) }}">{{ name.name }}</a>
             {% endfor %}
         </ul>
+    </div>
+
+    <!-- Новый блок Delete List -->
+    <div class="delete-list">
+        <h2>Delete List</h2>
+        <form class="form" id="delete-list-form">
+            <input type="text" id="delete-list-name" placeholder="List Name" required>
+            <button type="button" onclick="deleteList()">Delete</button>
+        </form>
     </div>
 </div>
 
@@ -208,23 +229,99 @@
     }
 
     function addList() {
-    const name = $('#list-name').val();
-    const content = $('#list-content').val();
-    const isPublic = $('#make-public').is(':checked');
-    
-    // Проверяем заполнены ли все поля
-    if (name && content) {
+        const name = $('#list-name').val();
+        const content = $('#list-content').val();
+        const isPublic = $('#make-public').is(':checked');
+
+        // Проверяем заполнены ли все поля
+        if (name && content) {
+            $('.loader').show();
+
+            // Создаем объект данных
+            const data = {
+                name: name,
+                uri_list: content.split('\n').filter(uri => uri.trim() !== ''), // Преобразуем содержание в список URI
+                is_public: isPublic
+            };
+
+            fetch('{{ url_for('add_list') }}', { // предполагается, что существует соответствующий маршрут
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    // Если сервер возвращает ошибку
+                    return response.json().then(err => Promise.reject(err));
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('List added:', data);
+                $('.loader').hide();
+                // Очистить форму после успешного добавления
+                $('#add-list-form')[0].reset();
+                // Можно добавить дополнительное действие, например, обновить UI
+                window.location.reload();  // Обновление страницы
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                $('.loader').hide();
+                alert(`Error: ${error.error || 'Unable to add list.'}`);
+            });
+        } else {
+            alert('Please fill in all fields.');
+        }
+    }
+
+    function deleteList() {
+        const listName = $('#delete-list-name').val();
+
+        if (listName) {
+            $('.loader').show();
+
+            fetch('{{ url_for('delete_list') }}', { // предполагается, что существует соответствующий маршрут
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ name: listName })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    // Если сервер возвращает ошибку
+                    return response.json().then(err => Promise.reject(err));
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('List deleted:', data);
+                $('.loader').hide();
+                $('#delete-list-form')[0].reset();
+                window.location.reload();  // Обновление страницы
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                $('.loader').hide();
+                alert(`Error: ${error.error || 'Unable to delete list.'}`);
+            });
+        } else {
+            alert('Please enter a list name.');
+        }
+    }
+
+    function togglePublic(listName, isPublic) {
         $('.loader').show();
 
-        // Создаем объект данных
         const data = {
-            name: name,
-            uri_list: content.split('\n').filter(uri => uri.trim() !== ''), // Преобразуем содержание в список URI
+            name: listName,
             is_public: isPublic
         };
 
-        fetch('{{ url_for('add_list') }}', { // предполагается, что существует соответствующий маршрут
-            method: 'POST',
+        fetch('{{ url_for('change_list_visibility') }}', { // предполагается, что существует соответствующий маршрут для обновления видимости списка
+            method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -238,20 +335,15 @@
             return response.json();
         })
         .then(data => {
-            console.log('List added:', data);
+            console.log('Visibility updated:', data);
             $('.loader').hide();
-            // Очистить форму после успешного добавления
-            $('#add-list-form')[0].reset();
-            // Можно добавить дополнительное действие, например, обновить UI
+            window.location.reload();  // Обновление страницы
         })
         .catch((error) => {
             console.error('Error:', error);
             $('.loader').hide();
-            alert(`Error: ${error.error || 'Unable to add list.'}`);
+            alert(`Error: ${error.error || 'Unable to update visibility.'}`);
         });
-    } else {
-        alert('Please fill in all fields.');
     }
-}
 </script>
 {% endblock %}

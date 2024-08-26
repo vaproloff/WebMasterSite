@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Callable
 
 from psycopg2 import IntegrityError
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from const import date_format, date_format_2
 from db.models import LastUpdateDate
@@ -50,3 +50,10 @@ async def get_last_load_date(async_session: Callable, metrics_type: str) -> str 
             return record.date.strftime(date_format_2)
     
     return None
+
+
+async def get_last_date(async_session: Callable, metric_type):
+    async with async_session() as s:
+        res = (await s.execute(select(func.max(metric_type.date)))).scalars().first()
+    
+    return res.strftime(date_format_2)
