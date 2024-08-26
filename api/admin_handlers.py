@@ -131,7 +131,7 @@ async def add_list(
         is_public=is_public,
     )
 
-    new_uris = [ListURI(uri=uri, list=new_list) for uri in uri_list]
+    new_uris = [ListURI(uri=uri.strip(), list=new_list) for uri in uri_list]
 
     try:
         session.add(new_list)
