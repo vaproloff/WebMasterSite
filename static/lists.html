@@ -9,242 +9,144 @@
         color: #343a40;
     }
     .container {
+        width: 100%;
+        max-width: 800px; /* Увеличена максимальная ширина для нового блока */
         margin: 0 auto;
-        width: 80%;
-        max-width: 1000px; /* Увеличено для размещения дополнительного блока */
-        display: flex; /* Используем flexbox для выравнивания по горизонтали */
-        justify-content: space-between; /* Пространство между колонками */
-        align-items: flex-start; /* Выравнивание по верхнему краю */
-        margin-top: 30px; /* Увеличение отступа сверху для общего контейнера */
+        margin-top: 30px;
+    }
+    .row {
+        display: flex;
+        padding: 10px 0;
+        border-bottom: 1px solid #ddd;
     }
     .header {
-        width: 100%; /* Ширина 100% для блока с именем пользователя */
-        margin-bottom: 20px; /* Добавлен отступ снизу для разделения */
+        font-weight: bold;
     }
-    .header h1 {
+    .cell {
+        flex: 1;
+        padding: 5px;
+    }
+    .add-list-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    .add-list-container h2 {
         color: #007bff;
-        margin: 0; /* Убираем отступы для заголовка */
+        margin-bottom: 10px;
     }
-    .services, .add-config, .new-block, .current-list, .delete-list { /* Добавлен новый класс delete-list */
-        display: inline-block;
-        vertical-align: top;
-        margin: 20px 10px; /* Добавление горизонтальных отступов между блоками */
-        text-align: center;
+    .add-list-form {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
     }
-    .new-block {
-        width: 55%; /* Сужаем ширину блока Add List */
-    }
-    .current-list {
-        width: 30%; /* Уменьшаем ширину блока Current List */
-    }
-    .delete-list {
-        width: 15%; /* Устанавливаем ширину блока Delete List */
-        margin-right: 10px; /* Добавляем отступ справа для Delete List */
-    }
-    .services h2, .add-config h2, .new-block h2, .current-list h2, .delete-list h2 { /* Добавлен новый класс delete-list */
-        color: #007bff;
-    }
-    .buttons {
-        margin-top: 20px;
-    }
-    .buttons a, .buttons button {
-        display: block;
-        margin: 10px auto;
-        padding: 10px 20px;
-        font-size: 16px;
-        background-color: #007bff;
-        color: #fff;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        width: 200px;
-        text-decoration: none;
-        text-align: center;
-    }
-    .buttons a:hover, .buttons button:hover {
-        background-color: #0056b3;
-    }
-    .form {
-        margin-top: 20px;
-    }
-    .form input, .form button, .form textarea {
-        display: block;
-        margin: 10px auto;
+    .add-list-form input, .add-list-form textarea, .add-list-form button {
+        margin: 5px 0;
         padding: 10px;
-        width: 95%; /* Увеличение ширины текстового поля */
+        width: 90%; /* Ширина элементов формы */
         font-size: 16px;
         border: 1px solid #ced4da;
         border-radius: 5px;
     }
-    .form textarea {
-        height: 150px; /* Увеличение высоты текстового поля */
-    }
-    .form button {
+    .add-list-form button {
         background-color: #007bff;
         color: #fff;
         border: none;
         cursor: pointer;
     }
-    .form button:hover {
+    .add-list-form button:hover {
         background-color: #0056b3;
     }
-    .checkbox-container {
-        display: flex;
-        align-items: center;
-        margin-top: 10px;
-        margin-left: 10px; /* Отступ слева для выравнивания с текстом */
-        margin-right: 10px; /* Отступ справа для выравнивания с текстом */
-    }
-    .checkbox-container input {
-        margin-right: 5px; /* Уменьшенный отступ справа от чекбокса */
-    }
-    .checkbox-container label {
-        font-size: 14px;
-        color: #343a40;
-    }
-
     .loader {
         position: fixed;
         z-index: 9999;
-        top: 10%;
-        left: 40%;
+        top: 50%;
+        left: 50%;
         transform: translate(-50%, -50%);
         border: 4px solid #f3f3f3;
         border-radius: 50%;
         border-top: 4px solid #3498db;
         width: 50px;
         height: 50px;
-        -webkit-animation: spin 2s linear infinite; /* Safari */
         animation: spin 2s linear infinite;
     }
     @keyframes spin {
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
     }
-
-    .current-list {
-        text-align: left; /* Выравнивание текста влево */
-    }
-    .current-list ul {
-        list-style-type: none; /* Убираем маркеры списка */
-        padding: 0; /* Убираем отступы */
-    }
-    .current-list li {
-        background-color: #f8f9fa;
-        padding: 10px;
-        margin-bottom: 5px;
-        border: 1px solid #ced4da;
-        border-radius: 5px;
-    }
-
-    .current-list a {
-        display: inline-block; /* Делает ссылку блочным элементом, чтобы применить стили кнопки */
-        padding: 10px 20px; /* Отступы внутри кнопки */
-        font-size: 16px; /* Размер шрифта */
-        background-color: #007bff; /* Цвет фона кнопки */
-        color: #fff; /* Цвет текста кнопки */
-        text-decoration: none; /* Убираем подчеркивание текста ссылки */
-        border-radius: 5px; /* Скругление углов кнопки */
-        border: 1px solid #007bff; /* Граница кнопки того же цвета, что и фон */
-        margin-bottom: 10px; /* Отступ снизу между кнопками */
-        text-align: center; /* Центрируем текст внутри кнопки */
-    }
-
-    .current-list a:hover {
-        background-color: #0056b3; /* Цвет фона кнопки при наведении */
-        border-color: #0056b3; /* Цвет границы кнопки при наведении */
-    }
 </style>
 
-<div class="header">
-    <h1>{{ user.username }}</h1>
-</div>
-
 <div class="container">
-    <!-- Новый блок Add List -->
-    <div class="new-block">
-        <h2>Add List</h2>
-        <form class="form" id="add-list-form">
-            <input type="text" id="list-name" placeholder="Name" required>
-            <textarea id="list-content" placeholder="Enter text here" rows="4" required></textarea>
-            <!-- Добавлен чекбокс для настройки видимости списка -->
+    <!-- Новый блок для добавления списка -->
+    <div class="add-list-container">
+        <h2>Add New List</h2>
+        <form class="add-list-form" id="add-list-form">
+            <input type="text" id="list-name" placeholder="List Name" required>
+            <input type="text" id="group-name" placeholder="Group Name" required>
+            <input type="text" id="config-name" placeholder="Config Name" required>
+            <textarea id="list-content" placeholder="Enter URLs here (one per line)" rows="6" required></textarea>
             <div class="checkbox-container">
                 <input type="checkbox" id="make-public">
-                <label for="make-public">Сделать список публичным?</label>
+                <label for="make-public">Make list public?</label>
             </div>
-            <button type="button" onclick="addList()">Add</button>
+            <button type="button" onclick="addList()">Add List</button>
         </form>
     </div>
 
-    <!-- Новый блок Current List -->
-    <div class="current-list">
-        <h2>Current List</h2>
-        <ul>
-            {% for name in list_names %}
-                <!-- Добавление чекбокса перед названием списка -->
-                <div class="checkbox-container">
-                    <input type="checkbox" id="public-{{ loop.index }}" 
-                           {% if name.is_public %}checked{% endif %} 
-                           onchange="togglePublic('{{ name.name }}', this.checked)">
-                    <label for="public-{{ loop.index }}">Public</label>
-                </div>
-                <a href="{{ url_for('get_urls').include_query_params(list_name=name.name) }}">{{ name.name }}</a>
-            {% endfor %}
-        </ul>
+    <!-- Таблица списков -->
+    <div class="row header">
+        <div class="cell">Номер</div>
+        <div class="cell">Название списка URL</div>
+        <div class="cell">Group</div>
+        <div class="cell">Config</div>
+        <div class="cell">Public</div>
+        <div class="cell">Действие</div>
     </div>
-
-    <!-- Новый блок Delete List -->
-    <div class="delete-list">
-        <h2>Delete List</h2>
-        <form class="form" id="delete-list-form">
-            <input type="text" id="delete-list-name" placeholder="List Name" required>
-            <button type="button" onclick="deleteList()">Delete</button>
-        </form>
+    {% for name in list_names %}
+    <div class="row">
+        <div class="cell">{{ loop.index }}</div>
+        <div class="cell">
+            <a href="{{ url_for('get_urls').include_query_params(list_name = name.name) }}">{{ name.name }}</a>
+        </div>
+        <div class="cell">{{ group_dict[name.group] }}</div>
+        <div class="cell">{{ config_dict[name.config] }}</div>
+        <div class="cell">
+            <input type="checkbox" id="public-{{ loop.index }}"
+                   {% if name.is_public %}checked{% endif %}
+                   onchange="togglePublic('{{ name.name }}', this.checked)">
+        </div>
+        <div class="cell">
+            <button type="button" onclick="editList('{{ url_for('show_edit_list', list_name=name.name) }}')">Edit</button>
+            <button type="button" onclick="deleteList('{{ name.name }}')">Удалить</button>
+        </div>
     </div>
+    {% endfor %}
 </div>
 
 <div class="loader" style="display: none;"></div>
 
 <script>
-    function sendRequest(url) {
-        $('.loader').show();
-        fetch(url)
-            .then(response => {
-                if (response.status === 403) {
-                    throw new Error('403 Forbidden');
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log('Success:', data);
-                $('.loader').hide();
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-                if (error.message === '403 Forbidden') {
-                    alert('Error: You do not have permission to perform this action.');
-                }
-                $('.loader').hide();
-            });
-    }
-
     function addList() {
-        const name = $('#list-name').val();
+        const groupName = $('#group-name').val();
+        const configName = $('#config-name').val();
+        const listName = $('#list-name').val();
         const content = $('#list-content').val();
         const isPublic = $('#make-public').is(':checked');
 
-        // Проверяем заполнены ли все поля
-        if (name && content) {
+        if (groupName && configName && listName && content) {
             $('.loader').show();
 
-            // Создаем объект данных
             const data = {
-                name: name,
+                group_name: groupName,
+                config_name: configName,
+                name: listName,
                 uri_list: content.split('\n').filter(uri => uri.trim() !== ''), // Преобразуем содержание в список URI
                 is_public: isPublic
             };
 
-            fetch('{{ url_for('add_list') }}', { // предполагается, что существует соответствующий маршрут
+            fetch('{{ url_for('add_list') }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -253,7 +155,6 @@
             })
             .then(response => {
                 if (!response.ok) {
-                    // Если сервер возвращает ошибку
                     return response.json().then(err => Promise.reject(err));
                 }
                 return response.json();
@@ -261,9 +162,7 @@
             .then(data => {
                 console.log('List added:', data);
                 $('.loader').hide();
-                // Очистить форму после успешного добавления
                 $('#add-list-form')[0].reset();
-                // Можно добавить дополнительное действие, например, обновить UI
                 window.location.reload();  // Обновление страницы
             })
             .catch((error) => {
@@ -276,13 +175,11 @@
         }
     }
 
-    function deleteList() {
-        const listName = $('#delete-list-name').val();
-
+    function deleteList(listName) {
         if (listName) {
             $('.loader').show();
 
-            fetch('{{ url_for('delete_list') }}', { // предполагается, что существует соответствующий маршрут
+            fetch('{{ url_for('delete_list') }}', {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json'
@@ -291,7 +188,6 @@
             })
             .then(response => {
                 if (!response.ok) {
-                    // Если сервер возвращает ошибку
                     return response.json().then(err => Promise.reject(err));
                 }
                 return response.json();
@@ -299,8 +195,7 @@
             .then(data => {
                 console.log('List deleted:', data);
                 $('.loader').hide();
-                $('#delete-list-form')[0].reset();
-                window.location.reload();  // Обновление страницы
+                window.location.reload();
             })
             .catch((error) => {
                 console.error('Error:', error);
@@ -320,7 +215,7 @@
             is_public: isPublic
         };
 
-        fetch('{{ url_for('change_list_visibility') }}', { // предполагается, что существует соответствующий маршрут для обновления видимости списка
+        fetch('{{ url_for('change_list_visibility') }}', {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
@@ -329,7 +224,6 @@
         })
         .then(response => {
             if (!response.ok) {
-                // Если сервер возвращает ошибку
                 return response.json().then(err => Promise.reject(err));
             }
             return response.json();
@@ -337,13 +231,18 @@
         .then(data => {
             console.log('Visibility updated:', data);
             $('.loader').hide();
-            window.location.reload();  // Обновление страницы
+            window.location.reload();
         })
         .catch((error) => {
             console.error('Error:', error);
             $('.loader').hide();
             alert(`Error: ${error.error || 'Unable to update visibility.'}`);
         });
+    }
+
+    function editList(url) {
+    // Редирект пользователя на страницу редактирования
+    window.location.href = url;
     }
 </script>
 {% endblock %}

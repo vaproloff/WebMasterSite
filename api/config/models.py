@@ -57,6 +57,8 @@ class List(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, nullable=False)
     author = Column(Integer,ForeignKey("user.id"), nullable=False)
+    group = Column(Integer, ForeignKey("group.id"), nullable=False)
+    config = Column(Integer, ForeignKey("config.id"), nullable=False)
     is_public = Column(Boolean, nullable=False, default=False)
 
     uris = relationship("ListURI", back_populates="list")

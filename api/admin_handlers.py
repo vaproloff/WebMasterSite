@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.auth.auth_config import current_user, RoleChecker
 from api.auth.models import User
-from api.config.models import List, ListURI
+from api.config.models import Config, Group, List, ListURI
 from api.config.utils import get_config_names, get_group_names, get_lists_names
 from db.session import get_db_general
 
@@ -79,7 +79,7 @@ async def show_superuser(
         request: Request,
         user=Depends(current_user),
         session: AsyncSession = Depends(get_db_general),
-        required: bool = Depends(RoleChecker(required_permissions={"Administrator", "Superuser"}))
+        required: bool = Depends(RoleChecker(required_permissions={"Superuser"}))
 ):
     group_name = request.session["group"].get("name", "")
     config_names = [elem[0] for elem in (await get_config_names(session, user, group_name))]
@@ -107,12 +107,23 @@ async def show_list(
 
     list_names = await get_lists_names(session, user, request.session["group"].get("name", ""))
 
+    groups = (await session.execute(select(Group.id, Group.name))).all()
+
+    group_dict = {group.id: group.name for group in groups}
+
+    configs = (await session.execute(select(Config.id, Config.name))).all()
+
+    config_dict = {config.id: config.name for config in configs}
+
     return templates.TemplateResponse("lists.html",
                                       {"request": request,
                                        "user": user,
                                        "config_names": config_names,
                                        "group_names": group_names,
-                                       "list_names": list_names})
+                                       "list_names": list_names,
+                                       "group_dict": group_dict,
+                                       "config_dict": config_dict,
+                                       })
 
 
 @admin_router.post("/list")
@@ -123,12 +134,22 @@ async def add_list(
     session: AsyncSession = Depends(get_db_general),
     required: bool = Depends(RoleChecker(required_permissions={"Administrator", "Superuser"}))
 ):
-    list_name, uri_list, is_public = data.values()
+    
+    print(data)
+
+    group_name, config_name, list_name, uri_list, is_public = data.values()
+
+    group_id = (await session.execute(select(Group.id).where(Group.name == group_name))).scalars().first()
+    config_id = (await session.execute(select(Config.id).where(Config.name == config_name))).scalars().first()
+
+    print(group_id, config_id)
 
     new_list = List(
         name=list_name,
         author=user.id,
         is_public=is_public,
+        group=group_id,
+        config=config_id,
     )
 
     new_uris = [ListURI(uri=uri.strip(), list=new_list) for uri in uri_list]
@@ -223,4 +244,35 @@ async def delete_list(
         }
 
 
+@admin_router.get("/list/edit/{list_name}")
+async def show_edit_list(
+    request: Request,
+    user=Depends(current_user),
+    session: AsyncSession = Depends(get_db_general),
+    required: bool = Depends(RoleChecker(required_permissions={"User", "Administrator", "Superuser"}))
+):
+    group_name = request.session["group"].get("name", "")
 
+    config_names = [elem[0] for elem in (await get_config_names(session, user, group_name))]
+
+    group_names = await get_group_names(session, user)
+
+    list_names = await get_lists_names(session, user, request.session["group"].get("name", ""))
+
+    groups = (await session.execute(select(Group.id, Group.name))).all()
+
+    group_dict = {group.id: group.name for group in groups}
+
+    configs = (await session.execute(select(Config.id, Config.name))).all()
+
+    config_dict = {config.id: config.name for config in configs}
+
+    return templates.TemplateResponse("edit_list.html",
+                                      {"request": request,
+                                       "user": user,
+                                       "config_names": config_names,
+                                       "group_names": group_names,
+                                       "list_names": list_names,
+                                       "group_dict": group_dict,
+                                       "config_dict": config_dict,
+                                       })

@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block content %}
+    <title>Список URL</title>
+    <style>
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: 20px auto;
+            border-collapse: collapse;
+        }
+        .row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        .header {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        .cell {
+            flex: 1;
+            padding: 10px;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        .btn-delete {
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+        }
+        .btn-edit {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+        }
+        button:hover {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row header">
+            <div class="cell">Пп</div>
+            <div class="cell">URL</div>
+            <div class="cell">Управление</div>
+        </div>
+        <div class="row">
+            <div class="cell">1</div>
+            <div class="cell">/zatvor/zatvor-s-pnevmoprivodom</div>
+            <div class="cell button-group">
+                <button class="btn-delete" onclick="deleteRow(this)">X</button>
+                <button class="btn-edit" onclick="editRow(this)">🖉</button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="cell">2</div>
+            <div class="cell">/zatvor/zatvor-s-pnevmoprivodom/dn100</div>
+            <div class="cell button-group">
+                <button class="btn-delete" onclick="deleteRow(this)">X</button>
+                <button class="btn-edit" onclick="editRow(this)">🖉</button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="cell">3</div>
+            <div class="cell">/zatvor/zatvor-s-pnevmoprivodom/dn200</div>
+            <div class="cell button-group">
+                <button class="btn-delete" onclick="deleteRow(this)">X</button>
+                <button class="btn-edit" onclick="editRow(this)">🖉</button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="cell">4</div>
+            <div class="cell">/zatvor/zatvor-s-elektroprivodom</div>
+            <div class="cell button-group">
+                <button class="btn-delete" onclick="deleteRow(this)">X</button>
+                <button class="btn-edit" onclick="editRow(this)">🖉</button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="cell">5</div>
+            <div class="cell">/zatvor/zatvor-s-elektroprivodom/dn100</div>
+            <div class="cell button-group">
+                <button class="btn-delete" onclick="deleteRow(this)">X</button>
+                <button class="btn-edit" onclick="editRow(this)">🖉</button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="cell">6</div>
+            <div class="cell">/zatvor/zatvor-s-elektroprivodom/dn150</div>
+            <div class="cell button-group">
+                <button class="btn-delete" onclick="deleteRow(this)">X</button>
+                <button class="btn-edit" onclick="editRow(this)">🖉</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function deleteRow(button) {
+            const row = button.closest('.row');
+            row.remove();
+        }
+
+        function editRow(button) {
+            const row = button.closest('.row');
+            const urlCell = row.querySelector('.cell:nth-child(2)');
+            const newUrl = prompt('Редактировать URL:', urlCell.textContent);
+            if (newUrl !== null) {
+                urlCell.textContent = newUrl;
+            }
+        }
+    </script>
+</body>
+</html>
+{% endblock %}

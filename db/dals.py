@@ -52,7 +52,6 @@ class UrlDAL:
             ):
         
         filter_query = None
-
         if list_name != "None":
             list_id = (await general_db.execute(
                 select(List_model.id).where(List_model.name == list_name)
