@@ -61,7 +61,8 @@ class UrlDAL:
                 select(ListURI.uri).where(ListURI.list_id == list_id)
             )).scalars().all()
 
-
+            print(uri_list)
+            
             filter_query = Url.url.in_(uri_list)
 
             filter_query_result = Metrics.url.in_(uri_list)

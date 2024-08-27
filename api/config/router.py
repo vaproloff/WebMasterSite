@@ -3,12 +3,12 @@ import re
 
 from alembic import command
 from fastapi import APIRouter, Depends, Request, HTTPException
-from sqlalchemy import select
+from sqlalchemy import and_, delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.auth.auth_config import current_user
 from api.auth.models import User
-from api.config.models import Config, Role, Group
+from api.config.models import Config, List, ListURI, Role, Group
 from api.config.utils import get_config_info
 from config import DB_USER, DB_PASSWORD, DB_HOST, DB_PORT
 from db.session import get_db_general
@@ -72,11 +72,13 @@ async def set_config(request: Request,
                      session: AsyncSession = Depends(get_db_general),
                      user: User = Depends(current_user)):
     result = await get_config_info(session, config_name['config_name'], user.id)
-    request.session["config"] = {"database_name": result.database_name,
+    request.session["config"] = {
+                                "config_id": result.id,
+                                "database_name": result.database_name,
                                  "access_token": result.access_token,
                                  "user_id": result.user_id,
                                  "host_id": result.host_id,
-                                 }
+                                }  
     
     return {"status": 200, "details": request.session}
 
@@ -86,7 +88,20 @@ async def set_group(request: Request,
                     group_name: dict,
                     session: AsyncSession = Depends(get_db_general),
                     user: User = Depends(current_user)):
-    request.session["group"] = {"name": group_name["group_name"]}
+    
+    group_id = (await session.execute(select(Group.id).where(Group.name == group_name["group_name"]))).scalars().first()
+    request.session["group"] = {
+        "group_id": group_id,
+        "name": group_name["group_name"],
+        }
+    request.session["config"] = {
+            "config_id": -1,
+            "database_name": "",
+            "access_token": "",
+            "user_id": -1,
+            "host_id": "",
+        }
+    print(request.session)
     return {"status": 200, "details": request.session}
 
 
@@ -295,6 +310,30 @@ async def delete_user_from_group(
 
     # Удаление пользователя из группы
     if user in group.users:
+
+        await session.execute(
+            delete(ListURI).where(
+                ListURI.list_id.in_(
+                    select(List.id).where(
+                        and_(
+                            List.author == user.id,
+                            List.group == group.id
+                        )
+                    )
+                )
+            )
+        )
+
+        # Удаление записей из таблицы List
+        await session.execute(
+            delete(List).where(
+                and_(
+                    List.author == user.id,
+                    List.group == group.id
+                )
+            )
+        )
+        
         group.users.remove(user)
         await session.commit()
         return {

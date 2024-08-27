@@ -108,8 +108,17 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
         request: Optional[Request] = None,
         response: Optional[Response] = None,
     ) -> None:
-        request.session["config"] = {}
-        request.session["group"] = {}
+        request.session["config"] = {
+            "config_id": -1,
+            "database_name": "",
+            "access_token": "",
+            "user_id": -1,
+            "host_id": "",
+        }
+        request.session["group"] = {
+            "group_id": -1,
+            "name": "",
+        }
 
     async def on_after_forgot_password(
 

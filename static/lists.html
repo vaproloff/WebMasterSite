@@ -99,6 +99,7 @@
     <div class="row header">
         <div class="cell">Номер</div>
         <div class="cell">Название списка URL</div>
+        <div class="cell">Автор</div>
         <div class="cell">Group</div>
         <div class="cell">Config</div>
         <div class="cell">Public</div>
@@ -110,6 +111,7 @@
         <div class="cell">
             <a href="{{ url_for('get_urls').include_query_params(list_name = name.name) }}">{{ name.name }}</a>
         </div>
+        <div class="cell">{{ name_dict[name.author] }}</div>
         <div class="cell">{{ group_dict[name.group] }}</div>
         <div class="cell">{{ config_dict[name.config] }}</div>
         <div class="cell">
@@ -118,7 +120,7 @@
                    onchange="togglePublic('{{ name.name }}', this.checked)">
         </div>
         <div class="cell">
-            <button type="button" onclick="editList('{{ url_for('show_edit_list', list_name=name.name) }}')">Edit</button>
+            <button type="button" onclick="editList('{{ url_for('show_edit_list', list_id=name.id) }}')">Edit</button>
             <button type="button" onclick="deleteList('{{ name.name }}')">Удалить</button>
         </div>
     </div>

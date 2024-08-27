@@ -1,4 +1,4 @@
-from sqlalchemy import exists, or_, select, and_, tuple_
+from sqlalchemy import case, exists, or_, select, and_, tuple_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from sqlalchemy.orm import aliased
@@ -42,37 +42,13 @@ async def get_group_names(session: AsyncSession, user: User):
 async def get_lists_names(
     session: AsyncSession,
     user: User,
-    current_group: str
+    current_group: str,
+    config_id: int,
+    group_id: int,
 ):
-    # Получаем group_id для current_group
-    group_id_result = await session.execute(
-        select(Group.id).where(Group.name == current_group)
+    stmt = select(List).where(
+        or_(and_(List.author == user.id, List.config == config_id), case((List.group == group_id, List.is_public == True), else_=False))
     )
-    group_id = group_id_result.scalar()
-
-    if group_id is None:
-        return []
-
-    # Подзапрос для нахождения групп, к которым принадлежит автор
-    author_groups_subquery = select(GroupUserAssociation.group_id).filter(
-        GroupUserAssociation.user_id == List.author
-    ).subquery()
-
-    author_groups = select(GroupUserAssociation.group_id).filter(
-        GroupUserAssociation.user_id == List.author
-    )
-
-
-    # Основной запрос
-    stmt = select(List).filter(
-        or_(
-            List.author == user.id,
-            and_(
-                List.is_public == True,
-                tuple_(group_id).in_(author_groups_subquery)
-                )
-            )
-        )
 
     result = await session.execute(stmt)
     return result.scalars().all()

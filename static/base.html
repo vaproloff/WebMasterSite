@@ -172,7 +172,11 @@
             document.getElementById('secondDropdownButton').innerText = groupName;
             setSelectedGroup(groupName);
 
-            // Отправка POST-запроса на эндпоинт set_group (предположительно)
+            // Сброс конфигурации при смене группы
+            setSelectedConfig('None');
+            document.getElementById('dropdownButton').innerText = 'None';
+
+            // Отправка POST-запроса на эндпоинт set_group
             try {
                 const response = await fetch('{{ url_for('set_group') }}', {
                     method: 'POST',

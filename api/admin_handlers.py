@@ -3,7 +3,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.templating import Jinja2Templates
 
-from sqlalchemy import delete, select
+from sqlalchemy import and_, delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.auth.auth_config import current_user, RoleChecker
@@ -100,20 +100,20 @@ async def show_list(
     session: AsyncSession = Depends(get_db_general),
     required: bool = Depends(RoleChecker(required_permissions={"User", "Administrator", "Superuser"}))
 ):
+    config_id = request.session["config"]["config_id"]
+    group_id = request.session["group"]["group_id"]
+
     group_name = request.session["group"].get("name", "")
     config_names = [elem[0] for elem in (await get_config_names(session, user, group_name))]
-
     group_names = await get_group_names(session, user)
-
-    list_names = await get_lists_names(session, user, request.session["group"].get("name", ""))
+    list_names = await get_lists_names(session, user, request.session["group"].get("name", ""), config_id, group_id)
 
     groups = (await session.execute(select(Group.id, Group.name))).all()
-
     group_dict = {group.id: group.name for group in groups}
-
     configs = (await session.execute(select(Config.id, Config.name))).all()
-
     config_dict = {config.id: config.name for config in configs}
+    users = (await session.execute(select(User.id, User.username))).all()
+    user_dict = {user.id: user.username for user in users}
 
     return templates.TemplateResponse("lists.html",
                                       {"request": request,
@@ -123,6 +123,7 @@ async def show_list(
                                        "list_names": list_names,
                                        "group_dict": group_dict,
                                        "config_dict": config_dict,
+                                       "name_dict": user_dict,
                                        })
 
 
@@ -134,15 +135,11 @@ async def add_list(
     session: AsyncSession = Depends(get_db_general),
     required: bool = Depends(RoleChecker(required_permissions={"Administrator", "Superuser"}))
 ):
-    
-    print(data)
 
     group_name, config_name, list_name, uri_list, is_public = data.values()
 
     group_id = (await session.execute(select(Group.id).where(Group.name == group_name))).scalars().first()
     config_id = (await session.execute(select(Config.id).where(Config.name == config_name))).scalars().first()
-
-    print(group_id, config_id)
 
     new_list = List(
         name=list_name,
@@ -244,35 +241,103 @@ async def delete_list(
         }
 
 
-@admin_router.get("/list/edit/{list_name}")
+@admin_router.get("/list/{list_id}/edit")
 async def show_edit_list(
     request: Request,
+    list_id: int,
     user=Depends(current_user),
     session: AsyncSession = Depends(get_db_general),
     required: bool = Depends(RoleChecker(required_permissions={"User", "Administrator", "Superuser"}))
 ):
+
     group_name = request.session["group"].get("name", "")
-
     config_names = [elem[0] for elem in (await get_config_names(session, user, group_name))]
-
     group_names = await get_group_names(session, user)
 
-    list_names = await get_lists_names(session, user, request.session["group"].get("name", ""))
-
     groups = (await session.execute(select(Group.id, Group.name))).all()
-
     group_dict = {group.id: group.name for group in groups}
-
     configs = (await session.execute(select(Config.id, Config.name))).all()
-
     config_dict = {config.id: config.name for config in configs}
+
+    uri_list = (await session.execute(select(ListURI.uri).where(ListURI.list_id == list_id))).scalars().all()
 
     return templates.TemplateResponse("edit_list.html",
                                       {"request": request,
                                        "user": user,
                                        "config_names": config_names,
                                        "group_names": group_names,
-                                       "list_names": list_names,
                                        "group_dict": group_dict,
                                        "config_dict": config_dict,
+                                       "uri_list":uri_list,
+                                       "list_id": list_id,
                                        })
+
+
+@admin_router.delete("/list/{list_id}/edit")
+async def delete_list_record(
+    request: Request,
+    list_id: int,
+    uri: dict,
+    user=Depends(current_user),
+    session: AsyncSession = Depends(get_db_general),
+    required: bool = Depends(RoleChecker(required_permissions={"User", "Administrator", "Superuser"}))
+):
+    uri_model = (await session.execute(select(ListURI).where(and_(ListURI.uri == uri["uri"], ListURI.list_id == list_id)))).scalars().first()
+
+    await session.delete(uri_model)
+
+    await session.commit()
+
+    return {
+        "status": 200,
+        "message": f"delete {uri} record from {list_id} list"
+    }
+
+
+@admin_router.put("/list/{list_id}/edit")
+async def change_list_record(
+    request: Request,
+    list_id: int,
+    data: dict,
+    user=Depends(current_user),
+    session: AsyncSession = Depends(get_db_general),
+    required: bool = Depends(RoleChecker(required_permissions={"User", "Administrator", "Superuser"}))
+):
+    print(data)
+
+    old_uri, new_uri = data.values()
+
+    uri_model = (await session.execute(select(ListURI).where(and_(ListURI.uri == old_uri, ListURI.list_id == list_id)))).scalars().first()
+
+    uri_model.uri = new_uri
+
+    await session.commit()
+    
+    return {
+        "status": 200,
+        "message": f"change uri from {old_uri} to {new_uri}"
+    }
+
+
+@admin_router.post("/list/{list_id}/edit")
+async def add_uri(
+    request: Request,
+    list_id: int,   
+    data: dict,
+    user=Depends(current_user),
+    session: AsyncSession = Depends(get_db_general),
+    required: bool = Depends(RoleChecker(required_permissions={"User", "Administrator", "Superuser"}))
+):
+    record = ListURI(
+        uri=data["uri"],
+        list_id=list_id
+    )
+
+    session.add(record)
+
+    await session.commit()
+
+    return {
+        "status": 200,
+        "message": f"add {data['uri']} record to {list_id} list"
+    }
