@@ -169,36 +169,46 @@
         }
 
         async function selectGroup(groupName) {
-            document.getElementById('secondDropdownButton').innerText = groupName;
-            setSelectedGroup(groupName);
+    // Установка нового имени группы в меню
+    document.getElementById('secondDropdownButton').innerText = groupName;
+    setSelectedGroup(groupName);
 
-            // Сброс конфигурации при смене группы
-            setSelectedConfig('None');
-            document.getElementById('dropdownButton').innerText = 'None';
+    // Сброс конфигурации при смене группы
+    setSelectedConfig('None');
+        document.getElementById('dropdownButton').innerText = 'None';
 
-            // Отправка POST-запроса на эндпоинт set_group
-            try {
-                const response = await fetch('{{ url_for('set_group') }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ group_name: groupName })
-                });
+        // Отправка POST-запроса на эндпоинт set_group
+        try {
+            const response = await fetch('{{ url_for('set_group') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ group_name: groupName })
+            });
 
-                if (response.ok) {
-                    console.log('Group set successfully');
-                    window.location.reload();
-                } else {
-                    const errorData = await response.json();
-                    console.error('Error:', errorData.detail);
-                    alert('Error: ' + errorData.detail);
-                }
-            } catch (error) {
-                console.error('Error during setting group:', error);
-                alert('An error occurred during setting group. Please try again.');
+            if (response.ok) {
+                const data = await response.json();
+                console.log('Group set successfully');
+
+                // Установка имени конфигурации в меню
+                const configName = data.details.config_name;
+                document.getElementById('dropdownButton').innerText = configName;
+                setSelectedConfig(configName);
+
+                // Перезагрузка страницы, если это необходимо
+                window.location.reload();
+            } else {
+                const errorData = await response.json();
+                console.error('Error:', errorData.detail);
+                alert('Error: ' + errorData.detail);
             }
+        } catch (error) {
+            console.error('Error during setting group:', error);
+            alert('An error occurred during setting group. Please try again.');
         }
+    }
+
 
         function superuser_button(url) {
             window.location.href = url;

@@ -1,5 +1,6 @@
 import logging
 import re
+from typing import Dict
 
 from alembic import command
 from fastapi import APIRouter, Depends, Request, HTTPException
@@ -8,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.auth.auth_config import current_user
 from api.auth.models import User
-from api.config.models import Config, List, ListURI, Role, Group
+from api.config.models import Config, GroupConfigAssociation, List, ListURI, Role, Group
 from api.config.utils import get_config_info
 from config import DB_USER, DB_PASSWORD, DB_HOST, DB_PORT
 from db.session import get_db_general
@@ -84,25 +85,64 @@ async def set_config(request: Request,
 
 
 @router.post("/set-group")
-async def set_group(request: Request,
-                    group_name: dict,
-                    session: AsyncSession = Depends(get_db_general),
-                    user: User = Depends(current_user)):
+async def set_group(
+        request: Request,
+        group_name: Dict[str, str],
+        session: AsyncSession = Depends(get_db_general),
+        user: User = Depends(current_user)
+):
+    # Получение group_id по имени группы
+    result = await session.execute(select(Group.id).where(Group.name == group_name["group_name"]))
+    group_id = result.scalars().first()
     
-    group_id = (await session.execute(select(Group.id).where(Group.name == group_name["group_name"]))).scalars().first()
-    request.session["group"] = {
-        "group_id": group_id,
-        "name": group_name["group_name"],
+    if group_id is None:
+        raise HTTPException(status_code=404, detail="Group not found.")
+    
+    # Получение первой конфигурации для группы
+    config_association = (await session.execute(
+        select(GroupConfigAssociation.config_id).where(GroupConfigAssociation.group_id == group_id).limit(1)
+    )).scalars().first()
+
+    config_record = (await session.execute(select(Config).where(Config.id == config_association))).scalars().first()
+
+    print(config_record)
+    
+    # Установка значений конфигурации
+    if config_record:
+        request.session["group"] = {
+            "group_id": group_id,
+            "name": group_name["group_name"],
         }
-    request.session["config"] = {
+        request.session["config"] = {
+            "config_id": config_association,
+            "database_name": config_record.database_name,
+            "access_token": config_record.access_token,
+            "user_id": config_record.user_id,
+            "host_id": config_record.host_id,
+        }
+    else:
+        # Если нет конфигурации для группы, можно установить значения по умолчанию
+        request.session["group"] = {
+            "group_id": group_id,
+            "name": group_name["group_name"],
+        }
+        request.session["config"] = {
             "config_id": -1,
             "database_name": "",
             "access_token": "",
             "user_id": -1,
             "host_id": "",
         }
+    
     print(request.session)
-    return {"status": 200, "details": request.session}
+    return {
+        "status": 200,
+        "details": {
+            "group": request.session["group"],
+            "config": request.session["config"],
+            "config_name": config_record.name
+        }
+    }
 
 
 @router.get("/role")

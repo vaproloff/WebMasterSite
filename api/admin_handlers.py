@@ -329,7 +329,7 @@ async def add_uri(
     required: bool = Depends(RoleChecker(required_permissions={"User", "Administrator", "Superuser"}))
 ):
     record = ListURI(
-        uri=data["uri"],
+        uri=data["uri"].strip(),
         list_id=list_id
     )
 
