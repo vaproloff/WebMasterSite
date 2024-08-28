@@ -8,14 +8,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.auth.auth_config import current_user, RoleChecker
 from api.auth.models import User
-from api.config.models import Config, Group, List, ListURI
-from api.config.utils import get_config_names, get_group_names, get_lists_names
+from api.config.models import Config, Group, List, ListURI, LiveSearchList, LiveSearchListQuery
+from api.config.utils import get_config_names, get_group_names, get_lists_names, get_live_search_lists_names
 from db.session import get_db_general
 
 from api.query_api.router import router as query_router
 from api.url_api.router import router as url_router
 from api.history_api.router import router as history_router
 from api.merge_api.router import router as merge_router
+from api.live_search_api.router import router as live_search_router
 
 from sqlalchemy.exc import IntegrityError
 
@@ -25,6 +26,7 @@ admin_router.include_router(query_router, prefix="/query")
 admin_router.include_router(url_router, prefix="/url")
 admin_router.include_router(history_router, prefix="/history")
 admin_router.include_router(merge_router, prefix="/merge")
+admin_router.include_router(live_search_router, prefix="/live_search_list")
 
 templates = Jinja2Templates(directory="static")
 
@@ -341,3 +343,135 @@ async def add_uri(
         "status": 200,
         "message": f"add {data['uri']} record to {list_id} list"
     }
+
+
+@admin_router.post("/list/{list_id}/edit")
+async def add_uri(
+    request: Request,
+    list_id: int,   
+    data: dict,
+    user=Depends(current_user),
+    session: AsyncSession = Depends(get_db_general),
+    required: bool = Depends(RoleChecker(required_permissions={"User", "Administrator", "Superuser"}))
+):
+    record = ListURI(
+        uri=data["uri"].strip(),
+        list_id=list_id
+    )
+
+    session.add(record)
+
+    await session.commit()
+
+    return {
+        "status": 200,
+        "message": f"add {data['uri']} record to {list_id} list"
+    }
+
+
+@admin_router.get("/live_search/{username}")
+async def show_live_search(
+    request: Request,
+    user=Depends(current_user),
+    session: AsyncSession = Depends(get_db_general),
+    required: bool = Depends(RoleChecker(required_permissions={"User", "Administrator", "Superuser"}))
+):
+    config_id = request.session["config"]["config_id"]
+    group_id = request.session["group"]["group_id"]
+
+    group_name = request.session["group"].get("name", "")
+    config_names = [elem[0] for elem in (await get_config_names(session, user, group_name))]
+    group_names = await get_group_names(session, user)
+    list_names = await get_live_search_lists_names(session, user)
+
+    return templates.TemplateResponse("live_search.html",
+                                      {"request": request,
+                                       "user": user,
+                                       "config_names": config_names,
+                                       "group_names": group_names,
+                                       "list_names": list_names,
+                                       })
+
+
+@admin_router.post("/live_search")
+async def add_live_search_list(
+    request: Request,
+    data: dict,
+    user=Depends(current_user),
+    session: AsyncSession = Depends(get_db_general),
+    required: bool = Depends(RoleChecker(required_permissions={"Administrator", "Superuser"}))
+):
+
+    main_domain, lr, list_name, query_list, search_system = data.values()
+
+    new_list = LiveSearchList(
+        name=list_name,
+        author=user.id,
+        main_domain=main_domain,
+        lr=int(lr),
+        search_system=search_system,
+    )
+
+    try:
+        session.add(new_list)
+        await session.flush()
+
+        new_queries = [
+            LiveSearchListQuery(query=query.strip(), list_id=new_list.id)
+            for query in query_list
+        ]
+
+        session.add_all(new_queries)
+        await session.commit()
+        
+    except IntegrityError:
+        await session.rollback()
+        return JSONResponse(
+            status_code=400,
+            content={"error": "An error occurred while adding the list. Possibly due to database constraints."}
+        )
+    except Exception as e:
+        await session.rollback()
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"An unexpected error occurred: {str(e)}"}
+        )
+
+    return {
+        "status": "success",
+        "message": f"List '{list_name}' created successfully",
+        "list_id": new_list.id
+    }
+
+
+@admin_router.delete("/live search")
+async def delete_live_search_list(
+    request: Request,
+    data: dict,
+    user=Depends(current_user),
+    session: AsyncSession = Depends(get_db_general),
+    required: bool = Depends(RoleChecker(required_permissions={"Administrator", "Superuser"}))
+):
+    list_name = data["name"]
+
+    # Получаем объект списка
+    result = await session.execute(select(LiveSearchList).where(LiveSearchList.name == list_name))
+    list_to_delete = result.scalars().first()
+
+    if list_to_delete:
+        # Удаляем все связанные записи в list_uri
+        await session.execute(delete(LiveSearchListQuery).where(LiveSearchListQuery.list_id == list_to_delete.id))
+
+        # Удаляем объект списка
+        await session.delete(list_to_delete)
+        await session.commit()  # Сохраняем изменения
+
+        return {
+            "status": 200,
+            "message": f"Successfully deleted list '{list_name}'"
+        }
+    else:
+        return {
+            "status": 404,
+            "message": f"List '{list_name}' not found"
+        }

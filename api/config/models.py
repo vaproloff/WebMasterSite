@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, String, Integer, ForeignKey
+from sqlalchemy import Boolean, Column, DateTime, String, Integer, ForeignKey
 from sqlalchemy.orm import DeclarativeBase, relationship
 
 
@@ -72,3 +72,53 @@ class ListURI(Base):
 
     # Связь с List
     list = relationship("List", back_populates="uris")
+
+
+class UserQueryCount(Base):
+    __tablename__ = "user_query_count"
+
+    user_id = Column(Integer, ForeignKey("user.id"), nullable=False, primary_key=True)
+    query_count = Column(Integer, nullable=False, default=3000)
+    
+
+
+class LiveSearchList(Base):
+    __tablename__ = "live_search_list"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String, nullable=False)
+    author = Column(Integer,ForeignKey("user.id"), nullable=False)
+    main_domain = Column(String, nullable=False)
+    lr = Column(Integer, nullable=False)
+    search_system = Column(String, nullable=False)
+
+
+class LiveSearchListQuery(Base):
+    __tablename__ ="live_search_list_query"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    query = Column(String, nullable=False)
+    list_id = Column(Integer, ForeignKey("live_search_list.id"), nullable=False)
+
+
+
+class QueryLiveSearchYandex(Base):
+    __tablename__ ="query_live_search_yandex"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    query = Column(Integer, ForeignKey("live_search_list_query.id"), nullable=False)
+    url = Column(String, nullable=False)
+    position = Column(Integer, nullable=False)
+    date = Column(DateTime, nullable=False)
+
+
+class QueryLiveSearchGoogle(Base):
+    __tablename__ ="query_live_search_google"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    query = Column(Integer, ForeignKey("live_search_list_query.id"), nullable=False)
+    url = Column(String, nullable=False)
+    position = Column(Integer, nullable=False)
+    date = Column(DateTime, nullable=False)
+
+    

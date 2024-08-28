@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
 from api.auth.models import User, GroupUserAssociation
-from api.config.models import Config, Group, GroupConfigAssociation, List
+from api.config.models import Config, Group, GroupConfigAssociation, List, LiveSearchList
 
 
 async def get_config_names(session: AsyncSession, user: User, group_name):
@@ -48,6 +48,18 @@ async def get_lists_names(
 ):
     stmt = select(List).where(
         or_(and_(List.author == user.id, List.config == config_id), case((List.group == group_id, List.is_public == True), else_=False))
+    )
+
+    result = await session.execute(stmt)
+    return result.scalars().all()
+
+
+async def get_live_search_lists_names(
+    session: AsyncSession,
+    user: User,
+):
+    stmt = select(LiveSearchList).where(
+        LiveSearchList.author == user.id
     )
 
     result = await session.execute(stmt)
