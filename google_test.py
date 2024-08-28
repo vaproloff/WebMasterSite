@@ -18,7 +18,8 @@ async def urlencode_string(string):
 async def process_query(query, MAIN_DOMAIN, lr, query_info):
     global completed_task
     encoded_query = await urlencode_string(query)
-    request_url = f"""{xml_config.API_URL}?
+    API_URL = f"https://xmlstock.com/google/json/"
+    request_url = f"""{API_URL}?
                     user={xml_config.USER_ID}&
                     key={xml_config.API_KEY}&
                     query={encoded_query}&
@@ -29,18 +30,12 @@ async def process_query(query, MAIN_DOMAIN, lr, query_info):
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(request_url) as response:
-                response_text = await response.text()
-                root = ET.fromstring(response_text.encode("utf-8"))
-                group_count = len(root.findall(".//group"))
-                for i in range(1, group_count + 1):
-                    domain = root.find(f".//group[{i}]/doc/domain").text
-                    url = root.find(f".//group[{i}]/doc/url")
-                    url = url.text if url is not None else "URL не найден"
-                    if domain == MAIN_DOMAIN:
-                        query_info[query] = [url, i]
-                        completed_task += 1
-                        if completed_task % 100 == 0:
-                            print(f"{completed_task} queries complete")
+                response_text = await response.json()
+                response_text_json = response_text["results"]
+                for key, value in response_text_json.items():
+                    if value["site_name"].lower() == MAIN_DOMAIN:
+                        print(key, value["url"])
+                        query_info[query] = [value["url"], key]
     except Exception as e:
         print(f"Error processing query '{query}': {e}", file=sys.stderr)
 
@@ -63,4 +58,4 @@ async def run_script_async(main_domain, lr, queries):
 
 # Запуск асинхронного процесса
 if __name__ == "__main__":
-    asyncio.run(run_script_async())
+    asyncio.run(run_script_async("dn.ru", 213, ["кран шаровый"]))

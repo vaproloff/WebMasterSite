@@ -459,9 +459,6 @@ async def delete_live_search_list(
     list_to_delete = result.scalars().first()
 
     if list_to_delete:
-        # Удаляем все связанные записи в list_uri
-        await session.execute(delete(LiveSearchListQuery).where(LiveSearchListQuery.list_id == list_to_delete.id))
-
         # Удаляем объект списка
         await session.delete(list_to_delete)
         await session.commit()  # Сохраняем изменения
