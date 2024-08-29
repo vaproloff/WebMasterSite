@@ -12,9 +12,7 @@
 <body>
     <div class="button-container">
         <a href="{{ url_for('show_profile', username=user.username) }}" class="back-to-menu">Back to profile</a>
-        <input type="button" value="Update Data Query" onclick="sendRequest('{{ url_for('load_queries_script') }}')">
-        <input type="number" id="days" placeholder="Days" min="1" max="13">
-        <input type="button" value="Delete Data for the Last" onclick="deleteDataForLast('{{ url_for('delete_query') }}');">
+        <input type="button" value="Update Data Live Search" onclick="sendRequest('{{ url_for('load_live_search_list') }}', '{{ list_id }}')">
     </div>
 
     <!-- Existing filters and buttons -->
@@ -145,136 +143,9 @@
         var nameCell = document.createElement('td');
         nameCell.textContent = "query";
         row.appendChild(nameCell);
-        var nameCell = document.createElement('td');
-        nameCell.textContent = "result"; // Добавляем основной текст
-        var lineBreak = document.createElement('br'); // Создаем элемент <br> для переноса строки
-        nameCell.appendChild(lineBreak); // Добавляем перенос строки
-        nameCell.appendChild(document.createTextNode("None")); // Добавляем текст "None"
-        row.appendChild(nameCell); // Добавляем ячейку в строку
-
-        let pButton = document.createElement('button');
-            pButton.style.width = '20px';  // Ширина кнопки
-            pButton.style.height = '20px'; // Высота кнопки
-            pButton.style.fontSize = '12px'; // Размер шрифта
-            pButton.style.padding = '2px 2px'; // Отступы внутри кнопки
-            pButton.innerHTML = "P";
-            let kButton = document.createElement('button');
-            kButton.style.width = '20px';  // Ширина кнопки
-            kButton.style.height = '20px'; // Высота кнопки
-            kButton.style.fontSize = '12px'; // Размер шрифта
-            kButton.style.padding = '2px 2px'; // Отступы внутри кнопки
-            kButton.innerHTML = "K";
-            let rButton = document.createElement('button');
-            rButton.style.width = '20px';  // Ширина кнопки
-            rButton.style.height = '20px'; // Высота кнопки
-            rButton.style.fontSize = '12px'; // Размер шрифта
-            rButton.style.padding = '2px 2px'; // Отступы внутри кнопки
-            rButton.innerHTML = "R";
-            let cButton = document.createElement('button');
-            cButton.style.width = '20px';  // Ширина кнопки
-            cButton.style.height = '20px'; // Высота кнопки
-            cButton.style.fontSize = '12px'; // Размер шрифта
-            cButton.style.padding = '2px 2px'; // Отступы внутри кнопки
-            cButton.innerHTML = "C";
-
-            pButton.addEventListener('click', function() {
-                resetButtons([pButton, kButton, rButton, cButton], pButton);
-                state_type = "result";
-
-                if (this.innerHTML === "P") {
-                    this.innerHTML = "P↓";
-                    state = "decrease";
-                } else if (this.innerHTML === "P↓") {
-                    this.innerHTML = "P↑";
-                    state = "increase";
-                } else if (this.innerHTML === "P↑") {
-                    this.innerHTML = "P";
-                    state = null;
-                }
-
-                metric_type = "P";
-
-                UpdateTable();
-            });
-
-            kButton.addEventListener('click', function() {
-                resetButtons([pButton, kButton, rButton, cButton], kButton);
-                state_type = "result";
-
-                if (this.innerHTML === "K") {
-                    this.innerHTML = "K↓";
-                    state = "decrease";
-                } else if (this.innerHTML === "K↓") {
-                    this.innerHTML = "K↑";
-                    state = "increase";
-                } else if (this.innerHTML === "K↑") {
-                    this.innerHTML = "K";
-                    state = null;
-                }
-
-                metric_type = "K";
-
-                UpdateTable();
-            });
-
-            rButton.addEventListener('click', function() {
-                resetButtons([pButton, kButton, rButton, cButton], rButton);
-                state_type = "result";
-
-                if (this.innerHTML === "R") {
-                    this.innerHTML = "R↓";
-                    state = "decrease";
-                } else if (this.innerHTML === "R↓") {
-                    this.innerHTML = "R↑";
-                    state = "increase";
-                } else if (this.innerHTML === "R↑") {
-                    this.innerHTML = "R";
-                    state = null;
-                }
-
-                metric_type = "R";
-
-                UpdateTable();
-            });
-
-            cButton.addEventListener('click', function() {
-                resetButtons([pButton, kButton, rButton, cButton], cButton);
-                state_type = "result";
-
-                if (this.innerHTML === "C") {
-                    this.innerHTML = "C↓";
-                    state = "decrease";
-                } else if (this.innerHTML === "C↓") {
-                    this.innerHTML = "C↑";
-                    state = "increase";
-                } else if (this.innerHTML === "C↑") {
-                    this.innerHTML = "C";
-                    state = null;
-                }
-
-                metric_type = "C";
-
-                UpdateTable();
-            });
-
-            let buttonContainer = document.createElement('div');
-            buttonContainer.style.display = 'flex'; // Выравнивание кнопок в одну строку
-            buttonContainer.style.gap = '5px'; // Расстояние между кнопками
-
-            // Добавляем кнопки в контейнер
-            buttonContainer.appendChild(pButton);
-            buttonContainer.appendChild(kButton);
-            buttonContainer.appendChild(rButton);
-            buttonContainer.appendChild(cButton);
-
-// Добавляем контейнер в ячейку
-            nameCell.appendChild(buttonContainer);
-
-            row.appendChild(nameCell);
 
         columns = [
             {"title": "query"},
-            {"title": "result"},
         ]
 
         amount = calculateDays();
@@ -408,17 +279,16 @@
 
             // Добавляем кнопки в контейнер
             buttonContainer.appendChild(pButton);
-            buttonContainer.appendChild(kButton);
-            buttonContainer.appendChild(rButton);
-            buttonContainer.appendChild(cButton);
+            // buttonContainer.appendChild(kButton);
+            // buttonContainer.appendChild(rButton);
+            // buttonContainer.appendChild(cButton);
 
-// Добавляем контейнер в ячейку
             nameCell.appendChild(buttonContainer);
 
             row.appendChild(nameCell);
         }
 
-        var url = "{{ url_for('get_queries') }}";
+        var url = "{{ url_for('get_live_search') }}";
         var params = {
             length: 50, // количество отображаемых элементов
             start: 0, // номер страницы
@@ -432,6 +302,8 @@
             button_state: state,
             metric_type: metric_type,
             state_type: state_type,
+            list_id: '{{ list_id }}',
+            author: '{{ author }}'
         };
 
         fetch(url, {
@@ -447,10 +319,9 @@
                 // Обработка ответа
                 data = data.data;
                 var table = $('#body_t');
-                empty = `<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #B9BDBC'>
+                empty = `<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #B9BDBC;
+                text-align: center; display: flex; align-items: center; justify-content: center;'>
             <span style='font-size: 18px'><span style='color:red'>NAN</span></span><br>
-            <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 10px'>CTR <span style='color:red'>NAN%</span></span><br>
-            <span style='font-size: 10px'><span style='color:red'>NAN</span></span> <span style='font-size: 10px; margin-left: 30px'>R <span style='color:red'>NAN%</span></span>
             </div>`
                 for (i = 0; i < 50; i++) {
                     var newRow = '<tr>';
@@ -481,168 +352,9 @@
         var nameCell = document.createElement('td');
         nameCell.textContent = "query";
         row.appendChild(nameCell);
-        var nameCell = document.createElement('td');
-        nameCell.textContent = "result"; // Добавляем основной текст
-        var lineBreak = document.createElement('br'); // Создаем элемент <br> для переноса строки
-        nameCell.appendChild(lineBreak); // Добавляем перенос строки
-        nameCell.appendChild(document.createTextNode("None")); // Добавляем текст "None"
-        row.appendChild(nameCell); // Добавляем ячейку в строку
-
-        let pButton = document.createElement('button');
-            pButton.style.width = '20px';  // Ширина кнопки
-            pButton.style.height = '20px'; // Высота кнопки
-            pButton.style.fontSize = '12px'; // Размер шрифта
-            pButton.style.padding = '2px 2px'; // Отступы внутри кнопки
-            pButton.innerHTML = "P";
-            let kButton = document.createElement('button');
-            kButton.style.width = '20px';  // Ширина кнопки
-            kButton.style.height = '20px'; // Высота кнопки
-            kButton.style.fontSize = '12px'; // Размер шрифта
-            kButton.style.padding = '2px 2px'; // Отступы внутри кнопки
-            kButton.innerHTML = "K";
-            let rButton = document.createElement('button');
-            rButton.style.width = '20px';  // Ширина кнопки
-            rButton.style.height = '20px'; // Высота кнопки
-            rButton.style.fontSize = '12px'; // Размер шрифта
-            rButton.style.padding = '2px 2px'; // Отступы внутри кнопки
-            rButton.innerHTML = "R";
-            let cButton = document.createElement('button');
-            cButton.style.width = '20px';  // Ширина кнопки
-            cButton.style.height = '20px'; // Высота кнопки
-            cButton.style.fontSize = '12px'; // Размер шрифта
-            cButton.style.padding = '2px 2px'; // Отступы внутри кнопки
-            cButton.innerHTML = "C";
-        
-            if (state === "decrease" && state_type == "result") {
-                if (metric_type == "P") {
-                    pButton.innerHTML = metric_type + "↓";
-                } else if (metric_type == "K") {
-                    kButton.innerHTML = metric_type + "↓";
-                } else if (metric_type == "R") {
-                    rButton.innerHTML = metric_type + "↓";
-                } else if (metric_type == "C") {
-                    cButton.innerHTML = metric_type + "↓";
-                } 
-            } else if (state === "increase" && state_type == "result") {
-                if (metric_type == "P") {
-                    pButton.innerHTML = metric_type + "↑";
-                } else if (metric_type == "K") {
-                    kButton.innerHTML = metric_type + "↑";
-                } else if (metric_type == "R") {
-                    rButton.innerHTML = metric_type + "↑";
-                } else if (metric_type == "C") {
-                    cButton.innerHTML = metric_type + "↑";
-                } 
-            } else {
-                if (metric_type == "P") {
-                    pButton.innerHTML = metric_type;
-                } else if (metric_type == "K") {
-                    kButton.innerHTML = metric_type;
-                } else if (metric_type == "R") {
-                    rButton.innerHTML = metric_type;
-                } else if (metric_type == "C") {
-                    cButton.innerHTML = metric_type;
-                } 
-                }
-
-                pButton.addEventListener('click', function() {
-                resetButtons([pButton, kButton, rButton, cButton], pButton);
-                state_type = "result";
-
-                if (this.innerHTML === "P") {
-                    this.innerHTML = "P↓";
-                    state = "decrease";
-                } else if (this.innerHTML === "P↓") {
-                    this.innerHTML = "P↑";
-                    state = "increase";
-                } else if (this.innerHTML === "P↑") {
-                    this.innerHTML = "P";
-                    state = null;
-                }
-
-                metric_type = "P";
-
-                UpdateTable();
-            });
-
-            kButton.addEventListener('click', function() {
-                resetButtons([pButton, kButton, rButton, cButton], kButton);
-                state_type = "result";
-
-                if (this.innerHTML === "K") {
-                    this.innerHTML = "K↓";
-                    state = "decrease";
-                } else if (this.innerHTML === "K↓") {
-                    this.innerHTML = "K↑";
-                    state = "increase";
-                } else if (this.innerHTML === "K↑") {
-                    this.innerHTML = "K";
-                    state = null;
-                }
-
-                metric_type = "K";
-
-                UpdateTable();
-            });
-
-            rButton.addEventListener('click', function() {
-                resetButtons([pButton, kButton, rButton, cButton], rButton);
-                state_type = "result";
-
-                if (this.innerHTML === "R") {
-                    this.innerHTML = "R↓";
-                    state = "decrease";
-                } else if (this.innerHTML === "R↓") {
-                    this.innerHTML = "R↑";
-                    state = "increase";
-                } else if (this.innerHTML === "R↑") {
-                    this.innerHTML = "R";
-                    state = null;
-                }
-
-                metric_type = "R";
-
-                UpdateTable();
-            });
-
-            cButton.addEventListener('click', function() {
-                resetButtons([pButton, kButton, rButton, cButton], cButton);
-                state_type = "result";
-
-                if (this.innerHTML === "C") {
-                    this.innerHTML = "C↓";
-                    state = "decrease";
-                } else if (this.innerHTML === "C↓") {
-                    this.innerHTML = "C↑";
-                    state = "increase";
-                } else if (this.innerHTML === "C↑") {
-                    this.innerHTML = "C";
-                    state = null;
-                }
-
-                metric_type = "C";
-
-                UpdateTable();
-            });
-
-            let buttonContainer = document.createElement('div');
-            buttonContainer.style.display = 'flex'; // Выравнивание кнопок в одну строку
-            buttonContainer.style.gap = '5px'; // Расстояние между кнопками
-
-            // Добавляем кнопки в контейнер
-            buttonContainer.appendChild(pButton);
-            buttonContainer.appendChild(kButton);
-            buttonContainer.appendChild(rButton);
-            buttonContainer.appendChild(cButton);
-
-// Добавляем контейнер в ячейку
-            nameCell.appendChild(buttonContainer);
-
-            row.appendChild(nameCell);
 
         columns = [
             {"title": "query"},
-            {"title": "result"},
         ]
 
         amount = calculateDays();
@@ -806,9 +518,9 @@
 
             // Добавляем кнопки в контейнер
             buttonContainer.appendChild(pButton);
-            buttonContainer.appendChild(kButton);
-            buttonContainer.appendChild(rButton);
-            buttonContainer.appendChild(cButton);
+            // buttonContainer.appendChild(kButton);
+            // buttonContainer.appendChild(rButton);
+            // buttonContainer.appendChild(cButton);
 
             nameCell.appendChild(buttonContainer);
 
@@ -816,7 +528,7 @@
         }
         var CurPage = document.getElementById("cur").innerHTML;
         CurPage = Number.parseInt(CurPage, 10)
-        var url = "{{ url_for('get_queries') }}";
+        var url = "{{ url_for('get_live_search') }}";
         var params = {
             length: 50, // количество отображаемых элементов
             start: (CurPage - 1) * 50, // номер страницы
@@ -830,6 +542,8 @@
             button_state: state,
             metric_type: metric_type,
             state_type: state_type,
+            list_id: '{{ list_id }}',
+            author: '{{ author }}',
         };
 
         fetch(url, {
@@ -856,10 +570,9 @@
                 if (data.length == 0) {
                     return;
                 }
-                empty = `<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #B9BDBC'>
+                empty = `<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #B9BDBC;
+                text-align: center; display: flex; align-items: center; justify-content: center;'>
             <span style='font-size: 18px'><span style='color:red'>NAN</span></span><br>
-            <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 10px'>CTR <span style='color:red'>NAN%</span></span><br>
-            <span style='font-size: 10px'><span style='color:red'>NAN</span></span> <span style='font-size: 10px; margin-left: 30px'>R <span style='color:red'>NAN%</span></span>
             </div>`
                 for (i = 0; i < 50; i++) {
                     var newRow = '<tr>';
@@ -890,168 +603,9 @@
         var nameCell = document.createElement('td');
         nameCell.textContent = "query";
         row.appendChild(nameCell);
-        var nameCell = document.createElement('td');
-        nameCell.textContent = "result"; // Добавляем основной текст
-        var lineBreak = document.createElement('br'); // Создаем элемент <br> для переноса строки
-        nameCell.appendChild(lineBreak); // Добавляем перенос строки
-        nameCell.appendChild(document.createTextNode("None")); // Добавляем текст "None"
-        row.appendChild(nameCell); // Добавляем ячейку в строку
-
-        let pButton = document.createElement('button');
-            pButton.style.width = '20px';  // Ширина кнопки
-            pButton.style.height = '20px'; // Высота кнопки
-            pButton.style.fontSize = '12px'; // Размер шрифта
-            pButton.style.padding = '2px 2px'; // Отступы внутри кнопки
-            pButton.innerHTML = "P";
-            let kButton = document.createElement('button');
-            kButton.style.width = '20px';  // Ширина кнопки
-            kButton.style.height = '20px'; // Высота кнопки
-            kButton.style.fontSize = '12px'; // Размер шрифта
-            kButton.style.padding = '2px 2px'; // Отступы внутри кнопки
-            kButton.innerHTML = "K";
-            let rButton = document.createElement('button');
-            rButton.style.width = '20px';  // Ширина кнопки
-            rButton.style.height = '20px'; // Высота кнопки
-            rButton.style.fontSize = '12px'; // Размер шрифта
-            rButton.style.padding = '2px 2px'; // Отступы внутри кнопки
-            rButton.innerHTML = "R";
-            let cButton = document.createElement('button');
-            cButton.style.width = '20px';  // Ширина кнопки
-            cButton.style.height = '20px'; // Высота кнопки
-            cButton.style.fontSize = '12px'; // Размер шрифта
-            cButton.style.padding = '2px 2px'; // Отступы внутри кнопки
-            cButton.innerHTML = "C";
-
-            if (state === "decrease" && state_type == "result") {
-                if (metric_type == "P") {
-                    pButton.innerHTML = metric_type + "↓";
-                } else if (metric_type == "K") {
-                    kButton.innerHTML = metric_type + "↓";
-                } else if (metric_type == "R") {
-                    rButton.innerHTML = metric_type + "↓";
-                } else if (metric_type == "C") {
-                    cButton.innerHTML = metric_type + "↓";
-                } 
-            } else if (state === "increase" && state_type == "result") {
-                if (metric_type == "P") {
-                    pButton.innerHTML = metric_type + "↑";
-                } else if (metric_type == "K") {
-                    kButton.innerHTML = metric_type + "↑";
-                } else if (metric_type == "R") {
-                    rButton.innerHTML = metric_type + "↑";
-                } else if (metric_type == "C") {
-                    cButton.innerHTML = metric_type + "↑";
-                } 
-            } else {
-                if (metric_type == "P") {
-                    pButton.innerHTML = metric_type;
-                } else if (metric_type == "K") {
-                    kButton.innerHTML = metric_type;
-                } else if (metric_type == "R") {
-                    rButton.innerHTML = metric_type;
-                } else if (metric_type == "C") {
-                    cButton.innerHTML = metric_type;
-                } 
-                }
-
-            pButton.addEventListener('click', function() {
-                resetButtons([pButton, kButton, rButton, cButton], pButton);
-                state_type = "result";
-
-                if (this.innerHTML === "P") {
-                    this.innerHTML = "P↓";
-                    state = "decrease";
-                } else if (this.innerHTML === "P↓") {
-                    this.innerHTML = "P↑";
-                    state = "increase";
-                } else if (this.innerHTML === "P↑") {
-                    this.innerHTML = "P";
-                    state = null;
-                }
-
-                metric_type = "P";
-
-                UpdateTable();
-            });
-
-            kButton.addEventListener('click', function() {
-                resetButtons([pButton, kButton, rButton, cButton], kButton);
-                state_type = "result";
-
-                if (this.innerHTML === "K") {
-                    this.innerHTML = "K↓";
-                    state = "decrease";
-                } else if (this.innerHTML === "K↓") {
-                    this.innerHTML = "K↑";
-                    state = "increase";
-                } else if (this.innerHTML === "K↑") {
-                    this.innerHTML = "K";
-                    state = null;
-                }
-
-                metric_type = "K";
-
-                UpdateTable();
-            });
-
-            rButton.addEventListener('click', function() {
-                resetButtons([pButton, kButton, rButton, cButton], rButton);
-                state_type = "result";
-
-                if (this.innerHTML === "R") {
-                    this.innerHTML = "R↓";
-                    state = "decrease";
-                } else if (this.innerHTML === "R↓") {
-                    this.innerHTML = "R↑";
-                    state = "increase";
-                } else if (this.innerHTML === "R↑") {
-                    this.innerHTML = "R";
-                    state = null;
-                }
-
-                metric_type = "R";
-
-                UpdateTable();
-            });
-
-            cButton.addEventListener('click', function() {
-                resetButtons([pButton, kButton, rButton, cButton], cButton);
-                state_type = "result";
-
-                if (this.innerHTML === "C") {
-                    this.innerHTML = "C↓";
-                    state = "decrease";
-                } else if (this.innerHTML === "C↓") {
-                    this.innerHTML = "C↑";
-                    state = "increase";
-                } else if (this.innerHTML === "C↑") {
-                    this.innerHTML = "C";
-                    state = null;
-                }
-
-                metric_type = "C";
-
-                UpdateTable();
-            });
-
-            let buttonContainer = document.createElement('div');
-            buttonContainer.style.display = 'flex'; // Выравнивание кнопок в одну строку
-            buttonContainer.style.gap = '5px'; // Расстояние между кнопками
-
-            // Добавляем кнопки в контейнер
-            buttonContainer.appendChild(pButton);
-            buttonContainer.appendChild(kButton);
-            buttonContainer.appendChild(rButton);
-            buttonContainer.appendChild(cButton);
-
-// Добавляем контейнер в ячейку
-            nameCell.appendChild(buttonContainer);
-
-            row.appendChild(nameCell);
 
         columns = [
             {"title": "query"},
-            {"title": "result"},
         ]
 
         amount = calculateDays();
@@ -1215,9 +769,9 @@
 
             // Добавляем кнопки в контейнер
             buttonContainer.appendChild(pButton);
-            buttonContainer.appendChild(kButton);
-            buttonContainer.appendChild(rButton);
-            buttonContainer.appendChild(cButton);
+            // buttonContainer.appendChild(kButton);
+            // buttonContainer.appendChild(rButton);
+            // buttonContainer.appendChild(cButton);
 
             nameCell.appendChild(buttonContainer);
 
@@ -1237,7 +791,7 @@
 
 
 
-        var url = "{{ url_for('get_queries') }}";
+        var url = "{{ url_for('get_live_search') }}";
         var params = {
             length: 50, // количество отображаемых элементов
             start: ((CurPage - 2) * 50), // номер страницы
@@ -1251,6 +805,8 @@
             button_state: state,
             metric_type: metric_type,
             state_type: state_type,
+            list_id: '{{ list_id }}',
+            author: '{{ author }}',
         };
 
         fetch(url, {
@@ -1277,10 +833,9 @@
                 if (data.length == 0) {
                     return;
                 }
-                empty = `<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #B9BDBC'>
+                empty = `<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #B9BDBC;
+                text-align: center; display: flex; align-items: center; justify-content: center;'>
             <span style='font-size: 18px'><span style='color:red'>NAN</span></span><br>
-            <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 10px'>CTR <span style='color:red'>NAN%</span></span><br>
-            <span style='font-size: 10px'><span style='color:red'>NAN</span></span> <span style='font-size: 10px; margin-left: 30px'>R <span style='color:red'>NAN%</span></span>
             </div>`
                 for (i = 0; i < 50; i++) {
                     var newRow = '<tr>';
@@ -1311,169 +866,9 @@
         var nameCell = document.createElement('td');
         nameCell.textContent = "query";
         row.appendChild(nameCell);
-        var nameCell = document.createElement('td');
-        nameCell.textContent = "result"; // Добавляем основной текст
-        var lineBreak = document.createElement('br'); // Создаем элемент <br> для переноса строки
-        nameCell.appendChild(lineBreak); // Добавляем перенос строки
-        nameCell.appendChild(document.createTextNode("None")); // Добавляем текст "None"
-        row.appendChild(nameCell); // Добавляем ячейку в строку
-
-        let pButton = document.createElement('button');
-            pButton.style.width = '20px';  // Ширина кнопки
-            pButton.style.height = '20px'; // Высота кнопки
-            pButton.style.fontSize = '12px'; // Размер шрифта
-            pButton.style.padding = '2px 2px'; // Отступы внутри кнопки
-            pButton.innerHTML = "P";
-            let kButton = document.createElement('button');
-            kButton.style.width = '20px';  // Ширина кнопки
-            kButton.style.height = '20px'; // Высота кнопки
-            kButton.style.fontSize = '12px'; // Размер шрифта
-            kButton.style.padding = '2px 2px'; // Отступы внутри кнопки
-            kButton.innerHTML = "K";
-            let rButton = document.createElement('button');
-            rButton.style.width = '20px';  // Ширина кнопки
-            rButton.style.height = '20px'; // Высота кнопки
-            rButton.style.fontSize = '12px'; // Размер шрифта
-            rButton.style.padding = '2px 2px'; // Отступы внутри кнопки
-            rButton.innerHTML = "R";
-            let cButton = document.createElement('button');
-            cButton.style.width = '20px';  // Ширина кнопки
-            cButton.style.height = '20px'; // Высота кнопки
-            cButton.style.fontSize = '12px'; // Размер шрифта
-            cButton.style.padding = '2px 2px'; // Отступы внутри кнопки
-            cButton.innerHTML = "C";
-
-            if (state === "decrease" && state_type == "result") {
-                if (metric_type == "P") {
-                    pButton.innerHTML = metric_type + "↓";
-                } else if (metric_type == "K") {
-                    kButton.innerHTML = metric_type + "↓";
-                } else if (metric_type == "R") {
-                    rButton.innerHTML = metric_type + "↓";
-                } else if (metric_type == "C") {
-                    cButton.innerHTML = metric_type + "↓";
-                } 
-            } else if (state === "increase" && state_type == "result") {
-                if (metric_type == "P") {
-                    pButton.innerHTML = metric_type + "↑";
-                } else if (metric_type == "K") {
-                    kButton.innerHTML = metric_type + "↑";
-                } else if (metric_type == "R") {
-                    rButton.innerHTML = metric_type + "↑";
-                } else if (metric_type == "C") {
-                    cButton.innerHTML = metric_type + "↑";
-                } 
-            } else {
-                if (metric_type == "P") {
-                    pButton.innerHTML = metric_type;
-                } else if (metric_type == "K") {
-                    kButton.innerHTML = metric_type;
-                } else if (metric_type == "R") {
-                    rButton.innerHTML = metric_type;
-                } else if (metric_type == "C") {
-                    cButton.innerHTML = metric_type;
-                } 
-                }
-
-            pButton.addEventListener('click', function() {
-                resetButtons([pButton, kButton, rButton, cButton], pButton);
-                state_type = "result";
-
-                if (this.innerHTML === "P") {
-                    this.innerHTML = "P↓";
-                    state = "decrease";
-                } else if (this.innerHTML === "P↓") {
-                    this.innerHTML = "P↑";
-                    state = "increase";
-                } else if (this.innerHTML === "P↑") {
-                    this.innerHTML = "P";
-                    state = null;
-                }
-
-                metric_type = "P";
-
-                UpdateTable();
-            });
-
-            kButton.addEventListener('click', function() {
-                resetButtons([pButton, kButton, rButton, cButton], kButton);
-                state_type = "result";
-
-                if (this.innerHTML === "K") {
-                    this.innerHTML = "K↓";
-                    state = "decrease";
-                } else if (this.innerHTML === "K↓") {
-                    this.innerHTML = "K↑";
-                    state = "increase";
-                } else if (this.innerHTML === "K↑") {
-                    this.innerHTML = "K";
-                    state = null;
-                }
-
-                metric_type = "K";
-
-                UpdateTable();
-            });
-
-            rButton.addEventListener('click', function() {
-                resetButtons([pButton, kButton, rButton, cButton], rButton);
-                state_type = "result";
-
-                if (this.innerHTML === "R") {
-                    this.innerHTML = "R↓";
-                    state = "decrease";
-                } else if (this.innerHTML === "R↓") {
-                    this.innerHTML = "R↑";
-                    state = "increase";
-                } else if (this.innerHTML === "R↑") {
-                    this.innerHTML = "R";
-                    state = null;
-                }
-
-                metric_type = "R";
-
-                UpdateTable();
-            });
-
-            cButton.addEventListener('click', function() {
-                resetButtons([pButton, kButton, rButton, cButton], cButton);
-                state_type = "result";
-
-                if (this.innerHTML === "C") {
-                    this.innerHTML = "C↓";
-                    state = "decrease";
-                } else if (this.innerHTML === "C↓") {
-                    this.innerHTML = "C↑";
-                    state = "increase";
-                } else if (this.innerHTML === "C↑") {
-                    this.innerHTML = "C";
-                    state = null;
-                }
-
-                metric_type = "C";
-
-                UpdateTable();
-            });
-
-
-            let buttonContainer = document.createElement('div');
-            buttonContainer.style.display = 'flex'; // Выравнивание кнопок в одну строку
-            buttonContainer.style.gap = '5px'; // Расстояние между кнопками
-
-            // Добавляем кнопки в контейнер
-            buttonContainer.appendChild(pButton);
-            buttonContainer.appendChild(kButton);
-            buttonContainer.appendChild(rButton);
-            buttonContainer.appendChild(cButton);
-
-// Добавляем контейнер в ячейку
-            nameCell.appendChild(buttonContainer);
-
-            row.appendChild(nameCell);
 
         columns = [
             {"title": "query"},
-            {"title": "result"},
         ]
 
         amount = calculateDays();
@@ -1637,9 +1032,9 @@
 
             // Добавляем кнопки в контейнер
             buttonContainer.appendChild(pButton);
-            buttonContainer.appendChild(kButton);
-            buttonContainer.appendChild(rButton);
-            buttonContainer.appendChild(cButton);
+            // buttonContainer.appendChild(kButton);
+            // buttonContainer.appendChild(rButton);
+            // buttonContainer.appendChild(cButton);
 
             nameCell.appendChild(buttonContainer);
 
@@ -1647,7 +1042,7 @@
         }
         var CurPage = document.getElementById("cur").innerHTML;
         CurPage = Number.parseInt(CurPage, 10)
-        var url = "{{ url_for('get_queries') }}";
+        var url = "{{ url_for('get_live_search') }}";
 
         document.getElementById("prev").innerHTML = CurPage;
         document.getElementById("prev").disabled = false;
@@ -1668,6 +1063,8 @@
             button_state: state,
             metric_type: metric_type,
             state_type: state_type,
+            list_id: '{{ list_id }}',
+            author: '{{ author }}'
         };
 
         fetch(url, {
@@ -1694,10 +1091,9 @@
                 if (data.length == 0) {
                     return;
                 }
-                empty = `<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #B9BDBC'>
+                empty = `<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #B9BDBC;
+                text-align: center; display: flex; align-items: center; justify-content: center;'>
             <span style='font-size: 18px'><span style='color:red'>NAN</span></span><br>
-            <span style='font-size: 10px'>Клики</span><span style='font-size: 10px; margin-left: 10px'>CTR <span style='color:red'>NAN%</span></span><br>
-            <span style='font-size: 10px'><span style='color:red'>NAN</span></span> <span style='font-size: 10px; margin-left: 30px'>R <span style='color:red'>NAN%</span></span>
             </div>`
                 for (i = 0; i < 50; i++) {
                     var newRow = '<tr>';
@@ -1813,33 +1209,37 @@ function generateCsv(url_f) {
     });
 }
 
-function sendRequest(url) {
+function sendRequest(url, list) {
     $('.loader').show();
-    fetch(url)
-        .then(response => {
-            // Проверяем статус ответа
-            if (!response.ok) {
-                console.log("qqq")
-                return response.json().then(errData => {
-                    // Обработка ошибки в зависимости от статуса
-                    if (response.status === 400) {
-                        throw new Error(errData.detail || 'Bad Request');
-                    }
-                });
-            }
-            return response.json();  // Если статус успешный, возвращаем JSON
-        })
-        .then(data => {
-            console.log('Success:', data);
-            // Обработка успешного ответа
-            $('.loader').hide();
-            window.location.reload();  // Обновление страницы
-        })
-        .catch((error) => {
-            alert(error.message);
-            // Обработка ошибки
-            $('.loader').hide();
-        });
+    if (list) {
+            $('.loader').show();
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ list: list })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => Promise.reject(err));
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('List load:', data);
+                $('.loader').hide();
+                window.location.reload();
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                $('.loader').hide();
+                alert(`Error: ${error.error || 'Unable to load list.'}`);
+            });
+        } else {
+            alert('Error');
+        }
 }
 
     async function deleteDataForLast(url) {

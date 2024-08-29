@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import select
+from sqlalchemy import and_, delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.config.models import LiveSearchListQuery, QueryLiveSearchGoogle, QueryLiveSearchYandex
@@ -32,6 +32,21 @@ async def main(
                     position=value[1],
                     date=datetime.strptime(datetime.now().strftime(date_format), date_format)
                 ))
+            
+            stmt = (
+                delete(QueryLiveSearchYandex)
+                .where(
+                    and_(
+                        QueryLiveSearchYandex.query.in_(approach_query.values()),
+                        QueryLiveSearchYandex.date == datetime.strptime(datetime.now().strftime(date_format), date_format
+                        )
+                    )
+                )
+            )
+            
+            # Выполнение запроса на удаление
+            await session.execute(stmt)
+            await session.commit()  # Коммит для фиксации изменений в базе данных
         
         elif search_system == "Google":
             print(approach_query_names)
@@ -47,6 +62,20 @@ async def main(
                     position=value[1],
                     date=datetime.strptime(datetime.now().strftime(date_format), date_format)
                 ))
+            
+            stmt = (
+                delete(QueryLiveSearchGoogle)
+                .where(
+                    and_(
+                        QueryLiveSearchGoogle.query.in_(approach_query.values()),
+                        QueryLiveSearchGoogle.date == datetime.strptime(datetime.now().strftime(date_format), date_format
+                        )
+                    )
+                )
+            )
+            
+            await session.execute(stmt)
+            await session.commit()
         
         print(query_info_for_db)
         session.add_all(query_info_for_db)
