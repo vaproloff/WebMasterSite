@@ -122,13 +122,27 @@ async def get_live_search(
                 list_id,
                 session,
                 )
-
     try:
         if urls:
             urls.sort(key=lambda x: x[-1])
         
         grouped_data = [(key, sorted(list(group), key=lambda x: x[0])) for key, group in
                         groupby(urls, key=lambda x: x[-1])]
+
+        if data_request["button_state"]:
+            if data_request["metric_type"] == "P":
+                grouped_data.sort(
+                    key=lambda x: next(
+                        (
+                            sub_item[2] if sub_item[2] != 0 else 
+                            (-float('inf') if data_request["button_state"] == "decrease" else float('inf'))
+                            for sub_item in x[1]
+                            if sub_item[0] == state_date
+                        ),
+                        -float('inf') if data_request["button_state"] == "decrease" else float('inf')
+                    ),
+                    reverse=data_request["button_state"] == "decrease"
+                )
     except TypeError as e:
         return JSONResponse({"data": []})
 

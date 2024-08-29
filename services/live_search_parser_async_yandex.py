@@ -40,6 +40,7 @@ async def process_query(query, MAIN_DOMAIN, lr, query_info):
                     if domain.lower() == MAIN_DOMAIN:
                         if query not in query_info:
                             query_info[query] = [url, i]
+                            print("task complete")
                             completed_task += 1
                             if completed_task % 100 == 0:
                                 print(f"{completed_task} queries complete")
@@ -54,7 +55,6 @@ async def run_script_async(main_domain, lr, queries):
         query = query.strip()
         task = asyncio.create_task(process_query(query, main_domain, lr, query_info))
         tasks.append(task)
-        await asyncio.sleep(0.05)
 
         await asyncio.gather(*tasks)
 

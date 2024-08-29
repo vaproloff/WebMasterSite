@@ -30,8 +30,10 @@ async def main(
                     query=approach_query[key],
                     url=value[0],
                     position=value[1],
-                    date=datetime.strptime(datetime.now().strftime(date_format), date_format)
+                    date=datetime.strptime(datetime.now().strftime(date_format), date_format),
                 ))
+
+                
             
             stmt = (
                 delete(QueryLiveSearchYandex)
@@ -49,11 +51,8 @@ async def main(
             await session.commit()  # Коммит для фиксации изменений в базе данных
         
         elif search_system == "Google":
-            print(approach_query_names)
             query_info = await run_script_async_google(main_domain, lr, approach_query_names)
             query_info_for_db = list()
-
-            print(query_info)
 
             for key, value in query_info.items():
                 query_info_for_db.append(QueryLiveSearchGoogle(

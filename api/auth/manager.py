@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 
 from fastapi import Depends
@@ -8,9 +9,14 @@ from requests import Response
 from api.auth.models import User
 from api.auth.schemas import UserCreate
 from api.auth.utils import get_user_db
+from api.config.models import UserQueryCount
 from config import SECRET
 
 from fastapi import Request
+
+from db.session import async_session_general
+
+from const import query_value, date_format
 
 
 class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
@@ -99,7 +105,22 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
 
         return user
 
-    async def on_after_register(self, user: User, request: Optional[Request] = None):
+    async def on_after_register(
+            self, 
+            user: User,
+            request: Optional[Request] = None,
+            ):
+        
+        async with async_session_general() as session:
+            session.add(UserQueryCount(
+                user_id=user.id,
+                query_count=query_value,
+                last_update_date=datetime.strptime(datetime.now().strftime(date_format), date_format),
+                )
+                )
+        
+            await session.commit()
+
         print(f"Зарегистрирован пользователь {user.username}")
 
     async def on_after_login(

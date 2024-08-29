@@ -79,6 +79,7 @@ class UserQueryCount(Base):
 
     user_id = Column(Integer, ForeignKey("user.id"), nullable=False, primary_key=True)
     query_count = Column(Integer, nullable=False, default=3000)
+    last_update_date = Column(DateTime, nullable=False)
     
 
 
