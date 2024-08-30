@@ -2,7 +2,8 @@ from datetime import datetime
 from sqlalchemy import and_, delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.config.models import LiveSearchListQuery, QueryLiveSearchGoogle, QueryLiveSearchYandex
+from api.auth.models import User
+from api.config.models import LiveSearchListQuery, QueryLiveSearchGoogle, QueryLiveSearchYandex, UserQueryCount
 
 from services.live_search_parser_async_yandex import run_script_async as run_script_async_yandex
 from services.live_search_parser_async_google import run_script_async as run_script_async_google
@@ -14,11 +15,19 @@ async def main(
         main_domain: str, 
         lr:int, 
         search_system: str,
+        user: User,
         session: AsyncSession
 ):
     approach_query = dict((await session.execute(select(LiveSearchListQuery.query, LiveSearchListQuery.id).where(LiveSearchListQuery.list_id == list_id))).fetchall())
 
+    user_query_model = (await session.execute(select(UserQueryCount).where(UserQueryCount.user_id == user.id))).scalars().first()
+
     approach_query_names = approach_query.keys()
+
+    if user_query_model.query_count - len(approach_query) < 0:
+        return 0
+    
+    user_query_model.query_count -= len(approach_query)
 
     try:
         if search_system == "Yandex":
@@ -76,13 +85,14 @@ async def main(
             await session.execute(stmt)
             await session.commit()
         
-        print(query_info_for_db)
         session.add_all(query_info_for_db)
         await session.commit()
 
     except Exception as e:
         print(
             f"Произошло досрочное выключение xmlstock. Search System:{search_system} Ошибка: {e}")
+    
+    return 1
 
 
 

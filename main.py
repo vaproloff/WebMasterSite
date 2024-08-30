@@ -7,8 +7,6 @@ from fastapi import APIRouter
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
-from pathlib import Path
-
 from api.admin_handlers import admin_router
 from api.auth.auth_config import fastapi_users, auth_backend
 from api.auth.http_exception import http_exception_handler

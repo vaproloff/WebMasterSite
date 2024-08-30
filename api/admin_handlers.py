@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.auth.auth_config import current_user, RoleChecker
 from api.auth.models import User
-from api.config.models import Config, Group, List, ListURI, LiveSearchList, LiveSearchListQuery
+from api.config.models import Config, Group, List, ListURI, LiveSearchList, LiveSearchListQuery, UserQueryCount
 from api.config.utils import get_config_names, get_group_names, get_lists_names, get_live_search_lists_names
 from db.session import get_db_general
 
@@ -345,30 +345,6 @@ async def add_uri(
     }
 
 
-@admin_router.post("/list/{list_id}/edit")
-async def add_uri(
-    request: Request,
-    list_id: int,   
-    data: dict,
-    user=Depends(current_user),
-    session: AsyncSession = Depends(get_db_general),
-    required: bool = Depends(RoleChecker(required_permissions={"User", "Administrator", "Superuser"}))
-):
-    record = ListURI(
-        uri=data["uri"].strip(),
-        list_id=list_id
-    )
-
-    session.add(record)
-
-    await session.commit()
-
-    return {
-        "status": 200,
-        "message": f"add {data['uri']} record to {list_id} list"
-    }
-
-
 @admin_router.get("/live_search/{username}")
 async def show_live_search(
     request: Request,
@@ -388,7 +364,7 @@ async def show_live_search(
                                       {"request": request,
                                        "user": user,
                                        "config_names": config_names,
-                                       "group_names": group_names,
+                                       "group_names": group_names,  
                                        "list_names": list_names,
                                        })
 
@@ -444,7 +420,7 @@ async def add_live_search_list(
     }
 
 
-@admin_router.delete("/live search")
+@admin_router.delete("/live_search")
 async def delete_live_search_list(
     request: Request,
     data: dict,

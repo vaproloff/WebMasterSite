@@ -1,28 +1,21 @@
-import csv
-from datetime import datetime, timedelta
-import io
+from datetime import datetime
 from itertools import groupby
-import logging
-import sys
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.encoders import jsonable_encoder
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import JSONResponse
 from fastapi.templating import Jinja2Templates
-from openpyxl import Workbook
-from sqlalchemy import delete, select
-from api.actions.actions import get_last_date, get_last_load_date
-from api.actions.queries import _get_urls_with_pagination_and_like_query, _get_urls_with_pagination_and_like_sort_query, _get_urls_with_pagination_query, _get_urls_with_pagination_sort_query
+from sqlalchemy import select
 from api.auth.models import User
+from api.config.models import UserQueryCount
 from api.config.utils import get_config_names, get_group_names
 from api.live_search_api.db import get_urls_with_pagination, get_urls_with_pagination_and_like, get_urls_with_pagination_sort, get_urls_with_pagination_sort_and_like
-from db.models import LastUpdateDate, MetricsQuery
-from db.session import connect_db, get_db_general
+from db.session import get_db_general
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.auth.auth_config import current_user
 
-from const import date_format_2, date_format_out
+from const import date_format_2, date_format, query_value
 
 
 templates = Jinja2Templates(directory="static")
@@ -35,15 +28,17 @@ async def get_live_search(
     request: Request,
     list_id: int = Query(None),
     author: int = Query(None),
+    search_system: str = Query(None),
     user: User = Depends(current_user),
     session: AsyncSession = Depends(get_db_general)
 ):  
-    print(list_id, author)
     group_name = request.session["group"].get("name", "")
     
     config_names = [elem[0] for elem in (await get_config_names(session, user, group_name))]
 
     group_names = await get_group_names(session, user)
+
+    query_count = (await session.execute(select(UserQueryCount.query_count).where(UserQueryCount.user_id == user.id))).scalars().first()
 
     return templates.TemplateResponse("live_search-info.html",
                                       {"request": request,
@@ -52,6 +47,8 @@ async def get_live_search(
                                        "group_names": group_names,
                                        "list_id": list_id,
                                        "author": author,
+                                       "query_count": query_count,
+                                       "search_system": search_system,
                                         }
                                        )
 
@@ -67,7 +64,7 @@ async def get_live_search(
     start_date = datetime.strptime(data_request["start_date"], date_format_2)
     end_date = datetime.strptime(data_request["end_date"], date_format_2)
     list_id = int(data_request["list_id"])
-    author = int(data_request["author"])
+    search_system = data_request["search_system"]
     state_date = None
     if data_request["button_date"]:
         state_date = datetime.strptime(data_request["button_date"], date_format_2)
@@ -106,6 +103,7 @@ async def get_live_search(
                 data_request["metric_type"],
                 data_request["state_type"],
                 list_id,
+                search_system,
                 session,
                 )
         else:
@@ -176,3 +174,25 @@ async def get_live_search(
     json_data = jsonable_encoder(data)
 
     return JSONResponse({"data": json_data})
+
+
+@router.get("/update_query_count")
+async def update_query_count(
+    request: Request,
+    user: User = Depends(current_user),
+    session: AsyncSession = Depends(get_db_general)
+):
+    res = (await session.execute(select(UserQueryCount).where(UserQueryCount.user_id == user.id))).scalars().first()
+
+    if res.last_update_date == datetime.strptime(datetime.now().strftime(date_format), date_format):
+        raise HTTPException(status_code=400, detail="Сегодня запросы уже были обновлены")
+    
+    res.query_count = query_value
+    res.last_update_date = datetime.strptime(datetime.now().strftime(date_format), date_format)
+
+    await session.commit()
+
+    return {
+        "status": 200,
+        "message": f"query for {user.username} reset"
+    }

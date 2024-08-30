@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Request, Depends
 from sqlalchemy import select
 
 from api.auth.auth_config import RoleChecker
+from api.auth.models import User
 from api.config.models import LiveSearchList
 from db.session import get_db_general
 from services.load_all_queries import get_all_data as get_all_data_queries
@@ -15,6 +16,8 @@ from services.load_query_url_merge import main as merge_main
 from services.load_live_search import main as live_search_main
 
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from api.auth.auth_config import current_user
 
 router = APIRouter()
 
@@ -73,6 +76,7 @@ async def load_live_search_list(
     request: Request,
     list: dict,
     session: AsyncSession = Depends(get_db_general),
+    user: User = Depends(current_user),
     required: bool = Depends(RoleChecker(required_permissions={"Administrator", "Superuser"}))
 ):
     list_id = int(list["list"])
@@ -81,7 +85,10 @@ async def load_live_search_list(
 
     list_id, main_domain, lr, search_system = list_model.id, list_model.main_domain, list_model.lr, list_model.search_system
 
-    await live_search_main(list_id, main_domain, lr, search_system, session)
+    status = await live_search_main(list_id, main_domain, lr, search_system, user, session)
+
+    if status == 0:
+        raise HTTPException(status_code=400, detail="Запросов доступно меньше, чем необходимо")
 
     return {
         "status": 200,

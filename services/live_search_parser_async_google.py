@@ -34,7 +34,6 @@ async def process_query(query, MAIN_DOMAIN, lr, query_info):
                 response_text_json = response_text["results"]
                 for key, value in response_text_json.items():
                     if value["site_name"].lower() == MAIN_DOMAIN:
-                        print("CHECK", query, value["url"], key)
                         if query not in query_info:
                             query_info[query] = [value["url"], int(key)]
     except Exception as e:
@@ -48,7 +47,6 @@ async def run_script_async(main_domain, lr, queries):
         query = query.strip()
         task = asyncio.create_task(process_query(query, main_domain, lr, query_info))
         tasks.append(task)
-        await asyncio.sleep(0.05)
 
         await asyncio.gather(*tasks)
 

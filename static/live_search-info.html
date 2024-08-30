@@ -13,6 +13,8 @@
     <div class="button-container">
         <a href="{{ url_for('show_profile', username=user.username) }}" class="back-to-menu">Back to profile</a>
         <input type="button" value="Update Data Live Search" onclick="sendRequest('{{ url_for('load_live_search_list') }}', '{{ list_id }}')">
+        <span>Запросов осталось: {{ query_count }}</span>
+        <button onclick="updateQueryCount()">Обновить</button>
     </div>
 
     <!-- Existing filters and buttons -->
@@ -24,8 +26,6 @@
     <label for="input_desc">По убыванию?</label>
     <input type="checkbox" id="input_desc">
     <input type="button" value="Отфильтровать" onclick="UpdateTable();">
-    <input type="button" value="Excel" onclick="generateExcel('{{ url_for('generate_excel_query')}}');">
-    <input type="button" value="Csv" onclick="generateCsv('{{ url_for('generate_csv_query')}}');">
     
     <table id="example" class="display nowrap" style="width:100%;">
         <thead>
@@ -303,7 +303,8 @@
             metric_type: metric_type,
             state_type: state_type,
             list_id: '{{ list_id }}',
-            author: '{{ author }}'
+            author: '{{ author }}',
+            search_system: '{{ search_system }}',
         };
 
         fetch(url, {
@@ -544,6 +545,7 @@
             state_type: state_type,
             list_id: '{{ list_id }}',
             author: '{{ author }}',
+            search_system: '{{ search_system }}',
         };
 
         fetch(url, {
@@ -807,6 +809,7 @@
             state_type: state_type,
             list_id: '{{ list_id }}',
             author: '{{ author }}',
+            search_system: '{{ search_system }}',
         };
 
         fetch(url, {
@@ -1064,7 +1067,8 @@
             metric_type: metric_type,
             state_type: state_type,
             list_id: '{{ list_id }}',
-            author: '{{ author }}'
+            author: '{{ author }}',
+            search_system: '{{ search_system }}',
         };
 
         fetch(url, {
@@ -1210,36 +1214,37 @@ function generateCsv(url_f) {
 }
 
 function sendRequest(url, list) {
-    $('.loader').show();
-    if (list) {
-            $('.loader').show();
+    $('.loader').show();  // Показываем загрузчик
 
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ list: list })
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(err => Promise.reject(err));
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log('List load:', data);
-                $('.loader').hide();
-                window.location.reload();
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-                $('.loader').hide();
-                alert(`Error: ${error.error || 'Unable to load list.'}`);
-            });
-        } else {
-            alert('Error');
-        }
+    if (list) {
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ list: list })
+        })
+        .then(response => {
+            if (!response.ok) {
+                // Преобразуем ответ в JSON и выбрасываем ошибку
+                return response.json().then(err => Promise.reject(err));
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('List load:', data);
+            $('.loader').hide();  // Скрываем загрузчик после успешного запроса
+            window.location.reload();  // Перезагружаем страницу
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+            $('.loader').hide();  // Скрываем загрузчик при ошибке
+            alert(`Ошибка: ${error.detail || 'Невозможно загрузить список.'}`);  // Показываем сообщение об ошибке
+        });
+    } else {
+        $('.loader').hide();  // Скрываем загрузчик, если список не указан
+        alert('Ошибка: Параметр списка не указан.');  // Показываем сообщение об ошибке
+    }
 }
 
     async function deleteDataForLast(url) {
@@ -1286,6 +1291,26 @@ function sendRequest(url, list) {
                 alert('Please enter a number of days.');
             }
         }
+
+        function updateQueryCount() {
+            fetch('{{ url_for('update_query_count') }}')
+                .then(response => {
+                    if (response.ok) {
+                        window.location.reload();  // Перезагружаем страницу при успешном ответе
+                        return null;  // Возвращаем null, чтобы пропустить следующий .then
+                    } else {
+                        return response.json();  // Преобразуем ответ в JSON только при ошибке
+                    }
+                })
+                .then(data => {
+                    if (data) {
+                        // Отображаем сообщение об ошибке, если data не null
+                        alert(data.detail || 'Ошибка при обновлении запроса');
+                    }
+                })
+                .catch(error => console.error('Ошибка:', error));
+        }
+
 </script>
 
 </body>
