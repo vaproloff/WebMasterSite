@@ -448,3 +448,104 @@ async def delete_live_search_list(
             "status": 404,
             "message": f"List '{list_name}' not found"
         }
+
+
+
+@admin_router.get("/live_search/{list_id}/edit")
+async def show_edit_live_search(
+    request: Request,
+    list_id: int,
+    user=Depends(current_user),
+    session: AsyncSession = Depends(get_db_general),
+    required: bool = Depends(RoleChecker(required_permissions={"User", "Administrator", "Superuser"}))
+):
+
+    group_name = request.session["group"].get("name", "")
+    config_names = [elem[0] for elem in (await get_config_names(session, user, group_name))]
+    group_names = await get_group_names(session, user)
+
+    query_list = (await session.execute(select(LiveSearchListQuery.query).where(LiveSearchListQuery.list_id == list_id))).scalars().all()
+
+    print(query_list)
+
+    return templates.TemplateResponse("live_search_edit.html",
+                                      {"request": request,
+                                       "user": user,
+                                       "config_names": config_names,
+                                       "group_names": group_names,
+                                       "query_list":query_list,
+                                       "list_id": list_id,
+                                       })
+
+
+
+@admin_router.delete("/live_search/{list_id}/edit")
+async def delete_live_search_record(
+    request: Request,
+    list_id: int,
+    query: dict,
+    user=Depends(current_user),
+    session: AsyncSession = Depends(get_db_general),
+    required: bool = Depends(RoleChecker(required_permissions={"User", "Administrator", "Superuser"}))
+):
+    query_model = (await session.execute(select(LiveSearchListQuery).where(and_(LiveSearchListQuery.query == query["query"], LiveSearchListQuery.list_id == list_id)))).scalars().first()
+
+    await session.delete(query_model)
+
+    await session.commit()
+
+    return {
+        "status": 200,
+        "message": f"delete {query} record from {list_id} list"
+    }
+
+
+@admin_router.put("/live_search/{list_id}/edit")
+async def change_live_search_record(
+    request: Request,
+    list_id: int,
+    data: dict,
+    user=Depends(current_user),
+    session: AsyncSession = Depends(get_db_general),
+    required: bool = Depends(RoleChecker(required_permissions={"User", "Administrator", "Superuser"}))
+):
+    print(data)
+
+    old_uri, new_uri = data.values()
+
+    query_model = (await session.execute(select(LiveSearchListQuery).where(and_(LiveSearchListQuery.query == old_uri, LiveSearchListQuery.list_id == list_id)))).scalars().first()
+
+    query_model.query = new_uri
+
+    await session.commit()
+    
+    return {
+        "status": 200,
+        "message": f"change query from {old_uri} to {new_uri}"
+    }
+
+
+@admin_router.post("/live_search/{list_id}/edit")
+async def add_live_search_record(
+    request: Request,
+    list_id: int,   
+    data: dict,
+    user=Depends(current_user),
+    session: AsyncSession = Depends(get_db_general),
+    required: bool = Depends(RoleChecker(required_permissions={"User", "Administrator", "Superuser"}))
+):
+    record = LiveSearchListQuery(
+        query=data["uri"].strip(),
+        list_id=list_id
+    )
+
+    session.add(record)
+
+    await session.commit()
+
+    return {
+        "status": 200,
+        "message": f"add {data['uri']} record to {list_id} list"
+    }
+
+

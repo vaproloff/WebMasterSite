@@ -119,7 +119,7 @@
         <div class="cell">{{ name.search_system }}</div>
         <div class="cell">
             <button type="button" onclick="UpdateList('{{ name.id }}')">Update</button>
-            <button type="button" onclick="editList('{{ url_for('show_edit_list', list_id=name.id) }}')">Edit</button>
+            <button type="button" onclick="editList('{{ url_for('show_edit_live_search', list_id=name.id) }}')">Edit</button>
             <button type="button" onclick="deleteList('{{ name.name }}')">Delete</button>
         </div>
     </div>
