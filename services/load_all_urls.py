@@ -129,10 +129,6 @@ async def get_all_data(request_session):
         last_update_date = datetime.strptime("1900-01-01", date_format)
     mx_date = [datetime.strptime("1900-01-01", date_format)]
     await add_data(data, last_update_date, async_session, mx_date)
-    if count > 500:
-        return {"status": 200,
-            "detail": "Ok"
-            }
     if mx_date[0] <= last_update_date:
         print("qq")
         return {"status": 400,
