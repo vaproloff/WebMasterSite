@@ -85,14 +85,6 @@
         <form class="add-list-form" id="add-list-form">
             <input type="text" id="list-name" placeholder="List Name" required>
             <input type="text" id="main-domain" placeholder="MAIN DOMAIN" required>
-            <input type="text" id="lr-ident" placeholder="Country or Region Identifier for Search" required>
-            
-            <!-- New field for selecting the search system -->
-            <select id="search-system" required>
-                <option value="" disabled selected>Select Search System</option>
-                <option value="Yandex">Yandex</option>
-                <option value="Google">Google</option>
-            </select>
 
             <textarea id="list-content" placeholder="Enter Queries here (one per line)" rows="6" required></textarea>
             <button type="button" onclick="addList()">Add Live Search List</button>
@@ -104,19 +96,15 @@
         <div class="cell">Number</div>
         <div class="cell">List Name</div>
         <div class="cell">Main Domain</div>
-        <div class="cell">lr</div>
-        <div class="cell">Search System</div>
         <div class="cell">Action</div>
     </div>
     {% for name in list_names %}
     <div class="row">
         <div class="cell">{{ loop.index }}</div>
         <div class="cell">
-            <a href="{{ url_for('get_live_search').include_query_params(list_id=name.id, author=name.author, search_system=name.search_system) }}">{{ name.name }}</a>
+            <a href="{{ url_for('show_list_menu').include_query_params(list_id=name.id, author=name.author, search_system=name.search_system) }}">{{ name.name }}</a>
         </div>
         <div class="cell">{{ name.main_domain }}</div>
-        <div class="cell">{{ name.lr }}</div>
-        <div class="cell">{{ name.search_system }}</div>
         <div class="cell">
             <button type="button" onclick="UpdateList('{{ name.id }}')">Update</button>
             <button type="button" onclick="editList('{{ url_for('show_edit_live_search', list_id=name.id) }}')">Edit</button>
@@ -131,20 +119,16 @@
 <script>
     function addList() {
         const mainDomain = $('#main-domain').val();
-        const lrIdent = $('#lr-ident').val();
         const listName = $('#list-name').val();
         const content = $('#list-content').val();
-        const searchSystem = $('#search-system').val();  // New variable for search system
 
-        if (mainDomain && lrIdent && listName && content && searchSystem) {
+        if (mainDomain && listName && content) {
             $('.loader').show();
 
             const data = {
                 main_domain: mainDomain,
-                lr_ident: lrIdent,
                 name: listName,
                 query_list: content.split('\n').filter(uri => uri.trim() !== ''),
-                search_system: searchSystem  // Include in the sent data
             };
 
             fetch('{{ url_for('add_live_search_list') }}', {

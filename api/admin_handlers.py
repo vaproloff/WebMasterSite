@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.auth.auth_config import current_user, RoleChecker
 from api.auth.models import User
-from api.config.models import Config, Group, List, ListURI, LiveSearchList, LiveSearchListQuery, UserQueryCount
+from api.config.models import Config, Group, List, ListLrSearchSystem, ListURI, LiveSearchList, LiveSearchListQuery, UserQueryCount
 from api.config.utils import get_config_names, get_group_names, get_lists_names, get_live_search_lists_names
 from db.session import get_db_general
 
@@ -378,26 +378,17 @@ async def add_live_search_list(
     required: bool = Depends(RoleChecker(required_permissions={"Administrator", "Superuser"}))
 ):
 
-    main_domain, lr, list_name, query_list, search_system = data.values()
+    main_domain, list_name, query_list = data.values()
 
     new_list = LiveSearchList(
         name=list_name,
         author=user.id,
         main_domain=main_domain,
-        lr=int(lr),
-        search_system=search_system,
     )
 
     try:
         session.add(new_list)
-        await session.flush()
 
-        new_queries = [
-            LiveSearchListQuery(query=query.strip(), list_id=new_list.id)
-            for query in query_list
-        ]
-
-        session.add_all(new_queries)
         await session.commit()
         
     except IntegrityError:
@@ -448,7 +439,6 @@ async def delete_live_search_list(
             "status": 404,
             "message": f"List '{list_name}' not found"
         }
-
 
 
 @admin_router.get("/live_search/{list_id}/edit")
@@ -547,5 +537,52 @@ async def add_live_search_record(
         "status": 200,
         "message": f"add {data['uri']} record to {list_id} list"
     }
+
+
+@admin_router.get("/list_menu")
+async def show_list_menu(
+    request: Request,
+    list_id: int,
+    user=Depends(current_user),
+    session: AsyncSession = Depends(get_db_general),
+    required: bool = Depends(RoleChecker(required_permissions={"User", "Administrator", "Superuser"}))
+):
+    group_name = request.session["group"].get("name", "")
+    config_names = [elem[0] for elem in (await get_config_names(session, user, group_name))]
+    group_names = await get_group_names(session, user)
+
+    list_name = (await session.execute(select(LiveSearchList.name).where(LiveSearchList.id == list_id))).scalars().first()
+
+    yandex_list = (await session.execute(select(ListLrSearchSystem).where(and_(ListLrSearchSystem.list_id == list_id, ListLrSearchSystem.search_system == "Yandex")))).scalars().all()
+    google_list = (await session.execute(select(ListLrSearchSystem).where(and_(ListLrSearchSystem.list_id == list_id, ListLrSearchSystem.search_system == "Google")))).scalars().all()
+
+    region_dict = {
+        213: "Москва",
+        225: "Россия",
+        65: "Новосибирск",
+    }
+
+    return templates.TemplateResponse("live_search_list.html",
+                                    {"request": request,
+                                    "user": user,
+                                    "config_names": config_names,
+                                    "group_names": group_names,
+                                    "list_id": list_id,
+                                    "list_name": list_name,
+                                    "yandex_list": yandex_list,
+                                    "google_list": google_list,
+                                    "region_dict": region_dict,
+                                    })
+
+
+@admin_router.post("/list_menu")
+async def add_lr_list(
+    request: Request,
+    data: dict,
+    user=Depends(current_user),
+    session: AsyncSession = Depends(get_db_general),
+    required: bool = Depends(RoleChecker(required_permissions={"User", "Administrator", "Superuser"}))
+):
+    print(data)
 
 

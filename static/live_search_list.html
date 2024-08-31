@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+{% block content %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Региональная таблица</title>
+    <style>
+        .content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            width: 600px;
+            max-width: 100%;
+        }
+        .block {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        h2 {
+            margin-top: 0;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+        }
+        .table th, .table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .add-button {
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .add-button:hover {
+            background-color: #218838;
+        }
+        .remove-button {
+            color: #dc3545;
+            cursor: pointer;
+            text-align: center;
+            padding: 5px;
+        }
+        .remove-button:hover {
+            text-decoration: underline;
+        }
+        .new-entry {
+            display: none;
+            margin-top: 10px;
+            position: relative;
+        }
+        .new-entry input {
+            width: calc(100% - 45px);
+            padding: 8px;
+            margin-right: 10px;
+            position: relative;
+        }
+        .new-entry button {
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .new-entry button:hover {
+            background-color: #218838;
+        }
+        .autocomplete-container {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+        .autocomplete-item {
+            padding: 10px;
+            cursor: pointer;
+        }
+        .autocomplete-item:hover {
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<div class="content">
+    <div class="container">
+        <!-- Яндекс блок -->
+        <div class="block">
+            <h2>Yandex</h2>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Регион</th>
+                        <th>Удалить</th>
+                    </tr>
+                </thead>
+                <tbody id="yandex-table-body">
+                    {% for region in yandex_list %}
+                    <tr> 
+                        <td>{{ region_dict[region.lr] }}</td>
+                        <td>
+                            <span class="remove-button" onclick="removeRegion(this)">🗑️</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <button class="add-button" onclick="toggleNewEntryForm('yandex')">Добавить регион</button>
+            <div class="new-entry" id="yandex-new-entry">
+                <input type="text" id="yandex-region-input" placeholder="Введите регион" oninput="showSuggestions('yandex')">
+                <button onclick="addRegion('yandex')">Добавить</button>
+                <div id="yandex-suggestions" class="autocomplete-container"></div>
+            </div>
+        </div>
+
+        <!-- Google блок -->
+        <div class="block">
+            <h2>Google</h2>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Регион</th>
+                        <th>Удалить</th>
+                    </tr>
+                </thead>
+                <tbody id="google-table-body">
+                    {% for region in google_list %}
+                    <tr>
+                        <td>{{ region_dict[region.lr] }}</td>
+                        <td>
+                            <span class="remove-button" onclick="removeRegion(this)">🗑️</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <button class="add-button" onclick="toggleNewEntryForm('google')">Добавить регион</button>
+            <div class="new-entry" id="google-new-entry">
+                <input type="text" id="google-region-input" placeholder="Введите регион" oninput="showSuggestions('google')">
+                <button onclick="addRegion('google')">Добавить</button>
+                <div id="google-suggestions" class="autocomplete-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const regions = {
+            "Москва": "213",
+            "Россия": "225",
+            "Новосибирск": "65"
+        };
+
+        function showSuggestions(block) {
+            const inputId = block + '-region-input';
+            const suggestionsId = block + '-suggestions';
+            const input = document.getElementById(inputId);
+            const suggestionsContainer = document.getElementById(suggestionsId);
+            const query = input.value.toLowerCase();
+
+            if (query.length === 0) {
+                suggestionsContainer.innerHTML = '';
+                return;
+            }
+
+            const filteredRegions = Object.keys(regions)
+                .filter(region => region.toLowerCase().includes(query))
+                .slice(0, 10);
+
+            suggestionsContainer.innerHTML = '';
+            filteredRegions.forEach(region => {
+                const div = document.createElement('div');
+                div.textContent = region;
+                div.className = 'autocomplete-item';
+                div.onclick = function() {
+                    input.value = region;
+                    suggestionsContainer.innerHTML = '';
+                };
+                suggestionsContainer.appendChild(div);
+            });
+
+            // Позиционирование контейнера с подсказками
+            const rect = input.getBoundingClientRect();
+            suggestionsContainer.style.top = `${rect.height}px`; // Сдвигаем подсказки вниз относительно поля ввода
+        }
+
+        function toggleNewEntryForm(block) {
+            const formId = block + '-new-entry';
+            const form = document.getElementById(formId);
+            form.style.display = form.style.display === 'none' || form.style.display === '' ? 'block' : 'none';
+
+            if (form.style.display === 'block') {
+                const inputId = block + '-region-input';
+                const input = document.getElementById(inputId);
+                input.focus();
+            }
+        }
+
+        function addRegion(block) {
+            const tableBodyId = block + '-table-body';
+            const inputId = block + '-region-input';
+            const regionInput = document.getElementById(inputId);
+            const region = regionInput.value.trim();
+
+            if (region) {
+                const regionCode = getRegionCode(region);
+
+                if (regionCode) {
+                    const url = "{{ url_for('add_lr_list') }}";
+
+                    fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            list_id: '{{ list_id }}',
+                            region_code: regionCode,
+                            search_system: block === 'yandex' ? 'Yandex' : 'Google'
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const tableBody = document.getElementById(tableBodyId);
+                            const newRow = document.createElement('tr');
+
+                            const regionCell = document.createElement('td');
+                            regionCell.textContent = region;
+                            newRow.appendChild(regionCell);
+
+                            const removeCell = document.createElement('td');
+                            const removeButton = document.createElement('span');
+                            removeButton.textContent = '🗑️';
+                            removeButton.className = 'remove-button';
+                            removeButton.onclick = function() {
+                                tableBody.removeChild(newRow);
+                            };
+                            removeCell.appendChild(removeButton);
+                            newRow.appendChild(removeCell);
+
+                            tableBody.appendChild(newRow);
+                            regionInput.value = '';
+                        } else {
+                            alert('Ошибка при добавлении региона');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Ошибка:', error);
+                    });
+                } else {
+                    alert('Неизвестный регион');
+                }
+            }
+
+            const formId = block + '-new-entry';
+            const form = document.getElementById(formId);
+            form.style.display = 'none';
+        }
+
+        function getRegionCode(region) {
+            const regionCodes = {
+                "Москва": 213,
+                "Россия": 225,
+                "Новосибирск": 65
+            };
+            return regionCodes[region] || null;
+        }
+    </script>
+</div>
+{% endblock %}
