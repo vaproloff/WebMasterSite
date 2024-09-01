@@ -175,7 +175,7 @@
                             <span class="remove-button" onclick="removeRegion('{{ region.list_id }}', '{{ region.lr }}', '{{ region.search_system }}')">×</span>
                         </td>
                         <td>
-                            <button class="update-button" onclick="UpdateList('{{ region.list_id }}', '{{ region.lr }}', '{{ region.search_system }}')">Update</button>
+                            <button class="update-button" onclick="UpdateList('{{ region.id }}')">Update</button>
                         </td>
                     </tr>
                     {% endfor %}
@@ -208,7 +208,7 @@
                             <span class="remove-button" onclick="removeRegion('{{ region.list_id }}', '{{ region.lr }}', '{{ region.search_system }}')">×</span>
                         </td>
                         <td>
-                            <button class="update-button" onclick="UpdateList('{{ region.list_id }}', '{{ region.lr }}', '{{ region.search_system }}')">Update</button>
+                            <button class="update-button" onclick="UpdateList('{{ region.id }}')">Update</button>
                         </td>
                     </tr>
                     {% endfor %}
@@ -224,12 +224,6 @@
     </div>
     <div class="loader" style="display: none;"></div>
     <script>
-        const regions = {
-            "Москва": "213",
-            "Россия": "225",
-            "Новосибирск": "65"
-        };
-
         function showSuggestions(block) {
             const inputId = block + '-region-input';
             const suggestionsId = block + '-suggestions';
@@ -237,23 +231,27 @@
             const suggestionsContainer = document.getElementById(suggestionsId);
             const query = input.value.toLowerCase();
 
+            suggestionsContainer.innerHTML = ''; // Очищаем контейнер с подсказками
+
+            let filteredRegions;
+
+            // Если поле ввода пустое, показываем все регионы
             if (query.length === 0) {
-                suggestionsContainer.innerHTML = '';
-                return;
+                filteredRegions = Object.keys(regionCodes);
+            } else {
+                // Фильтруем регионы, если есть введенный текст
+                filteredRegions = Object.keys(regionCodes).filter(region =>
+                    region.toLowerCase().includes(query)
+                );
             }
 
-            const filteredRegions = Object.keys(regions)
-                .filter(region => region.toLowerCase().includes(query))
-                .slice(0, 10);
-
-            suggestionsContainer.innerHTML = '';
-            filteredRegions.forEach(region => {
+            filteredRegions.slice(0, 10).forEach(region => { // Ограничиваем количество подсказок до 10
                 const div = document.createElement('div');
                 div.textContent = region;
                 div.className = 'autocomplete-item';
                 div.onclick = function() {
                     input.value = region;
-                    suggestionsContainer.innerHTML = '';
+                    suggestionsContainer.innerHTML = ''; // Очищаем подсказки после выбора
                 };
                 suggestionsContainer.appendChild(div);
             });
@@ -344,12 +342,19 @@
             }
         }
 
+        let regionCodes = {};
+
+        // Загружаем словарь регионов с бэка
+        fetch("{{ url_for('get_regions') }}")
+            .then(response => response.json())
+            .then(data => {
+                regionCodes = data; // Сохраняем словарь регионов в переменной
+                console.log('Загруженные регионы:', regionCodes); // Проверка, что данные загружены
+            })
+            .catch(error => console.error('Ошибка при загрузке регионов:', error));
+
         function getRegionCode(region) {
-            const regionCodes = {
-                "Москва": 213,
-                "Россия": 225,
-                "Новосибирск": 65
-            };
+            console.log(regionCodes)
             return regionCodes[region] || null;
         }
 
@@ -373,8 +378,8 @@
             }
         }
 
-        function UpdateList(list_id, lr, search_system) {
-    if (list_id) {
+        function UpdateList(list_lr_id) {
+    if (list_lr_id) {
         // Show the loader
         document.querySelector('.loader').style.display = 'block';
 
@@ -383,7 +388,7 @@
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ list_id: list_id, lr: lr, search_system: search_system })
+            body: JSON.stringify({ list_lr_id: list_lr_id })
         })
         .then(response => {
             if (!response.ok) {

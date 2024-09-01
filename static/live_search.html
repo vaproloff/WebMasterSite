@@ -102,7 +102,7 @@
     <div class="row">
         <div class="cell">{{ loop.index }}</div>
         <div class="cell">
-            <a href="{{ url_for('show_list_menu').include_query_params(list_id=name.id, author=name.author, search_system=name.search_system) }}">{{ name.name }}</a>
+            <a href="{{ url_for('show_list_menu').include_query_params(list_id=name.id, author=name.author) }}">{{ name.name }}</a>
         </div>
         <div class="cell">{{ name.main_domain }}</div>
         <div class="cell">

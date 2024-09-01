@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.auth.auth_config import current_user, RoleChecker
 from api.auth.models import User
-from api.config.models import Config, Group, List, ListLrSearchSystem, ListURI, LiveSearchList, LiveSearchListQuery, UserQueryCount
+from api.config.models import Config, Group, List, ListLrSearchSystem, ListURI, LiveSearchList, LiveSearchListQuery, UserQueryCount, YandexLr
 from api.config.utils import get_config_names, get_group_names, get_lists_names, get_live_search_lists_names
 from db.session import get_db_general
 
@@ -563,11 +563,8 @@ async def show_list_menu(
     yandex_list = (await session.execute(select(ListLrSearchSystem).where(and_(ListLrSearchSystem.list_id == list_id, ListLrSearchSystem.search_system == "Yandex")))).scalars().all()
     google_list = (await session.execute(select(ListLrSearchSystem).where(and_(ListLrSearchSystem.list_id == list_id, ListLrSearchSystem.search_system == "Google")))).scalars().all()
 
-    region_dict = {
-        213: "Москва",
-        225: "Россия",
-        65: "Новосибирск",
-    }
+    regions = (await session.execute(select(YandexLr))).scalars().all()
+    region_dict = {region.Geoid: region.Geo for region in regions}
 
     return templates.TemplateResponse("live_search_list.html",
                                     {"request": request,
@@ -633,6 +630,18 @@ async def delete_lr_list(
         "status": 200,
         "message": f"Delete association for {list_id}:\nlr={region_code}\nsearch_system={search_system}"
     }
+
+
+@admin_router.get("list_menu/regions")
+async def get_regions(
+    request: Request,
+    user=Depends(current_user),
+    session: AsyncSession = Depends(get_db_general),
+    required: bool = Depends(RoleChecker(required_permissions={"User", "Administrator", "Superuser"}))
+):
+    regions = (await session.execute(select(YandexLr))).scalars().all()
+    region_dict = {region.Geo: region.Geoid for region in regions}
+    return region_dict
 
 
 

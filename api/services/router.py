@@ -3,7 +3,7 @@ from sqlalchemy import select
 
 from api.auth.auth_config import RoleChecker
 from api.auth.models import User
-from api.config.models import LiveSearchList
+from api.config.models import ListLrSearchSystem, LiveSearchList, YandexLr
 from db.session import get_db_general
 from services.load_all_queries import get_all_data as get_all_data_queries
 
@@ -74,18 +74,20 @@ async def load_merge_script(
 @router.post('/load-live-search')
 async def load_live_search_list(
     request: Request,
-    list: dict,
+    data: dict,
     session: AsyncSession = Depends(get_db_general),
     user: User = Depends(current_user),
     required: bool = Depends(RoleChecker(required_permissions={"Administrator", "Superuser"}))
 ):
-    list_id = int(list["list_id"])
+    list_lr_id = int(data["list_lr_id"])
+    print(list_lr_id)
+    list_lr = (await session.execute(select(ListLrSearchSystem).where(ListLrSearchSystem.id == list_lr_id))).scalars().first()
+
+    list_id, lr, search_system = list_lr.list_id, list_lr.lr, list_lr.search_system
 
     main_domain = (await session.execute(select(LiveSearchList.main_domain).where(LiveSearchList.id == list_id))).scalars().first()
 
-    lr, search_system = list["lr"], list["search_system"]
-
-    status = await live_search_main(list_id, main_domain, lr, search_system, user, session)
+    status = await live_search_main(list_lr_id, list_id, main_domain, lr, search_system, user, session)
 
     if status == 0:
         raise HTTPException(status_code=400, detail="Запросов доступно меньше, чем необходимо")

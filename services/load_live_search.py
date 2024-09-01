@@ -11,6 +11,7 @@ from services.live_search_parser_async_google import run_script_async as run_scr
 from const import date_format
 
 async def main(
+        lr_list_id: int,
         list_id:int, 
         main_domain: str, 
         lr:int, 
@@ -40,6 +41,7 @@ async def main(
                     url=value[0],
                     position=value[1],
                     date=datetime.strptime(datetime.now().strftime(date_format), date_format),
+                    lr_list_id=lr_list_id,
                 ))
 
                 
@@ -50,7 +52,8 @@ async def main(
                     and_(
                         QueryLiveSearchYandex.query_id.in_(approach_query.values()),
                         QueryLiveSearchYandex.date == datetime.strptime(datetime.now().strftime(date_format), date_format
-                        )
+                        ),
+                        QueryLiveSearchYandex.lr_list_id == lr_list_id,
                     )
                 )
             )
@@ -60,15 +63,18 @@ async def main(
             await session.commit()  # Коммит для фиксации изменений в базе данных
         
         elif search_system == "Google":
+            print(approach_query_names)
             query_info = await run_script_async_google(main_domain, lr, approach_query_names)
             query_info_for_db = list()
+            print(query_info)
 
             for key, value in query_info.items():
                 query_info_for_db.append(QueryLiveSearchGoogle(
                     query_id=approach_query[key],
                     url=value[0],
                     position=value[1],
-                    date=datetime.strptime(datetime.now().strftime(date_format), date_format)
+                    date=datetime.strptime(datetime.now().strftime(date_format), date_format),
+                    lr_list_id=lr_list_id,
                 ))
             
             stmt = (
@@ -77,7 +83,8 @@ async def main(
                     and_(
                         QueryLiveSearchGoogle.query_id.in_(approach_query.values()),
                         QueryLiveSearchGoogle.date == datetime.strptime(datetime.now().strftime(date_format), date_format
-                        )
+                        ),
+                        QueryLiveSearchGoogle.lr_list_id == lr_list_id,
                     )
                 )
             )
