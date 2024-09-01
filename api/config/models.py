@@ -94,6 +94,10 @@ class LiveSearchList(Base):
     # Связь с ListLrSearchSystem
     lr_search_systems = relationship("ListLrSearchSystem", back_populates="live_search_list", cascade="all, delete-orphan")
 
+    # Связь с LiveSearchListQuery
+    queries = relationship("LiveSearchListQuery", back_populates="live_search_list", cascade="all, delete-orphan")
+
+
 class ListLrSearchSystem(Base):
     __tablename__ = "list_lr_search_system"
 
@@ -102,49 +106,64 @@ class ListLrSearchSystem(Base):
     lr = Column(Integer, nullable=False)
     search_system = Column(String, nullable=False)
 
-    # Обратная связь с LiveSearchList
+    # Back-reference to LiveSearchList
     live_search_list = relationship("LiveSearchList", back_populates="lr_search_systems")
 
-    # Связь с LiveSearchListQuery
-    queries = relationship("LiveSearchListQuery", back_populates="list_lr_search", cascade="all, delete-orphan")
 
 class LiveSearchListQuery(Base):
-    __tablename__ ="live_search_list_query"
+    __tablename__ = "live_search_list_query"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     query = Column(String, nullable=False)
-    list_lr_search_id = Column(Integer, ForeignKey("list_lr_search_system.id"), nullable=False)
+    list_id = Column(Integer, ForeignKey("live_search_list.id"), nullable=False)
 
-    # Обратная связь с ListLrSearchSystem
-    list_lr_search = relationship("ListLrSearchSystem", back_populates="queries")
+    # Обратная связь с LiveSearchList
+    live_search_list = relationship("LiveSearchList", back_populates="queries")
 
     # Связи с QueryLiveSearchYandex и QueryLiveSearchGoogle
     yandex_results = relationship("QueryLiveSearchYandex", back_populates="live_search_list_query", cascade="all, delete-orphan")
     google_results = relationship("QueryLiveSearchGoogle", back_populates="live_search_list_query", cascade="all, delete-orphan")
 
+
 class QueryLiveSearchYandex(Base):
-    __tablename__ ="query_live_search_yandex"
+    __tablename__ = "query_live_search_yandex"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     query_id = Column(Integer, ForeignKey("live_search_list_query.id"), nullable=False)
     url = Column(String, nullable=False)
     position = Column(Integer, nullable=False)
     date = Column(DateTime, nullable=False)
+    lr_list_id = Column(Integer, ForeignKey("list_lr_search_system.id"), nullable=False)
 
-    # Обратная связь с LiveSearchListQuery
+    # Back-reference to LiveSearchListQuery
     live_search_list_query = relationship("LiveSearchListQuery", back_populates="yandex_results")
 
+    # Relationship to ListLrSearchSystem
+    lr_list = relationship("ListLrSearchSystem")
+
+
 class QueryLiveSearchGoogle(Base):
-    __tablename__ ="query_live_search_google"
+    __tablename__ = "query_live_search_google"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     query_id = Column(Integer, ForeignKey("live_search_list_query.id"), nullable=False)
     url = Column(String, nullable=False)
     position = Column(Integer, nullable=False)
     date = Column(DateTime, nullable=False)
+    lr_list_id = Column(Integer, ForeignKey("list_lr_search_system.id"), nullable=False)
 
-    # Обратная связь с LiveSearchListQuery
+    # Back-reference to LiveSearchListQuery
     live_search_list_query = relationship("LiveSearchListQuery", back_populates="google_results")
 
+    # Relationship to ListLrSearchSystem
+    lr_list = relationship("ListLrSearchSystem")
 
+
+
+class YandexLr(Base):
+    __tablename__ = "yandex_lr"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    Geo = Column(String, nullable=False)
+    Geoid = Column(Integer, nullable=False)
     

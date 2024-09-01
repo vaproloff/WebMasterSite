@@ -79,11 +79,11 @@ async def load_live_search_list(
     user: User = Depends(current_user),
     required: bool = Depends(RoleChecker(required_permissions={"Administrator", "Superuser"}))
 ):
-    list_id = int(list["list"])
+    list_id = int(list["list_id"])
 
-    list_model = (await session.execute(select(LiveSearchList).where(LiveSearchList.id == list_id))).scalars().first()
+    main_domain = (await session.execute(select(LiveSearchList.main_domain).where(LiveSearchList.id == list_id))).scalars().first()
 
-    list_id, main_domain, lr, search_system = list_model.id, list_model.main_domain, list_model.lr, list_model.search_system
+    lr, search_system = list["lr"], list["search_system"]
 
     status = await live_search_main(list_id, main_domain, lr, search_system, user, session)
 

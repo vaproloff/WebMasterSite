@@ -388,7 +388,14 @@ async def add_live_search_list(
 
     try:
         session.add(new_list)
+        await session.flush()
 
+        new_queries = [
+            LiveSearchListQuery(query=query.strip(), list_id=new_list.id)
+            for query in query_list
+        ]
+
+        session.add_all(new_queries)
         await session.commit()
         
     except IntegrityError:
@@ -583,6 +590,49 @@ async def add_lr_list(
     session: AsyncSession = Depends(get_db_general),
     required: bool = Depends(RoleChecker(required_permissions={"User", "Administrator", "Superuser"}))
 ):
+    list_id, region_code, search_system = data.values()
+    list_id, region_code = int(list_id), int(region_code)
+
+    session.add(ListLrSearchSystem(
+        list_id=list_id,
+        lr=region_code,
+        search_system=search_system,
+    ))
+
+    await session.commit()
+
+    return {
+        "status": 200,
+        "message": f"Add association for {list_id}:\nlr={region_code}\nsearch_system={search_system}"
+    }
+
+
+@admin_router.delete("/list_menu")
+async def delete_lr_list(
+    request: Request,
+    data: dict,
+    user=Depends(current_user),
+    session: AsyncSession = Depends(get_db_general),
+    required: bool = Depends(RoleChecker(required_permissions={"User", "Administrator", "Superuser"}))
+):
     print(data)
+    list_id, region_code, search_system = data.values()
+    list_id, region_code = int(list_id), int(region_code)
+
+    res = (await session.execute(select(ListLrSearchSystem).where(
+        and_(
+            ListLrSearchSystem.list_id == list_id, 
+            ListLrSearchSystem.lr == region_code, 
+            ListLrSearchSystem.search_system == search_system)))).scalars().first()
+    
+    await session.delete(res)
+
+    await session.commit()
+
+    return {
+        "status": 200,
+        "message": f"Delete association for {list_id}:\nlr={region_code}\nsearch_system={search_system}"
+    }
+
 
 

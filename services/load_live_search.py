@@ -36,7 +36,7 @@ async def main(
 
             for key, value in query_info.items():
                 query_info_for_db.append(QueryLiveSearchYandex(
-                    query=approach_query[key],
+                    query_id=approach_query[key],
                     url=value[0],
                     position=value[1],
                     date=datetime.strptime(datetime.now().strftime(date_format), date_format),
@@ -48,7 +48,7 @@ async def main(
                 delete(QueryLiveSearchYandex)
                 .where(
                     and_(
-                        QueryLiveSearchYandex.query.in_(approach_query.values()),
+                        QueryLiveSearchYandex.query_id.in_(approach_query.values()),
                         QueryLiveSearchYandex.date == datetime.strptime(datetime.now().strftime(date_format), date_format
                         )
                     )
@@ -65,7 +65,7 @@ async def main(
 
             for key, value in query_info.items():
                 query_info_for_db.append(QueryLiveSearchGoogle(
-                    query=approach_query[key],
+                    query_id=approach_query[key],
                     url=value[0],
                     position=value[1],
                     date=datetime.strptime(datetime.now().strftime(date_format), date_format)
@@ -75,7 +75,7 @@ async def main(
                 delete(QueryLiveSearchGoogle)
                 .where(
                     and_(
-                        QueryLiveSearchGoogle.query.in_(approach_query.values()),
+                        QueryLiveSearchGoogle.query_id.in_(approach_query.values()),
                         QueryLiveSearchGoogle.date == datetime.strptime(datetime.now().strftime(date_format), date_format
                         )
                     )

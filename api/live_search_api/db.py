@@ -38,7 +38,7 @@ async def get_urls_with_pagination(
                 database.position,
                 sub.c.query,
             )
-            .join(sub, database.query == sub.c.id)
+            .join(sub, database.query_id_id == sub.c.id)
             .group_by(
                 database.date,
                 database.url,
@@ -57,12 +57,12 @@ async def get_urls_with_pagination(
         sub_get_id = (
             select(
                 database.id,  # Выбираем только нужные столбцы
-                database.query,
+                database.query_id_id,
                 database.url,
                 database.position,
                 database.date
             )
-            .join(LiveSearchListQuery, database.query == LiveSearchListQuery.id)
+            .join(LiveSearchListQuery, database.query_id_id == LiveSearchListQuery.id)
             .where(
                 and_(
                     database.date == state_date,
@@ -90,7 +90,7 @@ async def get_urls_with_pagination(
                 database.position,
                 sub.c.query,
             )
-            .join(sub, database.query == sub.c.id)
+            .join(sub, database.query_id_id == sub.c.id)
             .group_by(
                 database.date,
                 database.url,
@@ -109,12 +109,12 @@ async def get_urls_with_pagination(
         sub_get_id = (
             select(
                 database.id,  # Выбираем только нужные столбцы
-                database.query,
+                database.query_id_id,
                 database.url,
                 database.position,
                 database.date
             )
-            .join(LiveSearchListQuery, database.query == LiveSearchListQuery.id)
+            .join(LiveSearchListQuery, database.query_id_id == LiveSearchListQuery.id)
             .where(
                 and_(
                     database.date == state_date,
@@ -142,7 +142,7 @@ async def get_urls_with_pagination(
                 database.position,
                 sub.c.query,
             )
-            .join(sub, database.query == sub.c.id)
+            .join(sub, database.query_id_id == sub.c.id)
             .group_by(
                 database.date,
                 database.url,
@@ -198,7 +198,7 @@ async def get_urls_with_pagination_and_like(
                 database.position,
                 sub.c.query,
             )
-            .join(sub, database.query == sub.c.id)
+            .join(sub, database.query_id_id == sub.c.id)
             .group_by(
                 database.date,
                 database.url,
@@ -217,12 +217,12 @@ async def get_urls_with_pagination_and_like(
         sub_get_id = (
             select(
                 database.id,  # Выбираем только нужные столбцы
-                database.query,
+                database.query_id_id,
                 database.url,
                 database.position,
                 database.date
             )
-            .join(LiveSearchListQuery, database.query == LiveSearchListQuery.id)
+            .join(LiveSearchListQuery, database.query_id_id == LiveSearchListQuery.id)
             .where(
                 and_(
                     database.date == state_date,
@@ -250,7 +250,7 @@ async def get_urls_with_pagination_and_like(
                 database.position,
                 sub.c.query,
             )
-            .join(sub, database.query == sub.c.id)
+            .join(sub, database.query_id_id == sub.c.id)
             .group_by(
                 database.date,
                 database.url,
@@ -269,12 +269,12 @@ async def get_urls_with_pagination_and_like(
         sub_get_id = (
             select(
                 database.id,  # Выбираем только нужные столбцы
-                database.query,
+                database.query_id_id,
                 database.url,
                 database.position,
                 database.date
             )
-            .join(LiveSearchListQuery, database.query == LiveSearchListQuery.id)
+            .join(LiveSearchListQuery, database.query_id_id == LiveSearchListQuery.id)
             .where(
                 and_(
                     database.date == state_date,
@@ -302,7 +302,7 @@ async def get_urls_with_pagination_and_like(
                 database.position,
                 sub.c.query,
             )
-            .join(sub, database.query == sub.c.id)
+            .join(sub, database.query_id_id == sub.c.id)
             .group_by(
                 database.date,
                 database.url,
@@ -353,7 +353,7 @@ async def get_urls_with_pagination_sort(
             database.position,
             sub.c.query,
         )
-        .join(sub, database.query == sub.c.id)
+        .join(sub, database.query_id_id == sub.c.id)
         .group_by(
             database.date,
             database.url,
@@ -405,7 +405,7 @@ async def get_urls_with_pagination_sort_and_like(
             database.position,
             sub.c.query,
         )
-        .join(sub, database.query == sub.c.id)
+        .join(sub, database.query_id_id == sub.c.id)
         .group_by(
             database.date,
             database.url,

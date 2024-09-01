@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Региональная таблица</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         .content {
             display: flex;
@@ -52,13 +53,35 @@
             background-color: #218838;
         }
         .remove-button {
-            color: #dc3545;
-            cursor: pointer;
+            width: 20px;  /* Set width and height to create a square */
+            height: 20px;
+            display: inline-block;
+            background-color: #dc3545; /* Red background */
+            color: white;  /* White text for the cross */
             text-align: center;
-            padding: 5px;
+            line-height: 20px;  /* Align the text vertically */
+            border-radius: 3px;  /* Slight rounding for a softer look */
+            cursor: pointer;
+            font-weight: bold;  /* Make the cross bold */
+            font-size: 16px;  /* Adjust font size */
         }
+
         .remove-button:hover {
-            text-decoration: underline;
+            background-color: #c82333;  /* Darker red on hover */
+            text-decoration: none;  /* Remove underline if any */
+        }
+        .update-button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+        .update-button:hover {
+            background-color: #0056b3;
         }
         .new-entry {
             display: none;
@@ -102,10 +125,37 @@
         .autocomplete-item:hover {
             background-color: #f0f0f0;
         }
+        .list-name {
+            margin-bottom: 20px;
+            font-size: 36px;  /* Увеличиваем размер шрифта */
+            font-weight: bold;
+            text-align: center;
+            color: #333;  /* Добавляем цвет для улучшения контраста */
+        }
+        .loader {
+        position: fixed;
+        z-index: 9999;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        border: 4px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 4px solid #3498db;
+        width: 50px;
+        height: 50px;
+        animation: spin 2s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <div class="content">
     <div class="container">
+        <!-- Название списка -->
+        <div class="list-name">{{ list_name }}</div>
+
         <!-- Яндекс блок -->
         <div class="block">
             <h2>Yandex</h2>
@@ -114,6 +164,7 @@
                     <tr>
                         <th>Регион</th>
                         <th>Удалить</th>
+                        <th>Обновить</th>
                     </tr>
                 </thead>
                 <tbody id="yandex-table-body">
@@ -121,7 +172,10 @@
                     <tr> 
                         <td>{{ region_dict[region.lr] }}</td>
                         <td>
-                            <span class="remove-button" onclick="removeRegion(this)">🗑️</span>
+                            <span class="remove-button" onclick="removeRegion('{{ region.list_id }}', '{{ region.lr }}', '{{ region.search_system }}')">×</span>
+                        </td>
+                        <td>
+                            <button class="update-button" onclick="UpdateList('{{ region.list_id }}', '{{ region.lr }}', '{{ region.search_system }}')">Update</button>
                         </td>
                     </tr>
                     {% endfor %}
@@ -143,6 +197,7 @@
                     <tr>
                         <th>Регион</th>
                         <th>Удалить</th>
+                        <th>Обновить</th>
                     </tr>
                 </thead>
                 <tbody id="google-table-body">
@@ -150,7 +205,10 @@
                     <tr>
                         <td>{{ region_dict[region.lr] }}</td>
                         <td>
-                            <span class="remove-button" onclick="removeRegion(this)">🗑️</span>
+                            <span class="remove-button" onclick="removeRegion('{{ region.list_id }}', '{{ region.lr }}', '{{ region.search_system }}')">×</span>
+                        </td>
+                        <td>
+                            <button class="update-button" onclick="UpdateList('{{ region.list_id }}', '{{ region.lr }}', '{{ region.search_system }}')">Update</button>
                         </td>
                     </tr>
                     {% endfor %}
@@ -164,7 +222,7 @@
             </div>
         </div>
     </div>
-
+    <div class="loader" style="display: none;"></div>
     <script>
         const regions = {
             "Москва": "213",
@@ -242,7 +300,7 @@
                     })
                     .then(response => response.json())
                     .then(data => {
-                        if (data.success) {
+                        if (data.status === 200) { // Изменено на проверку data.status
                             const tableBody = document.getElementById(tableBodyId);
                             const newRow = document.createElement('tr');
 
@@ -252,7 +310,7 @@
 
                             const removeCell = document.createElement('td');
                             const removeButton = document.createElement('span');
-                            removeButton.textContent = '🗑️';
+                            removeButton.textContent = '×';
                             removeButton.className = 'remove-button';
                             removeButton.onclick = function() {
                                 tableBody.removeChild(newRow);
@@ -260,10 +318,21 @@
                             removeCell.appendChild(removeButton);
                             newRow.appendChild(removeCell);
 
+                            const updateCell = document.createElement('td');
+                            const updateButton = document.createElement('button');
+                            updateButton.textContent = 'Update';
+                            updateButton.className = 'update-button';
+                            updateButton.onclick = function() {
+                                UpdateList('{{ list_id }}', regionCode, block === 'yandex' ? 'Yandex' : 'Google');
+                            };
+                            updateCell.appendChild(updateButton);
+                            newRow.appendChild(updateCell);
+
                             tableBody.appendChild(newRow);
-                            regionInput.value = '';
+                            regionInput.value = ''; // Очищаем поле ввода
+                            window.location.reload();
                         } else {
-                            alert('Ошибка при добавлении региона');
+                            alert('Ошибка при добавлении региона: ' + data.message); // Выводим сообщение об ошибке
                         }
                     })
                     .catch(error => {
@@ -273,10 +342,6 @@
                     alert('Неизвестный регион');
                 }
             }
-
-            const formId = block + '-new-entry';
-            const form = document.getElementById(formId);
-            form.style.display = 'none';
         }
 
         function getRegionCode(region) {
@@ -287,6 +352,64 @@
             };
             return regionCodes[region] || null;
         }
+
+        async function removeRegion(list_id, lr, searchSystem) {
+            var url = "{{ url_for('delete_lr_list') }}"
+            if (confirm('Вы уверены, что хотите удалить этот регион?')) {
+                const response = await fetch(url, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ list_id: list_id, lr: lr, search_system: searchSystem })
+                });
+
+                if (response.ok) {
+                    // Remove row from table
+                    window.location.reload()
+                } else {
+                    alert('Ошибка при удалении записи.');
+                }
+            }
+        }
+
+        function UpdateList(list_id, lr, search_system) {
+    if (list_id) {
+        // Show the loader
+        document.querySelector('.loader').style.display = 'block';
+
+        fetch('{{ url_for('load_live_search_list') }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ list_id: list_id, lr: lr, search_system: search_system })
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => Promise.reject(err));
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('List load:', data);
+            // Hide the loader
+            document.querySelector('.loader').style.display = 'none';
+            // Reload the page
+            window.location.reload();
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+            // Hide the loader
+            document.querySelector('.loader').style.display = 'none';
+            alert(`Error: ${error.error || 'Unable to load list.'}`);
+        });
+        } else {
+            alert('Error');
+        }
+    }
+
     </script>
+    
 </div>
 {% endblock %}
