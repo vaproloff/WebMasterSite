@@ -170,7 +170,11 @@
                 <tbody id="yandex-table-body">
                     {% for region in yandex_list %}
                     <tr> 
-                        <td>{{ region_dict[region.lr] }}</td>
+                        <td>
+                        <a href="{{ url_for('get_live_search').include_query_params(list_id=region.list_id, search_system=region.search_system, lr_id=region.id) }}">
+                            {{ region_dict[region.lr] }}
+                        </td>
+                        </a>
                         <td>
                             <span class="remove-button" onclick="removeRegion('{{ region.list_id }}', '{{ region.lr }}', '{{ region.search_system }}')">×</span>
                         </td>
@@ -203,7 +207,10 @@
                 <tbody id="google-table-body">
                     {% for region in google_list %}
                     <tr>
-                        <td>{{ region_dict[region.lr] }}</td>
+                        <td>
+                        <a href="{{ url_for('get_live_search').include_query_params(list_id=region.list_id, search_system=region.search_system, lr_id=region.id) }}">
+                            {{ region_dict[region.lr] }}
+                        </td>
                         <td>
                             <span class="remove-button" onclick="removeRegion('{{ region.list_id }}', '{{ region.lr }}', '{{ region.search_system }}')">×</span>
                         </td>

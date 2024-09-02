@@ -109,6 +109,10 @@ class ListLrSearchSystem(Base):
     # Back-reference to LiveSearchList
     live_search_list = relationship("LiveSearchList", back_populates="lr_search_systems")
 
+    # Relationships to QueryLiveSearchYandex and QueryLiveSearchGoogle with cascade delete
+    yandex_results = relationship("QueryLiveSearchYandex", back_populates="lr_list", cascade="all, delete-orphan")
+    google_results = relationship("QueryLiveSearchGoogle", back_populates="lr_list", cascade="all, delete-orphan")
+
 
 class LiveSearchListQuery(Base):
     __tablename__ = "live_search_list_query"
@@ -133,13 +137,13 @@ class QueryLiveSearchYandex(Base):
     url = Column(String, nullable=False)
     position = Column(Integer, nullable=False)
     date = Column(DateTime, nullable=False)
-    lr_list_id = Column(Integer, ForeignKey("list_lr_search_system.id"), nullable=False)
+    lr_list_id = Column(Integer, ForeignKey("list_lr_search_system.id", ondelete="CASCADE"), nullable=False)
 
     # Back-reference to LiveSearchListQuery
     live_search_list_query = relationship("LiveSearchListQuery", back_populates="yandex_results")
 
-    # Relationship to ListLrSearchSystem
-    lr_list = relationship("ListLrSearchSystem")
+    # Relationship to ListLrSearchSystem with back-population
+    lr_list = relationship("ListLrSearchSystem", back_populates="yandex_results")
 
 
 class QueryLiveSearchGoogle(Base):
@@ -150,13 +154,13 @@ class QueryLiveSearchGoogle(Base):
     url = Column(String, nullable=False)
     position = Column(Integer, nullable=False)
     date = Column(DateTime, nullable=False)
-    lr_list_id = Column(Integer, ForeignKey("list_lr_search_system.id"), nullable=False)
+    lr_list_id = Column(Integer, ForeignKey("list_lr_search_system.id", ondelete="CASCADE"), nullable=False)
 
     # Back-reference to LiveSearchListQuery
     live_search_list_query = relationship("LiveSearchListQuery", back_populates="google_results")
 
-    # Relationship to ListLrSearchSystem
-    lr_list = relationship("ListLrSearchSystem")
+    # Relationship to ListLrSearchSystem with back-population
+    lr_list = relationship("ListLrSearchSystem", back_populates="google_results")
 
 
 

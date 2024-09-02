@@ -27,8 +27,8 @@ router = APIRouter()
 async def get_live_search(
     request: Request,
     list_id: int = Query(None),
-    author: int = Query(None),
     search_system: str = Query(None),
+    lr_id: int = Query(None),
     user: User = Depends(current_user),
     session: AsyncSession = Depends(get_db_general)
 ):  
@@ -46,9 +46,9 @@ async def get_live_search(
                                        "config_names": config_names,
                                        "group_names": group_names,
                                        "list_id": list_id,
-                                       "author": author,
                                        "query_count": query_count,
                                        "search_system": search_system,
+                                       "lr_id": lr_id,
                                         }
                                        )
 
@@ -60,10 +60,11 @@ async def get_live_search(
     user: User = Depends(current_user),
     session: AsyncSession = Depends(get_db_general)
     ):
-
+    print(data_request)
     start_date = datetime.strptime(data_request["start_date"], date_format_2)
     end_date = datetime.strptime(data_request["end_date"], date_format_2)
     list_id = int(data_request["list_id"])
+    lr_list_id = int(data_request["lr_id"])
     search_system = data_request["search_system"]
     state_date = None
     if data_request["button_date"]:
@@ -78,6 +79,7 @@ async def get_live_search(
                 end_date,
                 data_request["sort_desc"],
                 list_id,
+                lr_list_id,
                 session,
                 )
         else:
@@ -89,6 +91,7 @@ async def get_live_search(
                 data_request["search_text"],
                 data_request["sort_desc"],
                 list_id,
+                lr_list_id,
                 session
                 )
     else:
@@ -103,6 +106,7 @@ async def get_live_search(
                 data_request["metric_type"],
                 data_request["state_type"],
                 list_id,
+                lr_list_id,
                 search_system,
                 session,
                 )
@@ -118,6 +122,8 @@ async def get_live_search(
                 data_request["metric_type"],
                 data_request["state_type"],
                 list_id,
+                lr_list_id,
+                search_system,
                 session,
                 )
     try:

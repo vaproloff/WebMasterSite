@@ -12,7 +12,7 @@
 <body>
     <div class="button-container">
         <a href="{{ url_for('show_profile', username=user.username) }}" class="back-to-menu">Back to profile</a>
-        <input type="button" value="Update Data Live Search" onclick="sendRequest('{{ url_for('load_live_search_list') }}', '{{ list_id }}')">
+        <input type="button" value="Update Data Live Search" onclick="sendRequest('{{ url_for('load_live_search_list') }}', '{{ lr_id }}')">
         <span>Запросов осталось: {{ query_count }}</span>
         <button onclick="updateQueryCount()">Обновить</button>
     </div>
@@ -303,8 +303,9 @@
             metric_type: metric_type,
             state_type: state_type,
             list_id: '{{ list_id }}',
-            author: '{{ author }}',
             search_system: '{{ search_system }}',
+            lr_id: '{{ lr_id }}'
+            
         };
 
         fetch(url, {
@@ -544,8 +545,8 @@
             metric_type: metric_type,
             state_type: state_type,
             list_id: '{{ list_id }}',
-            author: '{{ author }}',
             search_system: '{{ search_system }}',
+            lr_id: '{{ lr_id }}',
         };
 
         fetch(url, {
@@ -808,8 +809,8 @@
             metric_type: metric_type,
             state_type: state_type,
             list_id: '{{ list_id }}',
-            author: '{{ author }}',
             search_system: '{{ search_system }}',
+            lr_id: '{{ lr_id }}',
         };
 
         fetch(url, {
@@ -1067,8 +1068,8 @@
             metric_type: metric_type,
             state_type: state_type,
             list_id: '{{ list_id }}',
-            author: '{{ author }}',
             search_system: '{{ search_system }}',
+            lr_id: '{{ lr_id }}',
         };
 
         fetch(url, {
@@ -1213,16 +1214,16 @@ function generateCsv(url_f) {
     });
 }
 
-function sendRequest(url, list) {
+function sendRequest(url, lr_id) {
     $('.loader').show();  // Показываем загрузчик
 
-    if (list) {
+    if (lr_id) {
         fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ list: list })
+            body: JSON.stringify({ list_lr_id: lr_id })
         })
         .then(response => {
             if (!response.ok) {
