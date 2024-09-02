@@ -56,4 +56,4 @@ async def get_last_date(async_session: Callable, metric_type):
     async with async_session() as s:
         res = (await s.execute(select(func.max(metric_type.date)))).scalars().first()
     
-    return res.strftime(date_format_2)
+    return res.strftime(date_format_2) if res else "1900-01-01"

@@ -36,6 +36,7 @@ async def add_data(data, last_update_date, async_session, mx_date=None):
         for el in query['statistics']:
             if date != el['date']:
                 date = datetime.strptime(date, date_format)
+                print(date)
                 if mx_date:
                     mx_date[0] = max(mx_date[0], date)
                 if date > last_update_date:
@@ -122,13 +123,13 @@ async def get_all_data(request_session):
 
     data = response.json()
     count = data["count"]
-    print(count)
     last_update_date = await get_last_update_date(async_session, Metrics)
     print("last update date:", last_update_date)
     if not last_update_date:
         last_update_date = datetime.strptime("1900-01-01", date_format)
     mx_date = [datetime.strptime("1900-01-01", date_format)]
     await add_data(data, last_update_date, async_session, mx_date)
+    print(mx_date, last_update_date)
     if mx_date[0] <= last_update_date:
         return {"status": 400,
                 "detail": "Data is not up-to-date. Please refresh data before executing the script."
