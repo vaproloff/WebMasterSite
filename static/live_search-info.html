@@ -12,7 +12,29 @@
 <body>
     <div class="button-container">
         <a href="{{ url_for('show_profile', username=user.username) }}" class="back-to-menu">Back to profile</a>
+
+        <!-- New section for displaying current system and region -->
+        <div class="current-info">
+            <p style="font-size: 1.5em; font-weight: bold;">Текущая Система: {{ search_system }}</p>
+            <p style="font-size: 1.5em; font-weight: bold;">Текущий регион: {{ region_dict[current_region] }}</p>
+        </div>
+
         <input type="button" value="Update Data Live Search" onclick="sendRequest('{{ url_for('load_live_search_list') }}', '{{ lr_id }}')">
+
+        <select id="searchEngineSelect" onchange="redirectToEngine()">
+            <option value="">Select Search Engine</option>
+            <option value="{{ url_for('get_live_search').include_query_params(list_id=list_id, search_system='Yandex', lr_id=-1) }}">Yandex</option>
+            <option value="{{ url_for('get_live_search').include_query_params(list_id=list_id, search_system='Google', lr_id=-1) }}">Google</option>
+        </select>
+
+        <!-- Dropdown for selecting region -->
+        <select id="regionSelect" onchange="updateRegion()">
+            <option value="">Select Region</option>
+            {% for region in region_list %}
+                <option value="{{ url_for('get_live_search').include_query_params(list_id=list_id, search_system=search_system, lr_id=region.id) }}">{{ region_dict[region.lr] }}</option>
+            {% endfor %}
+        </select>
+
         <span>Запросов осталось: {{ query_count }}</span>
         <button onclick="updateQueryCount()">Обновить</button>
     </div>
@@ -56,6 +78,100 @@
 
 
 <script>
+const initialSearchSystem = "{{ search_system }}";
+    const initialRegionId = "{{ lr_id }}";
+
+    // Default values for search engine and region
+    const defaultSearchEngineIndex = 0; // Adjust based on your options
+    const defaultRegionId = ''; // Adjust based on your default region ID
+
+    function redirectToEngine() {
+        var selectElement = document.getElementById('searchEngineSelect');
+        var selectedUrl = selectElement.value;
+        localStorage.setItem('selectedSearchEngine', selectElement.selectedIndex); // Save the selected index to localStorage
+
+        if (selectedUrl) {
+            window.location.href = selectedUrl;
+        }
+    }
+
+    // Function to restore the selected search engine from localStorage
+    function restoreSelectedSearchEngine() {
+        var selectElement = document.getElementById('searchEngineSelect');
+        var savedIndex = localStorage.getItem('selectedSearchEngine');
+
+        if (savedIndex !== null) {
+            selectElement.selectedIndex = savedIndex;
+        } else if (initialSearchSystem) {
+            // Set to initial value from Jinja if available
+            var options = selectElement.options;
+            for (var i = 0; i < options.length; i++) {
+                if (options[i].text === initialSearchSystem) {
+                    selectElement.selectedIndex = i;
+                    break;
+                }
+            }
+        } else {
+            // If no saved index and no initial value, set to default
+            selectElement.selectedIndex = defaultSearchEngineIndex;
+        }
+    }
+
+    function updateRegion() {
+        var selectElement = document.getElementById('regionSelect');
+        var selectedUrl = selectElement.value;
+        localStorage.setItem('selectedRegion', selectElement.value); // Save the selected region URL to localStorage
+
+        if (selectedUrl) {
+            window.location.href = selectedUrl;
+        }
+    }
+
+    // Function to restore the selected region from localStorage
+    function restoreSelectedRegion() {
+        var selectElement = document.getElementById('regionSelect');
+        var savedRegion = localStorage.getItem('selectedRegion');
+
+        if (savedRegion !== null) {
+            selectElement.value = savedRegion;
+        } else if (initialRegionId) {
+            // Set to initial value from Jinja if available
+            selectElement.value = initialRegionId;
+        } else {
+            // If no saved region and no initial value, set to default
+            selectElement.value = defaultRegionId;
+        }
+    }
+
+    // Function to initialize localStorage values
+    function initializeLocalStorage() {
+        var savedSearchEngine = localStorage.getItem('selectedSearchEngine');
+        var savedRegion = localStorage.getItem('selectedRegion');
+
+        if (savedSearchEngine === null) {
+            // Set default value if not present
+            localStorage.setItem('selectedSearchEngine', defaultSearchEngineIndex);
+        }
+
+        if (savedRegion === null) {
+            // Set default value if not present
+            localStorage.setItem('selectedRegion', defaultRegionId);
+        }
+    }
+
+    // Call the initialization and restore functions when the page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeLocalStorage();
+        restoreSelectedSearchEngine();
+        restoreSelectedRegion();
+    });
+
+    // Clear localStorage on page unload (including refresh)
+    window.addEventListener('beforeunload', function() {
+        localStorage.removeItem('selectedSearchEngine');
+        localStorage.removeItem('selectedRegion');
+    });
+
     var state = null;
     var global_date = null;
     var metric_type = null;

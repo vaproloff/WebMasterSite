@@ -4,9 +4,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from fastapi.templating import Jinja2Templates
-from sqlalchemy import select
+from sqlalchemy import and_, select
 from api.auth.models import User
-from api.config.models import UserQueryCount
+from api.config.models import ListLrSearchSystem, UserQueryCount, YandexLr
 from api.config.utils import get_config_names, get_group_names
 from api.live_search_api.db import get_urls_with_pagination, get_urls_with_pagination_and_like, get_urls_with_pagination_sort, get_urls_with_pagination_sort_and_like
 from db.session import get_db_general
@@ -32,6 +32,12 @@ async def get_live_search(
     user: User = Depends(current_user),
     session: AsyncSession = Depends(get_db_general)
 ):  
+    if lr_id == -1:
+        lr_id = (await session.execute(select(ListLrSearchSystem.id).where(and_(ListLrSearchSystem.list_id == list_id, ListLrSearchSystem.search_system == search_system)))).scalars().first()
+        if lr_id is None:
+            lr_id = -1
+    print(lr_id)
+
     group_name = request.session["group"].get("name", "")
     
     config_names = [elem[0] for elem in (await get_config_names(session, user, group_name))]
@@ -39,6 +45,15 @@ async def get_live_search(
     group_names = await get_group_names(session, user)
 
     query_count = (await session.execute(select(UserQueryCount.query_count).where(UserQueryCount.user_id == user.id))).scalars().first()
+
+    region_list = (await session.execute(select(ListLrSearchSystem).where(and_(ListLrSearchSystem.list_id == list_id, ListLrSearchSystem.search_system == search_system)))).scalars().all()
+
+    regions = (await session.execute(select(YandexLr))).scalars().all()
+    region_dict = {region.Geoid: region.Geo for region in regions}
+
+    current_region = (await session.execute(select(ListLrSearchSystem.lr).where(ListLrSearchSystem.id == lr_id))).scalars().first()
+
+    print(current_region)
 
     return templates.TemplateResponse("live_search-info.html",
                                       {"request": request,
@@ -49,6 +64,9 @@ async def get_live_search(
                                        "query_count": query_count,
                                        "search_system": search_system,
                                        "lr_id": lr_id,
+                                       "region_list": region_list,
+                                       "region_dict": region_dict,
+                                       "current_region": current_region,
                                         }
                                        )
 
