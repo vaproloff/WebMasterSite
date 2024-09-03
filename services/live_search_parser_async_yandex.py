@@ -1,3 +1,4 @@
+import re
 import aiohttp
 import aiofiles
 import asyncio
@@ -5,6 +6,8 @@ import xml.etree.ElementTree as ET
 import urllib.parse
 from datetime import datetime
 import sys
+
+import idna
 
 from config import xml_config
 
@@ -37,7 +40,17 @@ async def process_query(query, MAIN_DOMAIN, lr, query_info):
                     domain = root.find(f".//group[{i}]/doc/domain").text
                     url = root.find(f".//group[{i}]/doc/url")
                     url = url.text if url is not None else "URL не найден"
-                    if domain.lower() == MAIN_DOMAIN:
+                    parsed_url = urllib.parse.urlparse(url)
+                    # Проверяем и декодируем домен
+                    try:
+                        decoded_netloc = idna.decode(parsed_url.netloc)
+                    except idna.IDNAError:
+                        decoded_netloc = parsed_url.netloc  # Если ошибка, оставляем как есть
+
+                    # Собираем обратно URL
+                    decoded_url = urllib.parse.urlunparse((parsed_url.scheme, decoded_netloc, parsed_url.path, parsed_url.params, parsed_url.query, parsed_url.fragment))
+                    pattern = fr'{re.escape(MAIN_DOMAIN)}'
+                    if re.search(pattern, decoded_url):
                         if query not in query_info:
                             query_info[query] = [url, i]
                             print("task complete")
