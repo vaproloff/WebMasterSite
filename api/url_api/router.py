@@ -41,9 +41,17 @@ router = APIRouter()
 
 
 @router.post("/generate_excel_url")
-async def generate_excel_url(request: Request, data_request: dict, user: User = Depends(current_user)):
+async def generate_excel_url(
+    request: Request, 
+    data_request: dict, 
+    user: User = Depends(current_user),
+    general_session: AsyncSession = Depends(get_db_general),
+    ):
     DATABASE_NAME = request.session['config'].get('database_name', "")
     group = request.session['group'].get('name', '')
+    state_date = None
+    if data_request["button_date"]:
+        state_date = datetime.strptime(data_request["button_date"], date_format_2)
     async_session = await connect_db(DATABASE_NAME)
     wb = Workbook()
     ws = wb.active
@@ -73,24 +81,55 @@ async def generate_excel_url(request: Request, data_request: dict, user: User = 
         start_el = (start * 50)
         if data_request["sort_result"]:
             if data_request["search_text"] == "":
-                urls = await _get_urls_with_pagination_sort(start_el, data_request["length"],
-                                                            start_date, end_date,
-                                                            data_request["sort_desc"], async_session)
+                urls = await _get_urls_with_pagination_sort(
+                    start_el, 
+                    data_request["length"], 
+                    start_date,
+                    end_date, 
+                    data_request["sort_desc"],
+                    data_request["list_name"],
+                    async_session,
+                    general_session,)
             else:
-                urls = await _get_urls_with_pagination_and_like_sort(start_el, data_request["length"],
-                                                                     start_date, end_date,
-                                                                     data_request["search_text"],
-                                                                     data_request["sort_desc"],
-                                                                     async_session)
+                urls = await _get_urls_with_pagination_and_like_sort(
+                    start_el, 
+                    data_request["length"],
+                    start_date, 
+                    end_date,
+                    data_request["search_text"],
+                    data_request["sort_desc"],
+                    data_request["list_name"],
+                    async_session,
+                    general_session,)
         else:
             if data_request["search_text"] == "":
-                urls = await _get_urls_with_pagination(start_el, data_request["length"],
-                                                       start_date, end_date, async_session)
+                urls = await _get_urls_with_pagination(
+                    start_el, 
+                    data_request["length"], 
+                    start_date,
+                    end_date, 
+                    data_request["button_state"], 
+                    state_date,
+                    data_request["metric_type"],
+                    data_request["state_type"],
+                    data_request["list_name"],
+                    async_session,
+                    general_session,
+                    )
             else:
-                urls = await _get_urls_with_pagination_and_like(start_el, data_request["length"],
-                                                                start_date, end_date,
-                                                                data_request["search_text"],
-                                                                async_session)
+                urls = await _get_urls_with_pagination_and_like(
+                    start_el, 
+                    data_request["length"],
+                    start_date, 
+                    end_date, 
+                    data_request["search_text"],
+                    data_request["button_state"], 
+                    state_date,
+                    data_request["metric_type"],
+                    data_request["state_type"],
+                    data_request["list_name"],
+                    async_session,
+                    general_session,)
         start += 1
         try:
             if urls:
@@ -134,11 +173,19 @@ async def generate_excel_url(request: Request, data_request: dict, user: User = 
 
 
 @router.post("/generate_csv_urls")
-async def generate_csv_url(request: Request, data_request: dict, user: User = Depends(current_user)):
+async def generate_csv_url(
+    request: Request, 
+    data_request: dict, 
+    user: User = Depends(current_user),
+    general_session: AsyncSession = Depends(get_db_general),
+    ):
     DATABASE_NAME = request.session['config'].get('database_name', "")
     group = request.session['group'].get('name', '')
     async_session = await connect_db(DATABASE_NAME)
     ws = []
+    state_date = None
+    if data_request["button_date"]:
+        state_date = datetime.strptime(data_request["button_date"], date_format_2)
     start_date = datetime.strptime(data_request["start_date"], date_format_2)
     end_date = datetime.strptime(data_request["end_date"], date_format_2)
     main_header = []
@@ -162,27 +209,58 @@ async def generate_csv_url(request: Request, data_request: dict, user: User = De
     main_header.append("Result")
     main_header = main_header[::-1]
     while True:
-        start_el = (start * 50) + 1
+        start_el = (start * 50)
         if data_request["sort_result"]:
             if data_request["search_text"] == "":
-                urls = await _get_urls_with_pagination_sort(start_el, data_request["length"],
-                                                            start_date, end_date,
-                                                            data_request["sort_desc"], async_session)
+                urls = await _get_urls_with_pagination_sort(
+                    start_el, 
+                    data_request["length"], 
+                    start_date,
+                    end_date, 
+                    data_request["sort_desc"],
+                    data_request["list_name"],
+                    async_session,
+                    general_session,)
             else:
-                urls = await _get_urls_with_pagination_and_like_sort(start_el, data_request["length"],
-                                                                     start_date, end_date,
-                                                                     data_request["search_text"],
-                                                                     data_request["sort_desc"],
-                                                                     async_session)
+                urls = await _get_urls_with_pagination_and_like_sort(
+                    start_el, 
+                    data_request["length"],
+                    start_date, 
+                    end_date,
+                    data_request["search_text"],
+                    data_request["sort_desc"],
+                    data_request["list_name"],
+                    async_session,
+                    general_session,)
         else:
             if data_request["search_text"] == "":
-                urls = await _get_urls_with_pagination(start_el, data_request["length"],
-                                                       start_date, end_date, async_session)
+                urls = await _get_urls_with_pagination(
+                    start_el, 
+                    data_request["length"], 
+                    start_date,
+                    end_date, 
+                    data_request["button_state"], 
+                    state_date,
+                    data_request["metric_type"],
+                    data_request["state_type"],
+                    data_request["list_name"],
+                    async_session,
+                    general_session,
+                    )
             else:
-                urls = await _get_urls_with_pagination_and_like(start_el, data_request["length"],
-                                                                start_date, end_date,
-                                                                data_request["search_text"],
-                                                                async_session)
+                urls = await _get_urls_with_pagination_and_like(
+                    start_el, 
+                    data_request["length"],
+                    start_date, 
+                    end_date, 
+                    data_request["search_text"],
+                    data_request["button_state"], 
+                    state_date,
+                    data_request["metric_type"],
+                    data_request["state_type"],
+                    data_request["list_name"],
+                    async_session,
+                    general_session,)
         start += 1
         try:
             if urls:

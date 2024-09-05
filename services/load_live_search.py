@@ -39,7 +39,7 @@ async def main(
                 if query in query_info:
                     key, value = query, query_info[query]
                 else:
-                    key, value = query, ("", 0)
+                    key, value = query, ("None", 0)
                 query_info_for_db.append(QueryLiveSearchYandex(
                     query_id=approach_query[key],
                     url=value[0],

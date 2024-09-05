@@ -187,12 +187,17 @@ async def get_live_search(
                 color = "#B4D7ED"
                 color_text = "blue"
             pos = stat[2]
-            res[stat[0].strftime(
-                date_format_2)] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: {color}; text-align: center; display: flex; align-items: center; justify-content: center;'>
-                                    <a href='{stat[1]}' style='font-size: 18px; text-decoration: none; color: inherit;'>
-                                        {stat[2]}
-                                    </a>
-                                </div>"""
+            if stat[2] > 0:
+                res[stat[0].strftime(
+                    date_format_2)] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: {color}; text-align: center; display: flex; align-items: center; justify-content: center;'>
+                                        <a href='{stat[1]}' style='font-size: 18px; text-decoration: none; color: inherit;'>
+                                            {stat[2]}
+                                        </a>
+                                    </div>"""
+            else:   
+                res[stat[0].strftime(
+                date_format_2)] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #FFFF99; text-align: center; display: flex; align-items: center; justify-content: center;'>
+                                        <span style='font-size: 18px'>-</span></div>"""
         data.append(res)
 
     json_data = jsonable_encoder(data)
