@@ -104,7 +104,7 @@ class UrlDAL:
         elif state == "decrease":
             if state_type == "date":
 
-                sub = sub_query.where(Metrics.date == state_date).order_by(desc(pointer)).offset(page).limit(per_page).subquery()
+                sub = sub_query_result.where(Metrics.date == state_date).order_by(desc(pointer)).offset(page).limit(per_page).subquery()
 
                 query = select(Metrics.date, Metrics.position, Metrics.clicks, Metrics.impression,
                             Metrics.ctr, sub).join(sub,
@@ -141,7 +141,7 @@ class UrlDAL:
                     )
             if state_type == "date":
 
-                sub = sub_query.where(Metrics.date == state_date).order_by(asc(pointer)).offset(page).limit(per_page).subquery()
+                sub = sub_query_result.where(Metrics.date == state_date).order_by(asc(pointer)).offset(page).limit(per_page).subquery()
 
                 query = select(Metrics.date, Metrics.position, Metrics.clicks, Metrics.impression,
                             Metrics.ctr, sub).join(sub,
@@ -172,7 +172,6 @@ class UrlDAL:
 
         res = await self.db_session.execute(query)
         product_row = res.fetchall()
-        print(len(product_row))
         if len(product_row) != 0:
             return product_row
 

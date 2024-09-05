@@ -447,12 +447,10 @@ async def generate_excel_query(
                             reverse=data_request["button_state"] == "decrease"
                         )              
         except TypeError as e:
-            return JSONResponse({"data": []})
+            break
 
         if len(grouped_data) == 0:
-            return JSONResponse({"data": []})
-        
-        print(grouped_data)
+            break
         for el in grouped_data:
             info = {}
             res = []
@@ -479,10 +477,10 @@ async def generate_excel_query(
         output = io.BytesIO()
         wb.save(output)
         output.seek(0)
-        
-        return StreamingResponse(io.BytesIO(output.getvalue()),
-                                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                                headers={"Content-Disposition": "attachment;filename='data.xlsx'"})
+    
+    return StreamingResponse(io.BytesIO(output.getvalue()),
+                            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            headers={"Content-Disposition": "attachment;filename='data.xlsx'"})
 
 
 @router.post("/generate_csv_queries/")
@@ -649,38 +647,38 @@ async def generate_csv_query(
                                 reverse=data_request["button_state"] == "decrease"
                             )              
             except TypeError as e:
-                return JSONResponse({"data": []})
+                break
 
             if len(grouped_data) == 0:
-                return JSONResponse({"data": []})
-                for el in grouped_data:
-                    res = []
-                    info = {}
-                    total_clicks, position, impressions, ctr, count = 0, 0, 0, 0, 0
-                    for k, stat in enumerate(el[1]):
-                        info[stat[0].strftime(date_format_out)] = [stat[1], stat[2], stat[3], stat[4]]
-                        total_clicks += stat[2]
-                        position += stat[1]
-                        impressions += stat[3]
-                        if stat[1] > 0:
-                            count += 1
-                    if impressions > 0:
-                        info["Result"] = [round(position / count, 2), total_clicks, impressions, round(total_clicks * 100 / impressions, 2)]
+                break
+            for el in grouped_data:
+                res = []
+                info = {}
+                total_clicks, position, impressions, ctr, count = 0, 0, 0, 0, 0
+                for k, stat in enumerate(el[1]):
+                    info[stat[0].strftime(date_format_out)] = [stat[1], stat[2], stat[3], stat[4]]
+                    total_clicks += stat[2]
+                    position += stat[1]
+                    impressions += stat[3]
+                    if stat[1] > 0:
+                        count += 1
+                if impressions > 0:
+                    info["Result"] = [round(position / count, 2), total_clicks, impressions, round(total_clicks * 100 / impressions, 2)]
+                else:
+                    info["Result"] = [0, total_clicks, impressions, 0]
+                res.append(el[0])
+                for el in main_header:
+                    if el in info:
+                        res.extend(info[el])
                     else:
-                        info["Result"] = [0, total_clicks, impressions, 0]
-                    res.append(el[0])
-                    for el in main_header:
-                        if el in info:
-                            res.extend(info[el])
-                        else:
-                            res.extend([0, 0, 0, 0])
+                        res.extend([0, 0, 0, 0])
 
-                    ws.append(res)
+                ws.append(res)
 
-            output = io.StringIO()
-            writer = csv.writer(output)
-            writer.writerows(ws)
-            output.seek(0)
+                output = io.StringIO()
+                writer = csv.writer(output)
+                writer.writerows(ws)
+                output.seek(0)
 
             return StreamingResponse(content=output.getvalue(),
                                     headers={"Content-Disposition": "attachment;filename='data.csv'"})

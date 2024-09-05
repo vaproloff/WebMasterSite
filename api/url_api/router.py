@@ -46,7 +46,7 @@ async def generate_excel_url(
     data_request: dict, 
     user: User = Depends(current_user),
     general_session: AsyncSession = Depends(get_db_general),
-    ):
+):
     DATABASE_NAME = request.session['config'].get('database_name', "")
     group = request.session['group'].get('name', '')
     state_date = None
@@ -131,6 +131,7 @@ async def generate_excel_url(
                     async_session,
                     general_session,)
         start += 1
+        print(start_el)
         try:
             if urls:
                 urls.sort(key=lambda x: x[-1])
@@ -197,12 +198,12 @@ async def generate_excel_url(
                             ),
                             reverse=data_request["button_state"] == "decrease"
                         )   
-            
+        
         except TypeError as e:
-            return JSONResponse({"data": []})
+            break
 
         if len(grouped_data) == 0:
-            return JSONResponse({"data": []})
+            break
         for el in grouped_data:
             info = {}
             res = []
@@ -226,13 +227,13 @@ async def generate_excel_url(
                     res.extend([0, 0, 0, 0])
             ws.append(res)
 
-        output = io.BytesIO()
-        wb.save(output)
-        output.seek(0)
+            output = io.BytesIO()
+            wb.save(output)
+            output.seek(0)
 
-        return StreamingResponse(io.BytesIO(output.getvalue()),
-                                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                                headers={"Content-Disposition": "attachment;filename='data.xlsx'"})
+    return StreamingResponse(io.BytesIO(output.getvalue()),
+                            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            headers={"Content-Disposition": "attachment;filename='data.xlsx'"})
 
 
 @router.post("/generate_csv_urls")
@@ -393,10 +394,11 @@ async def generate_csv_url(
                         )   
             
         except TypeError as e:
-            return JSONResponse({"data": []})
+            break
 
         if len(grouped_data) == 0:
-            return JSONResponse({"data": []})
+            break
+
         for el in grouped_data:
             info = {}
             res = []
@@ -426,8 +428,8 @@ async def generate_csv_url(
         writer.writerows(ws)
         output.seek(0)
 
-        return StreamingResponse(content=output.getvalue(),
-                                headers={"Content-Disposition": "attachment;filename='data.csv'"})
+    return StreamingResponse(content=output.getvalue(),
+                            headers={"Content-Disposition": "attachment;filename='data.csv'"})
 
 
 @router.get("/")
