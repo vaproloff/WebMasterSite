@@ -372,12 +372,87 @@ async def generate_excel_query(
         try:
             if urls:
                 urls.sort(key=lambda x: x[-1])
+            
             grouped_data = [(key, sorted(list(group), key=lambda x: x[0])) for key, group in
                             groupby(urls, key=lambda x: x[-1])]
+
+            if data_request["button_state"]:
+                if state_date and data_request["state_type"] == "date":
+                    if data_request["metric_type"] == "P":
+                        grouped_data.sort(
+                            key=lambda x: next(
+                                (
+                                    sub_item[1] if sub_item[1] != 0 else 
+                                    (-float('inf') if data_request["button_state"] == "decrease" else float('inf'))
+                                    for sub_item in x[1]
+                                    if sub_item[0] == state_date
+                                ),
+                                -float('inf') if data_request["button_state"] == "decrease" else float('inf')
+                            ),
+                            reverse=data_request["button_state"] == "decrease"
+                        )
+                    elif data_request["metric_type"] == "K":
+                        grouped_data.sort(
+                            key=lambda x: next(
+                                (
+                                    sub_item[1] if sub_item[1] != 0 else 
+                                    (-float('inf') if data_request["button_state"] == "decrease" else float('inf'))
+                                    for sub_item in x[1]
+                                    if sub_item[0] == state_date
+                                ),
+                                -float('inf') if data_request["button_state"] == "decrease" else float('inf')
+                            ),
+                            reverse=data_request["button_state"] == "decrease"
+                        )                
+                    elif data_request["metric_type"] == "R":
+                        grouped_data.sort(key=lambda x: next((sub_item[3] for sub_item in x[1] if sub_item[0] == state_date), float('-inf')), reverse=data_request["button_state"] == "decrease")
+                    elif data_request["metric_type"] == "C":
+                        grouped_data.sort(
+                            key=lambda x: next(
+                                (
+                                    sub_item[4] if sub_item[4] != 0 else 
+                                    (-float('inf') if data_request["button_state"] == "decrease" else float('inf'))
+                                    for sub_item in x[1]
+                                    if sub_item[0] == state_date
+                                ),
+                                -float('inf') if data_request["button_state"] == "decrease" else float('inf')
+                            ),
+                            reverse=data_request["button_state"] == "decrease"
+                        )
+                else:
+                    if data_request["metric_type"] == "P":
+                        grouped_data.sort(
+                            key=lambda x: (
+                                (total := sum(sub_item[1] for sub_item in x[1] if start_date <= sub_item[0] <= end_date and sub_item[1] != 0),
+                                count := sum(1 for sub_item in x[1] if start_date <= sub_item[0] <= end_date and sub_item[1] != 0),
+                                total / count if count > 0 else (
+                                    -float('inf') if data_request["button_state"] == "decrease" else float('inf')
+                                ))[2]
+                            ),
+                            reverse=data_request["button_state"] == "decrease"
+                        )
+                    elif data_request["metric_type"] == "K":
+                        grouped_data.sort( key=lambda x: (sum(sub_item[2] for sub_item in x[1] if start_date <= sub_item[0] <= end_date)), reverse=data_request["button_state"] == "decrease"),
+                    elif data_request["metric_type"] == "R":
+                        grouped_data.sort( key=lambda x: (sum(sub_item[3] for sub_item in x[1] if start_date <= sub_item[0] <= end_date)), reverse=data_request["button_state"] == "decrease"),
+                    elif data_request["metric_type"] == "C":
+                        grouped_data.sort(
+                            key=lambda x:(
+                                (clicks := (sum(sub_item[2] for sub_item in x[1] if start_date <= sub_item[0] <= end_date)),
+                                immersions := (sum(sub_item[3] for sub_item in x[1] if start_date <= sub_item[0] <= end_date)),
+                                clicks / immersions if immersions > 0 else (
+                                    -float('inf') if data_request["button_state"] == "decrease" else float('inf')
+                                ))[2]
+                            ),
+                            reverse=data_request["button_state"] == "decrease"
+                        )              
         except TypeError as e:
-            break
+            return JSONResponse({"data": []})
+
         if len(grouped_data) == 0:
-            break
+            return JSONResponse({"data": []})
+        
+        print(grouped_data)
         for el in grouped_data:
             info = {}
             res = []
@@ -401,13 +476,13 @@ async def generate_excel_query(
                     res.extend([0, 0, 0, 0])
             ws.append(res)
 
-    output = io.BytesIO()
-    wb.save(output)
-    output.seek(0)
-    
-    return StreamingResponse(io.BytesIO(output.getvalue()),
-                             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                             headers={"Content-Disposition": "attachment;filename='data.xlsx'"})
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+        
+        return StreamingResponse(io.BytesIO(output.getvalue()),
+                                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                headers={"Content-Disposition": "attachment;filename='data.xlsx'"})
 
 
 @router.post("/generate_csv_queries/")
@@ -499,40 +574,113 @@ async def generate_csv_query(
             try:
                 if urls:
                     urls.sort(key=lambda x: x[-1])
+                
                 grouped_data = [(key, sorted(list(group), key=lambda x: x[0])) for key, group in
                                 groupby(urls, key=lambda x: x[-1])]
-            except TypeError as e:
-                break
-            if len(grouped_data) == 0:
-                break
-            for el in grouped_data:
-                res = []
-                info = {}
-                total_clicks, position, impressions, ctr, count = 0, 0, 0, 0, 0
-                for k, stat in enumerate(el[1]):
-                    info[stat[0].strftime(date_format_out)] = [stat[1], stat[2], stat[3], stat[4]]
-                    total_clicks += stat[2]
-                    position += stat[1]
-                    impressions += stat[3]
-                    if stat[1] > 0:
-                        count += 1
-                if impressions > 0:
-                    info["Result"] = [round(position / count, 2), total_clicks, impressions, round(total_clicks * 100 / impressions, 2)]
-                else:
-                    info["Result"] = [0, total_clicks, impressions, 0]
-                res.append(el[0])
-                for el in main_header:
-                    if el in info:
-                        res.extend(info[el])
+
+                if data_request["button_state"]:
+                    if state_date and data_request["state_type"] == "date":
+                        if data_request["metric_type"] == "P":
+                            grouped_data.sort(
+                                key=lambda x: next(
+                                    (
+                                        sub_item[1] if sub_item[1] != 0 else 
+                                        (-float('inf') if data_request["button_state"] == "decrease" else float('inf'))
+                                        for sub_item in x[1]
+                                        if sub_item[0] == state_date
+                                    ),
+                                    -float('inf') if data_request["button_state"] == "decrease" else float('inf')
+                                ),
+                                reverse=data_request["button_state"] == "decrease"
+                            )
+                        elif data_request["metric_type"] == "K":
+                            grouped_data.sort(
+                                key=lambda x: next(
+                                    (
+                                        sub_item[1] if sub_item[1] != 0 else 
+                                        (-float('inf') if data_request["button_state"] == "decrease" else float('inf'))
+                                        for sub_item in x[1]
+                                        if sub_item[0] == state_date
+                                    ),
+                                    -float('inf') if data_request["button_state"] == "decrease" else float('inf')
+                                ),
+                                reverse=data_request["button_state"] == "decrease"
+                            )                
+                        elif data_request["metric_type"] == "R":
+                            grouped_data.sort(key=lambda x: next((sub_item[3] for sub_item in x[1] if sub_item[0] == state_date), float('-inf')), reverse=data_request["button_state"] == "decrease")
+                        elif data_request["metric_type"] == "C":
+                            grouped_data.sort(
+                                key=lambda x: next(
+                                    (
+                                        sub_item[4] if sub_item[4] != 0 else 
+                                        (-float('inf') if data_request["button_state"] == "decrease" else float('inf'))
+                                        for sub_item in x[1]
+                                        if sub_item[0] == state_date
+                                    ),
+                                    -float('inf') if data_request["button_state"] == "decrease" else float('inf')
+                                ),
+                                reverse=data_request["button_state"] == "decrease"
+                            )
                     else:
-                        res.extend([0, 0, 0, 0])
+                        if data_request["metric_type"] == "P":
+                            grouped_data.sort(
+                                key=lambda x: (
+                                    (total := sum(sub_item[1] for sub_item in x[1] if start_date <= sub_item[0] <= end_date and sub_item[1] != 0),
+                                    count := sum(1 for sub_item in x[1] if start_date <= sub_item[0] <= end_date and sub_item[1] != 0),
+                                    total / count if count > 0 else (
+                                        -float('inf') if data_request["button_state"] == "decrease" else float('inf')
+                                    ))[2]
+                                ),
+                                reverse=data_request["button_state"] == "decrease"
+                            )
+                        elif data_request["metric_type"] == "K":
+                            grouped_data.sort( key=lambda x: (sum(sub_item[2] for sub_item in x[1] if start_date <= sub_item[0] <= end_date)), reverse=data_request["button_state"] == "decrease"),
+                        elif data_request["metric_type"] == "R":
+                            grouped_data.sort( key=lambda x: (sum(sub_item[3] for sub_item in x[1] if start_date <= sub_item[0] <= end_date)), reverse=data_request["button_state"] == "decrease"),
+                        elif data_request["metric_type"] == "C":
+                            grouped_data.sort(
+                                key=lambda x:(
+                                    (clicks := (sum(sub_item[2] for sub_item in x[1] if start_date <= sub_item[0] <= end_date)),
+                                    immersions := (sum(sub_item[3] for sub_item in x[1] if start_date <= sub_item[0] <= end_date)),
+                                    clicks / immersions if immersions > 0 else (
+                                        -float('inf') if data_request["button_state"] == "decrease" else float('inf')
+                                    ))[2]
+                                ),
+                                reverse=data_request["button_state"] == "decrease"
+                            )              
+            except TypeError as e:
+                return JSONResponse({"data": []})
 
-                ws.append(res)
+            if len(grouped_data) == 0:
+                return JSONResponse({"data": []})
+                for el in grouped_data:
+                    res = []
+                    info = {}
+                    total_clicks, position, impressions, ctr, count = 0, 0, 0, 0, 0
+                    for k, stat in enumerate(el[1]):
+                        info[stat[0].strftime(date_format_out)] = [stat[1], stat[2], stat[3], stat[4]]
+                        total_clicks += stat[2]
+                        position += stat[1]
+                        impressions += stat[3]
+                        if stat[1] > 0:
+                            count += 1
+                    if impressions > 0:
+                        info["Result"] = [round(position / count, 2), total_clicks, impressions, round(total_clicks * 100 / impressions, 2)]
+                    else:
+                        info["Result"] = [0, total_clicks, impressions, 0]
+                    res.append(el[0])
+                    for el in main_header:
+                        if el in info:
+                            res.extend(info[el])
+                        else:
+                            res.extend([0, 0, 0, 0])
 
-        output = io.StringIO()
-        writer = csv.writer(output)
-        writer.writerows(ws)
-        output.seek(0)
+                    ws.append(res)
 
-        return StreamingResponse(content=output.getvalue(),
-                                headers={"Content-Disposition": "attachment;filename='data.csv'"})
+            output = io.StringIO()
+            writer = csv.writer(output)
+            writer.writerows(ws)
+            output.seek(0)
+
+            return StreamingResponse(content=output.getvalue(),
+                                    headers={"Content-Disposition": "attachment;filename='data.csv'"})
