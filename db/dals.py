@@ -60,8 +60,6 @@ class UrlDAL:
             uri_list = (await general_db.execute(
                 select(ListURI.uri).where(ListURI.list_id == list_id)
             )).scalars().all()
-
-            print(uri_list)
             
             filter_query = Url.url.in_(uri_list)
 
@@ -247,8 +245,8 @@ class UrlDAL:
 
         elif state == "decrease":
             if state_type == "date":
-
-                sub = sub_query.filter(Metrics.url.like(f"%{search_text.strip()}%")).where(Metrics.date == state_date).order_by(desc(pointer)).offset(page).limit(per_page).subquery()
+                
+                sub = sub_query_result.filter(Metrics.url.like(f"%{search_text.strip()}%")).where(Metrics.date == state_date).order_by(desc(pointer)).offset(page).limit(per_page).subquery()
 
                 query = select(Metrics.date, Metrics.position, Metrics.clicks, Metrics.impression,
                             Metrics.ctr, sub).join(sub,
@@ -285,7 +283,7 @@ class UrlDAL:
                     )
             if state_type == "date":
 
-                sub = sub_query.filter(Metrics.url.like(f"%{search_text.strip()}%")).where(Metrics.date == state_date).order_by(asc(pointer)).offset(page).limit(per_page).subquery()
+                sub = sub_query_result.filter(Metrics.url.like(f"%{search_text.strip()}%")).where(Metrics.date == state_date).order_by(asc(pointer)).offset(page).limit(per_page).subquery()
 
                 query = select(Metrics.date, Metrics.position, Metrics.clicks, Metrics.impression,
                             Metrics.ctr, sub).join(sub,

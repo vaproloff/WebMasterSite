@@ -1730,15 +1730,20 @@
     function generateExcel(url_f) {
     $('.loader').show();
     const data = {
-        "start": 0,
-        "length": 50,
-        "start_date": document.getElementById('start_date').value,
-        "end_date": document.getElementById('end_date').value,
-        "amount": calculateDays(),
-        "search_text": document.getElementById("search_field").value,
-        "sort_result": document.getElementById("input_sort").checked,
-        "sort_desc": document.getElementById("input_desc").checked,
-    };
+            length: 50, // количество отображаемых элементов
+            start: 0, // номер страницы
+            start_date: document.getElementById('start_date').value, // Дата начала поиска
+            end_date: document.getElementById('end_date').value, // Дата окончания поиска
+            amount: calculateDays(),
+            search_text: document.getElementById("search_field").value,
+            sort_result: document.getElementById("input_sort").checked,
+            sort_desc: document.getElementById("input_desc").checked,
+            button_date: global_date,
+            button_state: state,
+            metric_type: metric_type,
+            state_type: state_type,
+            list_name: "{{ list_name }}",
+        };
 
     fetch(url_f, {
         method: 'POST',
@@ -1774,15 +1779,20 @@
 function generateCsv(url_f) {
     $('.loader').show();
     const data = {
-        "start": 0,
-        "length": 50,
-        "start_date": document.getElementById('start_date').value,
-        "end_date": document.getElementById('end_date').value,
-        "amount": calculateDays(),
-        "search_text": document.getElementById("search_field").value,
-        "sort_result": document.getElementById("input_sort").checked,
-        "sort_desc": document.getElementById("input_desc").checked,
-    };
+            length: 50, // количество отображаемых элементов
+            start: 0, // номер страницы
+            start_date: document.getElementById('start_date').value, // Дата начала поиска
+            end_date: document.getElementById('end_date').value, // Дата окончания поиска
+            amount: calculateDays(),
+            search_text: document.getElementById("search_field").value,
+            sort_result: document.getElementById("input_sort").checked,
+            sort_desc: document.getElementById("input_desc").checked,
+            button_date: global_date,
+            button_state: state,
+            metric_type: metric_type,
+            state_type: state_type,
+            list_name: "{{ list_name }}",
+        };
 
     fetch(url_f, {
         method: 'POST',
