@@ -250,7 +250,7 @@ async def get_urls_with_pagination_and_like(
             LiveSearchListQuery.id,
             LiveSearchListQuery.query,
             LiveSearchListQuery.list_id
-        ).join(sub_get_id, LiveSearchListQuery.id == sub_get_id.c.query).filter(LiveSearchListQuery.query.like(f"%{search_text.strip()}%")).subquery()
+        ).join(sub_get_id, LiveSearchListQuery.id == sub_get_id.c.query_id).filter(LiveSearchListQuery.query.like(f"%{search_text.strip()}%")).subquery()
 
         all_queries = (await session.execute(select(LiveSearchListQuery.query).where(LiveSearchListQuery.list_id == list_id).filter(LiveSearchListQuery.query.like(f"%{search_text.strip()}%")).offset(page).limit(per_page))).scalars().all()
         # Основной запрос, используя алиасы
@@ -303,7 +303,7 @@ async def get_urls_with_pagination_and_like(
             LiveSearchListQuery.id,
             LiveSearchListQuery.query,
             LiveSearchListQuery.list_id
-        ).join(sub_get_id, LiveSearchListQuery.id == sub_get_id.c.query).filter(LiveSearchListQuery.query.like(f"%{search_text.strip()}%")).subquery()
+        ).join(sub_get_id, LiveSearchListQuery.id == sub_get_id.c.query_id).filter(LiveSearchListQuery.query.like(f"%{search_text.strip()}%")).subquery()
 
         all_queries = (await session.execute(select(LiveSearchListQuery.query).where(LiveSearchListQuery.list_id == list_id).filter(LiveSearchListQuery.query.like(f"%{search_text.strip()}%")).offset(page).limit(per_page))).scalars().all()
         # Основной запрос, используя алиасы
