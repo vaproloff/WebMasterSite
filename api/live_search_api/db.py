@@ -32,6 +32,8 @@ async def get_urls_with_pagination(
     if not state:
         sub = select(LiveSearchListQuery).where(LiveSearchListQuery.list_id == list_id).offset(page).limit(per_page).subquery()
 
+        all_queries = (await session.execute(select(LiveSearchListQuery.query).where(LiveSearchListQuery.list_id == list_id).offset(page).limit(per_page))).scalars().all()
+
         query = (
             select(
                 database.date,
@@ -82,6 +84,8 @@ async def get_urls_with_pagination(
             LiveSearchListQuery.query,
             LiveSearchListQuery.list_id
         ).join(sub_get_id, LiveSearchListQuery.id == sub_get_id.c.query_id).subquery()
+
+        all_queries = (await session.execute(select(LiveSearchListQuery.query).where(LiveSearchListQuery.list_id == list_id).offset(page).limit(per_page))).scalars().all()
 
         # Основной запрос, используя алиасы
         query = (
@@ -135,6 +139,8 @@ async def get_urls_with_pagination(
             LiveSearchListQuery.list_id
         ).join(sub_get_id, LiveSearchListQuery.id == sub_get_id.c.query_id).subquery()
 
+        all_queries = (await session.execute(select(LiveSearchListQuery.query).where(LiveSearchListQuery.list_id == list_id).offset(page).limit(per_page))).scalars().all()
+
         # Основной запрос, используя алиасы
         query = (
             select(
@@ -162,7 +168,7 @@ async def get_urls_with_pagination(
     product_row = res.fetchall()
     
     if product_row:
-        return product_row
+        return product_row, all_queries
 
 
 async def get_urls_with_pagination_and_like(
@@ -192,6 +198,8 @@ async def get_urls_with_pagination_and_like(
 
     if not state:
         sub = select(LiveSearchListQuery).where(LiveSearchListQuery.list_id == list_id).filter(LiveSearchListQuery.query.like(f"%{search_text.strip()}%")).offset(page).limit(per_page).subquery()
+
+        all_queries = (await session.execute(select(LiveSearchListQuery.query).where(LiveSearchListQuery.list_id == list_id).filter(LiveSearchListQuery.query.like(f"%{search_text.strip()}%")).offset(page).limit(per_page))).scalars().all()
         
         query = (
             select(
@@ -244,6 +252,7 @@ async def get_urls_with_pagination_and_like(
             LiveSearchListQuery.list_id
         ).join(sub_get_id, LiveSearchListQuery.id == sub_get_id.c.query).filter(LiveSearchListQuery.query.like(f"%{search_text.strip()}%")).subquery()
 
+        all_queries = (await session.execute(select(LiveSearchListQuery.query).where(LiveSearchListQuery.list_id == list_id).filter(LiveSearchListQuery.query.like(f"%{search_text.strip()}%")).offset(page).limit(per_page))).scalars().all()
         # Основной запрос, используя алиасы
         query = (
             select(
@@ -296,6 +305,7 @@ async def get_urls_with_pagination_and_like(
             LiveSearchListQuery.list_id
         ).join(sub_get_id, LiveSearchListQuery.id == sub_get_id.c.query).filter(LiveSearchListQuery.query.like(f"%{search_text.strip()}%")).subquery()
 
+        all_queries = (await session.execute(select(LiveSearchListQuery.query).where(LiveSearchListQuery.list_id == list_id).filter(LiveSearchListQuery.query.like(f"%{search_text.strip()}%")).offset(page).limit(per_page))).scalars().all()
         # Основной запрос, используя алиасы
         query = (
             select(
@@ -323,7 +333,7 @@ async def get_urls_with_pagination_and_like(
     product_row = res.fetchall()
     
     if product_row:
-        return product_row
+        return product_row, all_queries
 
 
 async def get_urls_with_pagination_sort(
@@ -346,8 +356,11 @@ async def get_urls_with_pagination_sort(
 
     if sort_desc:
         sub = select(LiveSearchListQuery).order_by(desc(LiveSearchListQuery.query)).where(LiveSearchListQuery.list_id == list_id).offset(page).limit(per_page).subquery()
+        all_queries = (await session.execute(select(LiveSearchListQuery.query).order_by(desc(LiveSearchListQuery.query)).where(LiveSearchListQuery.list_id == list_id).offset(page).limit(per_page))).scalars().all()
     else:
-        sub = select(LiveSearchListQuery).order_by((LiveSearchListQuery.query)).where(LiveSearchListQuery.list_id == list_id).offset(page).limit(per_page).subquery()
+        sub = select(LiveSearchListQuery).order_by(asc(LiveSearchListQuery.query)).where(LiveSearchListQuery.list_id == list_id).offset(page).limit(per_page).subquery()
+        all_queries = (await session.execute(select(LiveSearchListQuery).order_by(asc(LiveSearchListQuery.query)).where(LiveSearchListQuery.list_id == list_id).offset(page).limit(per_page))).scalars().all()
+
     
     query = (
         select(
@@ -375,7 +388,7 @@ async def get_urls_with_pagination_sort(
     product_row = res.fetchall()
     
     if product_row:
-        return product_row
+        return product_row, all_queries
 
 
 async def get_urls_with_pagination_sort_and_like(
@@ -399,9 +412,12 @@ async def get_urls_with_pagination_sort_and_like(
 
     if sort_desc:
         sub = select(LiveSearchListQuery).order_by(desc(LiveSearchListQuery.query)).filter(LiveSearchListQuery.query.like(f"%{search_text.strip()}%")).where(LiveSearchListQuery.list_id == list_id).offset(page).limit(per_page).subquery()
+        all_queries = (await session.execute(select(LiveSearchListQuery).order_by(desc(LiveSearchListQuery.query)).filter(LiveSearchListQuery.query.like(f"%{search_text.strip()}%")).where(LiveSearchListQuery.list_id == list_id).offset(page).limit(per_page))).scalars().all()
+
     else:
         sub = select(LiveSearchListQuery).order_by((LiveSearchListQuery.query)).filter(LiveSearchListQuery.query.like(f"%{search_text.strip()}%")).where(LiveSearchListQuery.list_id == list_id).offset(page).limit(per_page).subquery()
-    
+        all_queries = (await session.execute(select(LiveSearchListQuery).order_by((LiveSearchListQuery.query)).filter(LiveSearchListQuery.query.like(f"%{search_text.strip()}%")).where(LiveSearchListQuery.list_id == list_id).offset(page).limit(per_page))).scalars().all()
+
     query = (
         select(
             database.date,
@@ -428,4 +444,4 @@ async def get_urls_with_pagination_sort_and_like(
     product_row = res.fetchall()
     
     if product_row:
-        return product_row
+        return product_row, all_queries

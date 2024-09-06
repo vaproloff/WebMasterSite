@@ -423,7 +423,6 @@ const initialSearchSystem = "{{ search_system }}";
             lr_id: '{{ lr_id }}'
             
         };
-
         fetch(url, {
             method: "POST",
             headers: {
@@ -437,10 +436,8 @@ const initialSearchSystem = "{{ search_system }}";
                 // Обработка ответа
                 data = data.data;
                 var table = $('#body_t');
-                empty = `<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #B9BDBC;
-                text-align: center; display: flex; align-items: center; justify-content: center;'>
-            <span style='font-size: 18px'><span style='color:red'>NAN</span></span><br>
-            </div>`
+                empty = `<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #FFFF99; text-align: center; display: flex; align-items: center; justify-content: center;'>
+                                        <span style='font-size: 18px'>-</span></div>`
                 for (i = 0; i < 50; i++) {
                     var newRow = '<tr>';
                     $.each(columns, function (index_c, cell) {

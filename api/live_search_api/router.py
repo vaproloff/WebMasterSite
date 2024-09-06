@@ -90,7 +90,7 @@ async def get_live_search(
 
     if data_request["sort_result"]:
         if data_request["search_text"] == "":
-            urls = await get_urls_with_pagination_sort(
+            urls, all_queries = await get_urls_with_pagination_sort(
                 data_request["start"], 
                 data_request["length"], 
                 start_date,
@@ -101,7 +101,7 @@ async def get_live_search(
                 session,
                 )
         else:
-            urls = await get_urls_with_pagination_sort_and_like(
+            urls, all_queries = await get_urls_with_pagination_sort_and_like(
                 data_request["start"], 
                 data_request["length"],
                 start_date, 
@@ -114,7 +114,7 @@ async def get_live_search(
                 )
     else:
         if data_request["search_text"] == "":
-            urls = await get_urls_with_pagination(
+            urls, all_queries = await get_urls_with_pagination(
                 data_request["start"], 
                 data_request["length"], 
                 start_date,
@@ -129,7 +129,7 @@ async def get_live_search(
                 session,
                 )
         else:
-            urls = await get_urls_with_pagination_and_like(
+            urls, all_queries = await get_urls_with_pagination_and_like(
                 data_request["start"], 
                 data_request["length"],
                 start_date, 
@@ -172,9 +172,11 @@ async def get_live_search(
         return JSONResponse({"data": []})
     
     data = []
+    current_query = set()
     for el in grouped_data:
         res = {"query":
                    f"<div style='width:355px; height: 55px; overflow: auto; white-space: nowrap;'><span>{el[0]}</span></div>"}
+        current_query.add(el[0])
         url, pos = "", float("inf")
         for k, stat in enumerate(el[1]):
             if stat[2] < pos:
@@ -199,6 +201,13 @@ async def get_live_search(
                 date_format_2)] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #FFFF99; text-align: center; display: flex; align-items: center; justify-content: center;'>
                                         <span style='font-size: 18px'>-</span></div>"""
         data.append(res)
+    
+    for query in all_queries:
+        if query not in current_query:
+            data.append(
+                {"query":
+                   f"<div style='width:355px; height: 55px; overflow: auto; white-space: nowrap;'><span>{query}</span></div>"}
+                   )
 
     json_data = jsonable_encoder(data)
 

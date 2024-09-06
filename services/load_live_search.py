@@ -35,11 +35,7 @@ async def main(
             query_info = await run_script_async_yandex(main_domain, lr, approach_query_names)
             query_info_for_db = list()
 
-            for query in approach_query_names:
-                if query in query_info:
-                    key, value = query, query_info[query]
-                else:
-                    key, value = query, ("None", 0)
+            for key, value in query_info.items():
                 query_info_for_db.append(QueryLiveSearchYandex(
                     query_id=approach_query[key],
                     url=value[0],
@@ -71,11 +67,7 @@ async def main(
             query_info = await run_script_async_google(main_domain, lr, approach_query_names)
             query_info_for_db = list()
 
-            for query in approach_query_names:
-                if query in query_info:
-                    key, value = query, query_info[query]
-                else:
-                    key, value = query, ("", 0)
+            for key, value in query_info.items():
                 query_info_for_db.append(QueryLiveSearchGoogle(
                     query_id=approach_query[key],
                     url=value[0],
