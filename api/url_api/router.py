@@ -68,7 +68,7 @@ async def generate_excel_url(
     for i in range(4):
         main_header.insert(1, "Result")
     ws.append(main_header)
-    header = ["Position", "Click", "R", "CTR"] * (int(data_request["amount"]) + 4)
+    header = ["Position", "Click", "R", "CTR"] * (int(data_request["amount"]) + 2)
     header.insert(0, "")
     ws.append(header)
     start = 0
@@ -131,7 +131,6 @@ async def generate_excel_url(
                     async_session,
                     general_session,)
         start += 1
-        print(start_el)
         try:
             if urls:
                 urls.sort(key=lambda x: x[-1])
@@ -227,9 +226,9 @@ async def generate_excel_url(
                     res.extend([0, 0, 0, 0])
             ws.append(res)
 
-            output = io.BytesIO()
-            wb.save(output)
-            output.seek(0)
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
 
     return StreamingResponse(io.BytesIO(output.getvalue()),
                             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -261,7 +260,7 @@ async def generate_csv_url(
     main_header = main_header[::-1]
     main_header.insert(0, "Url")
     ws.append(main_header)
-    header = ["Position", "Click", "R", "CTR"] * (int(data_request["amount"]) + 4)
+    header = ["Position", "Click", "R", "CTR"] * (int(data_request["amount"]) + 2)
     header.insert(0, "")
     for i in range(4):
         main_header.insert(1, "Result")

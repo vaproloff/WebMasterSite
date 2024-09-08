@@ -310,7 +310,7 @@ async def generate_excel_query(
     for i in range(4):
         main_header.insert(1, "Result")
     ws.append(main_header)
-    header = ["Position", "Click", "R", "CTR"] * (int(data_request["amount"]) + 4)
+    header = ["Position", "Click", "R", "CTR"] * (int(data_request["amount"]) + 2)
     header.insert(0, "")
     ws.append(header)
     start = 0
@@ -510,7 +510,7 @@ async def generate_csv_query(
         for i in range(4):
             main_header.insert(1, "Result")
         ws.append(main_header)
-        header = ["Position", "Click", "R", "CTR"] * (int(data_request["amount"]) + 4)
+        header = ["Position", "Click", "R", "CTR"] * (int(data_request["amount"]) + 2)
         header.insert(0, "")
         ws.append(header)
         start = 0
@@ -675,10 +675,10 @@ async def generate_csv_query(
 
                 ws.append(res)
 
-                output = io.StringIO()
-                writer = csv.writer(output)
-                writer.writerows(ws)
-                output.seek(0)
+            output = io.StringIO()
+            writer = csv.writer(output)
+            writer.writerows(ws)
+            output.seek(0)
 
-            return StreamingResponse(content=output.getvalue(),
-                                    headers={"Content-Disposition": "attachment;filename='data.csv'"})
+        return StreamingResponse(content=output.getvalue(),
+                                headers={"Content-Disposition": "attachment;filename='data.csv'"})
