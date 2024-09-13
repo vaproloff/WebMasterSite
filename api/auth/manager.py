@@ -24,20 +24,6 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
 
     verification_token_secret = SECRET
 
-    async def get_by_username(self, username: str):
-        """
-        Get a user by username.
-
-        :param user_email: E-mail of the user to retrieve.
-        :raises UserNotExists: The user does not exist.
-        :return: A user.
-        """
-        user = await self.user_db.get_by_username(username)
-        if user is None:
-            raise exceptions.UserNotExists()
-
-        return user
-
     async def create(
             self,
             user_create: UserCreate,
@@ -59,7 +45,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
         """
         await self.validate_password(user_create.password, user_create)
 
-        existing_user = await self.user_db.get_by_username(user_create.username)
+        existing_user = await self.user_db.get_by_email(user_create.email)
         if existing_user is not None:
             raise exceptions.UserAlreadyExists()
 
@@ -88,7 +74,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
         :param credentials: The user credentials.
         """
         try:
-            user = await self.get_by_username(credentials.username)
+            user = await self.get_by_email(credentials.username)
         except exceptions.UserNotExists:
             # Run the hasher to mitigate timing attack
             # Inspired from Django: https://code.djangoproject.com/ticket/20760
@@ -121,7 +107,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
         
             await session.commit()
 
-        print(f"Зарегистрирован пользователь {user.username}")
+        print(f"Зарегистрирован пользователь {user.email}")
 
     async def on_after_login(
         self,

@@ -14,9 +14,11 @@ class GroupUserAssociation(Base):
 
 class User(SQLAlchemyBaseUserTable[int], Base):
     id: int = Column(Integer, primary_key=True)
-    email = None
+    email: str = Column(
+            String(length=320), unique=True, index=True, nullable=False,
+        )
     username: str = Column(
-        String(length=320), unique=True, index=True, nullable=False
+        String(length=320), unique=True, index=True,  nullable=True,
     )
 
     role: int = Column(

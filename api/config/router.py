@@ -439,3 +439,33 @@ async def delete_config_from_group(
         "status": "success",
         "message": f"{config} added to {group_name}"
     }
+
+
+@router.get("/get_all_user")
+async def get_all_user(
+    request: Request,
+    user=Depends(current_user),
+    session: AsyncSession = Depends(get_db_general),
+):
+    users = (await session.execute(select(User))).scalars().all()
+
+    return users
+
+
+@router.put("/user/{id}")
+async def get_all_user(
+    request: Request,
+    id: int,
+    formData: dict,
+    user=Depends(current_user),
+    session: AsyncSession = Depends(get_db_general),
+):
+    email, role, groups = formData.values()
+    user = (await session.execute(select(User).where(User.id == id))).scalars().all()
+
+    
+
+
+
+
+

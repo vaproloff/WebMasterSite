@@ -5,8 +5,8 @@
     <form onsubmit="register(event)">
         <h3 class="text-center">Регистрация</h3>
         <div class="form-group">
-            <input class="form-control item" type="text" name="username" maxlength="15" minlength="4"
-                   pattern="^[a-zA-Z0-9_.-]*$" id="username" placeholder="Логин" required>
+            <input class="form-control item" type="email" name="email" maxlength="320" minlength="5"
+                pattern="^[a-zA-Z0-9_.\-]+@[a-zA-Z0-9_.\-]+\.[a-zA-Z]{2,}$" id="email" placeholder="Email" required>
         </div>
         <div class="form-group">
             <input class="form-control item" type="password" name="password" id="password"
@@ -26,13 +26,12 @@
         const formData = new FormData(form);
 
         const data = {
-            email: null, // Устанавливаем email в null
+            email: formData.get('email'), // Получаем email из формы
             password: formData.get('password'),
             is_active: true,
             is_superuser: false,
             is_verified: false,
-            id: 0,
-            username: formData.get('username')
+            id: 0
         };
 
         try {
@@ -58,7 +57,6 @@
         }
     }
 </script>
-
 
 <style>
     .registration-cssave {
