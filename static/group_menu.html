@@ -224,6 +224,11 @@
         background-color: #004080;
         transform: scale(0.98);
     }
+
+    #addConfig {
+        max-height: 200px;  /* Примерно 10 элементов */
+        overflow-y: auto;   /* Включение вертикальной прокрутки */
+    }
     </style>
 </head>
 <body>
@@ -231,22 +236,29 @@
     <h1>Users</h1>
     
     <!-- Кнопка для добавления нового пользователя -->
-    <button class="add-btn" onclick="toggleAddUserForm()">+ Add New User</button>
+    <button class="add-btn" onclick="toggleAddUserForm()">+ Add New Group</button>
     
-    <!-- Форма для добавления нового пользователя -->
     <div id="addUserForm">
         <h3>Add New User</h3>
         <form id="userForm" onsubmit="return addUser()">
             <div class="form-group">
-                <label for="addEmail">Email:</label>
-                <input class="form-control item" type="email" id="addEmail" name="email" maxlength="320" minlength="5"
-                    pattern="^[a-zA-Z0-9_.\-]+@[a-zA-Z0-9_.\-]+\.[a-zA-Z]{2,}$" required>
-                <small id="emailError" class="form-text text-danger" style="display: none;">Invalid email format.</small>
+                <label for="addName">Name:</label>
+                <input class="form-control item" type="text" id="addName" name="name" required>
             </div>
             <div class="form-group">
-                <label for="addPassword">Password:</label>
-                <input class="form-control item" type="password" id="addPassword" name="password" required>
+                <label for="addConfig">Config:</label>
+                <select class="form-control item" id="addConfig" name="config" required>
+                    {% for config in all_configs %}
+                    <option value="{{ config.id }}">{{ config.name }}</option>
+                    {% endfor %}
+                </select>
             </div>
+
+            <div id="configsContainer">
+            </div>
+
+            <button type="button" class="btn btn-primary" onclick="addConfigField()">+ Add Config</button>
+
             <div class="form-group">
                 <button class="btn btn-primary btn-block create-account" type="submit">Submit</button>
             </div>
@@ -256,19 +268,16 @@
     <div class="table-container" id="tableContainer">
         <div class="row header">
             <div class="cell">#</div>
-            <div class="cell">Email</div>
-            <div class="cell">Role</div>
+            <div class="cell">Name</div>
             <div class="cell">Actions</div>
         </div>
-        {% for user in all_users %}
+        {% for group in all_groups %}
         <div class="row">
             <div class="cell">{{ loop.index }}</div> <!-- Порядковый номер -->
-            <div class="cell">{{ user.email }}</div>
-            <div class="cell">{{ all_roles_dict[user.role] }}</div>
+            <div class="cell">{{ group.name }}</div>
             <div class="cell">
-                <button class="edit-btn" onclick="showEditUserForm({{ user.id }}, '{{ user.email }}', '{{ user.role }}')">Edit</button>
                 <button class="delete-btn" onclick="deleteUser('{{ url_for('delete_user', id=user.id) }}')">Delete</button>
-                <button class="group-list-btn" data-user-id="{{ user.id }}" data-user-email="{{ user.email }}" onclick="showGroupList(this)">Group List</button>
+                <button class="group-list-btn" data-user-id="{{ user.id }}" onclick="showGroupList(this)">Group List</button>
             </div>
         </div>
         {% endfor %}
@@ -327,6 +336,33 @@
     </div>
     
     <script>
+    let configCounter = 1; // Счетчик для уникальных id полей конфигов
+
+function addConfigField() {
+    // Создание нового элемента для выбора конфига
+    const configContainer = document.createElement('div');
+    configContainer.classList.add('form-group', 'config-select');
+    configContainer.innerHTML = `
+        <label for="addConfig${configCounter}">Config:</label>
+        <select class="form-control item" id="addConfig${configCounter}" name="configs[]" required>
+            {% for config in all_configs %}
+            <option value="{{ config.id }}">{{ config.name }}</option>
+            {% endfor %}
+        </select>
+        <button type="button" class="btn btn-danger remove-btn" onclick="removeConfigField(this)">Remove</button>
+    `;
+
+    // Добавление нового элемента в контейнер
+    document.getElementById('configsContainer').appendChild(configContainer);
+
+    // Увеличиваем счетчик для следующего добавленного поля
+    configCounter++;
+    }
+
+    function removeConfigField(button) {
+        // Удаляем родительский элемент (контейнер с полем конфигурации)
+        button.parentElement.remove();
+    }
         function toggleAddUserForm() {
             const form = document.getElementById('addUserForm');
             const tableContainer = document.getElementById('tableContainer');
@@ -421,11 +457,9 @@
 
         let currentUserId = null; // Глобальная переменная для хранения текущего userId
 
-        function showGroupList(buttonElement) {
-        // Получаем userId и email из data-атрибутов кнопки
-        currentUserId = buttonElement.getAttribute('data-user-id');
-        const userEmail = buttonElement.getAttribute('data-user-email'); // Получаем email
-
+    function showGroupList(buttonElement) {
+        // Получаем userId из data-атрибута кнопки
+        currentUserId = buttonElement.getAttribute('data-user-id'); // Обновляем глобальную переменную
         const url = getGroupsUrl.replace('/0', `/${currentUserId}`);
 
         fetch(url)
@@ -453,11 +487,8 @@
                     groupTableContainer.appendChild(row);
                 });
 
-                // Обновляем заголовок модального окна
-                const groupListModal = document.getElementById('groupListModal');
-                groupListModal.querySelector('h3').textContent = `${userEmail}`;
-
                 // Показываем модальное окно
+                const groupListModal = document.getElementById('groupListModal');
                 groupListModal.classList.add('show');
 
                 // Показываем форму добавления группы

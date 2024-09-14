@@ -84,6 +84,16 @@ async def get_all_user(
     return users
 
 
+async def get_all_groups(
+    session: AsyncSession,
+):
+    users = (await session.execute(select(Group))).scalars().all()
+
+    users.sort(key=lambda x: x.id)
+
+    return users
+
+
 async def get_all_roles(
     session: AsyncSession,
 ):
@@ -104,3 +114,11 @@ async def get_all_groups_for_user(
     group_names = (await session.execute(stmt)).scalars().all()
 
     return group_names
+
+
+async def get_all_configs(
+    session: AsyncSession,
+):
+    configs = (await session.execute(select(Config))).scalars().all()
+
+    return configs
