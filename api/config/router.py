@@ -8,11 +8,13 @@ from sqlalchemy import and_, delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.auth.auth_config import current_user
-from api.auth.models import User
+from api.auth.models import GroupUserAssociation, User
 from api.config.models import Config, GroupConfigAssociation, List, ListURI, Role, Group
 from api.config.utils import get_config_info
 from config import DB_USER, DB_PASSWORD, DB_HOST, DB_PORT
 from db.session import get_db_general
+
+from fastapi_users.password import PasswordHelper
 
 from alembic.config import Config as AlembicConfig
 
@@ -441,27 +443,117 @@ async def delete_config_from_group(
     }
 
 
-@router.get("/get_all_user")
-async def get_all_user(
-    request: Request,
-    user=Depends(current_user),
-    session: AsyncSession = Depends(get_db_general),
-):
-    users = (await session.execute(select(User))).scalars().all()
-
-    return users
-
-
 @router.put("/user/{id}")
-async def get_all_user(
+async def edit_user(
     request: Request,
     id: int,
     formData: dict,
     user=Depends(current_user),
     session: AsyncSession = Depends(get_db_general),
 ):
-    email, role, groups = formData.values()
-    user = (await session.execute(select(User).where(User.id == id))).scalars().all()
+    email, password, role = formData.get('email'), formData.get('password'), int(formData.get('role'))
+    user = (await session.execute(select(User).where(User.id == id))).scalars().first()
+
+    if email:
+        user.email = email
+    if password:
+        password_helper = PasswordHelper()
+        user.hashed_password = password_helper.hash(password)
+    if role:
+        user.role = role
+    
+    print(user.email, user.role)
+
+    await session.commit()
+
+    return {
+        "status": 200,
+        "message": f"Updated user with id: {id}",
+    }
+
+
+@router.delete("/user/{id}")
+async def delete_user(
+    request: Request,
+    id: int,
+    user=Depends(current_user),
+    session: AsyncSession = Depends(get_db_general),
+):
+    user = (await session.execute(select(User).where(User.id == id))).scalars().first()
+
+    await session.delete(user)
+
+    await session.commit()
+
+    return {
+        "status": 200,
+        "message": f"delete user with id: {id}",
+    }
+
+
+@router.get("/user_group/{user_id}")
+async def get_users_group(
+    user_id: int,
+    user=Depends(current_user),
+    session: AsyncSession = Depends(get_db_general),
+):
+    print(user_id)
+    # Получаем список групп для указанного user_id
+    groups = await session.execute(
+        select(GroupUserAssociation.group_id)
+        .where(GroupUserAssociation.user_id == user_id)
+    )
+    group_ids = groups.scalars().all()
+
+    # Получаем информацию о группах
+    groups_info = await session.execute(
+        select(Group).where(Group.id.in_(group_ids))
+    )
+    groups_data = groups_info.scalars().all()
+
+    print([{"id": group.id, "name": group.name} for group in groups_data])
+
+    return [{"id": group.id, "name": group.name} for group in groups_data]
+
+@router.delete("/user_group/{user_id}/{group_id}")
+async def delete_group_for_user(
+    request: Request,
+    user_id: int,
+    group_id: int,
+    user=Depends(current_user),
+    session: AsyncSession = Depends(get_db_general),
+):
+    group_obj = (await session.execute(select(
+        GroupUserAssociation).where(
+            and_(GroupUserAssociation.group_id == group_id, GroupUserAssociation.user_id == user_id)))).scalars().first()
+    
+
+    await session.delete(group_obj)
+
+    await session.commit()
+
+    return {
+        "status": 200,
+        "message": f"delete group ID:{group_id} for user ID: {user_id}"
+    }
+
+
+@router.post("/user_group/{user_id}/{group_id}")
+async def add_group_for_user(
+    request: Request,
+    user_id: int,
+    group_id: int,
+    user=Depends(current_user),
+    session: AsyncSession = Depends(get_db_general),
+):
+    session.add(GroupUserAssociation(user_id = user_id, group_id=group_id))
+
+    await session.commit()
+
+    return {
+        "status": 200,
+        "message": f"add group ID: {group_id} for user ID: {user_id}"
+    }
 
     
 

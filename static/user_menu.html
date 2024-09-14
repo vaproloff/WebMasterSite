@@ -1,0 +1,511 @@
+{% extends "base.html" %}
+{% block content %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Users Table</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        .table-container {
+            display: table;
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            transition: margin-top 0.3s;
+        }
+        .row {
+            display: table-row;
+        }
+        .header {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        .cell {
+            display: table-cell;
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+        .cell a {
+            color: #007BFF;
+            text-decoration: none;
+        }
+        .cell a:hover {
+            text-decoration: underline;
+        }
+        button {
+            padding: 5px 10px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        .edit-btn {
+            background-color: orange;
+            color: white;
+            border-radius: 4px;
+        }
+        .edit-btn:hover {
+            background-color: darkorange;
+            transform: scale(1.05);
+        }
+        .delete-btn {
+            background-color: red;
+            color: white;
+            border-radius: 4px;
+        }
+        .delete-btn:hover {
+            background-color: darkred;
+            transform: scale(1.05);
+        }
+        .group-list-btn {
+            background-color: blue;
+            color: white;
+            border-radius: 4px;
+        }
+        .group-list-btn:hover {
+            background-color: darkblue;
+            transform: scale(1.05);
+        }
+        .add-btn {
+            background-color: green;
+            color: white;
+            padding: 10px;
+            font-size: 18px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        .add-btn:hover {
+            background-color: darkgreen;
+            transform: scale(1.05);
+        }
+        #addUserForm {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s, margin-bottom 0.3s;
+        }
+        #addUserForm.show {
+            display: block;
+            opacity: 1;
+        }
+        #addUserForm input {
+            margin: 5px 0;
+            padding: 8px;
+            width: calc(100% - 16px);
+            box-sizing: border-box;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        #addUserForm input:focus {
+            border-color: #007BFF;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+        }
+        #addUserForm button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        #addUserForm button:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+        /* Стили для модального окна */
+        #editUserForm {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
+        }
+        #editUserForm.show {
+            display: block;
+            opacity: 1;
+        }
+        #editUserForm input, #editUserForm select {
+            margin: 5px 0;
+            padding: 8px;
+            width: calc(100% - 16px);
+            box-sizing: border-box;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        #editUserForm input:focus, #editUserForm select:focus {
+            border-color: #007BFF;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+        }
+        #editUserForm button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        #editUserForm button:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+        .close-btn {
+            display: block;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: center;
+        }
+        .close-btn:hover {
+            background-color: #c82333;
+        }
+        /* Модальное окно для отображения групп */
+        #groupListModal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
+        }
+        #groupListModal.show {
+            display: block;
+            opacity: 1;
+        }
+        #groupTableContainer {
+            margin-top: 20px;
+        }
+        .btn-primary {
+        background-color: #007BFF;
+        color: white;
+        border: none;
+        padding: 10px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s, transform 0.2s;
+    }
+
+    .btn-primary:hover {
+        background-color: #0056b3;
+        transform: scale(1.05);
+    }
+
+    .btn-primary:active {
+        background-color: #004080;
+        transform: scale(0.98);
+    }
+    </style>
+</head>
+<body>
+
+    <h1>Users</h1>
+    
+    <!-- Кнопка для добавления нового пользователя -->
+    <button class="add-btn" onclick="toggleAddUserForm()">+ Add New User</button>
+    
+    <!-- Форма для добавления нового пользователя -->
+    <div id="addUserForm">
+        <h3>Add New User</h3>
+        <form id="userForm" onsubmit="return addUser()">
+            <div class="form-group">
+                <label for="addEmail">Email:</label>
+                <input class="form-control item" type="email" id="addEmail" name="email" maxlength="320" minlength="5"
+                    pattern="^[a-zA-Z0-9_.\-]+@[a-zA-Z0-9_.\-]+\.[a-zA-Z]{2,}$" required>
+                <small id="emailError" class="form-text text-danger" style="display: none;">Invalid email format.</small>
+            </div>
+            <div class="form-group">
+                <label for="addPassword">Password:</label>
+                <input class="form-control item" type="password" id="addPassword" name="password" required>
+            </div>
+            <div class="form-group">
+                <button class="btn btn-primary btn-block create-account" type="submit">Submit</button>
+            </div>
+        </form>
+    </div>
+    
+    <div class="table-container" id="tableContainer">
+        <div class="row header">
+            <div class="cell">#</div>
+            <div class="cell">Email</div>
+            <div class="cell">Role</div>
+            <div class="cell">Actions</div>
+        </div>
+        {% for user in all_users %}
+        <div class="row">
+            <div class="cell">{{ loop.index }}</div> <!-- Порядковый номер -->
+            <div class="cell">{{ user.email }}</div>
+            <div class="cell">{{ all_roles_dict[user.role] }}</div>
+            <div class="cell">
+                <button class="edit-btn" onclick="showEditUserForm({{ user.id }}, '{{ user.email }}', '{{ user.role }}')">Edit</button>
+                <button class="delete-btn" onclick="deleteUser('{{ url_for('delete_user', id=user.id) }}')">Delete</button>
+                <button class="group-list-btn" data-user-id="{{ user.id }}" onclick="showGroupList(this)">Group List</button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Форма для редактирования пользователя -->
+    <div id="editUserForm">
+        <h3>Edit User</h3>
+        <form id="editUserFormContent" onsubmit="return updateUser()">
+            <input type="hidden" id="editUserId" name="user_id">
+            <div class="form-group">
+                <label for="editEmail">Email:</label>
+                <input class="form-control item" type="email" id="editEmail" name="email" maxlength="320" minlength="5"
+                    pattern="^[a-zA-Z0-9_.\-]+@[a-zA-Z0-9_.\-]+\.[a-zA-Z]{2,}$" required>
+            </div>
+            <div class="form-group">
+                <label for="editPassword">Password:</label>
+                <input class="form-control item" type="password" id="editPassword" name="password">
+            </div>
+            <div class="form-group">
+                <label for="editRole">Role:</label>
+                <select class="form-control item" id="editRole" name="role">
+                    {% for role_key, role_value in all_roles_dict.items() %}
+                    <option value="{{ role_key }}">{{ role_value }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <button class="btn btn-primary btn-block" type="submit">Save</button>
+                <button class="close-btn" type="button" onclick="closeEditUserForm()">Close</button>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Модальное окно для отображения групп -->
+    <div id="groupListModal">
+        <h3>User Group</h3>
+        <div id="groupTableContainer">
+            <!-- Таблица групп будет создана динамически здесь -->
+        </div>
+        <form id="addGroupForm" onsubmit="return addGroup(event)">
+            <h3>Add New Group</h3>
+            <div class="form-group">
+                <label for="groupName">Group Name:</label>
+                <select class="form-control item" id="groupName" name="group_name" required>
+                    {% for id, name in groups_dict.items() %}
+                    <option value="{{ id }}">{{ name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <button class="btn btn-primary btn-block" type="submit">Add Group</button>
+            </div>
+            <button class="close-btn" type="button" onclick="closeGroupListModal()">Close</button>
+        </form>
+    </div>
+    
+    <script>
+        function toggleAddUserForm() {
+            const form = document.getElementById('addUserForm');
+            const tableContainer = document.getElementById('tableContainer');
+            if (form.classList.contains('show')) {
+                form.classList.remove('show');
+                tableContainer.style.marginTop = '20px'; // Возвращаем отступ
+            } else {
+                form.classList.add('show');
+                tableContainer.style.marginTop = '180px'; // Увеличиваем отступ
+            }
+        }
+
+        function addUser() {
+            const email = document.getElementById('addEmail').value;
+            const password = document.getElementById('addPassword').value;
+            
+            // Проверяем email
+            const emailPattern = /^[a-zA-Z0-9_.\-]+@[a-zA-Z0-9_.\-]+\.[a-zA-Z]{2,}$/;
+            if (!emailPattern.test(email)) {
+                document.getElementById('emailError').style.display = 'block';
+                return false;
+            }
+
+            document.getElementById('emailError').style.display = 'none';
+
+            const form = document.getElementById('userForm');
+            const formData = new FormData(form);
+            
+            // Отправляем данные на сервер
+            fetch('/add_user', {
+                method: 'POST',
+                body: formData
+            }).then(response => response.json())
+              .then(data => {
+                  if (data.success) {
+                      location.reload(); // Перезагружаем страницу после добавления
+                  } else {
+                      alert('Failed to add user');
+                  }
+              });
+
+            return false; // Предотвращаем отправку формы по умолчанию
+        }
+
+        function showEditUserForm(userId, email, role) {
+            document.getElementById('editUserId').value = userId;
+            document.getElementById('editEmail').value = email;
+            document.getElementById('editRole').value = Object.keys(all_roles_dict).find(key => all_roles_dict[key] === role);
+            document.getElementById('editUserForm').classList.add('show');
+        }
+
+        function closeEditUserForm() {
+            document.getElementById('editUserForm').classList.remove('show');
+        }
+
+        function updateUser() {
+            const form = document.getElementById('editUserFormContent');
+            const formData = new FormData(form);
+            
+            // Отправляем данные на сервер
+            fetch('/update_user', {
+                method: 'POST',
+                body: formData
+            }).then(response => response.json())
+              .then(data => {
+                  if (data.success) {
+                      location.reload(); // Перезагружаем страницу после обновления
+                  } else {
+                      alert('Failed to update user');
+                  }
+              });
+
+            return false; // Предотвращаем отправку формы по умолчанию
+        }
+
+        function deleteUser(url) {
+            if (confirm('Are you sure you want to delete this user?')) {
+                fetch(url, {
+                    method: 'DELETE'
+                }).then(response => response.json())
+                  .then(data => {
+                      if (data.success) {
+                          location.reload(); // Перезагружаем страницу после удаления
+                      } else {
+                          alert('Failed to delete user');
+                      }
+                  });
+            }
+        }
+
+        const getGroupsUrl = '{{ url_for('get_users_group', user_id=0) }}'; // Обратите внимание, что user_id = 0
+
+        let currentUserId = null; // Глобальная переменная для хранения текущего userId
+
+    function showGroupList(buttonElement) {
+        // Получаем userId из data-атрибута кнопки
+        currentUserId = buttonElement.getAttribute('data-user-id'); // Обновляем глобальную переменную
+        const url = getGroupsUrl.replace('/0', `/${currentUserId}`);
+
+        fetch(url)
+            .then(response => response.json())
+            .then(groups => {
+                const groupTableContainer = document.getElementById('groupTableContainer');
+                const addGroupForm = document.getElementById('addGroupForm');
+
+                // Очищаем таблицу перед добавлением новых элементов
+                groupTableContainer.innerHTML = '';
+
+                // Генерируем таблицу групп
+                groups.forEach((group, index) => {
+                    const row = document.createElement('div');
+                    row.classList.add('row');
+                    
+                    row.innerHTML = `
+                        <div class="cell">${index + 1}</div>
+                        <div class="cell">${group.name}</div>
+                        <div class="cell">
+                            <button class="delete-btn" onclick="deleteGroup(${currentUserId}, ${group.id})">Delete</button>
+                        </div>
+                    `;
+                    
+                    groupTableContainer.appendChild(row);
+                });
+
+                // Показываем модальное окно
+                const groupListModal = document.getElementById('groupListModal');
+                groupListModal.classList.add('show');
+
+                // Показываем форму добавления группы
+                addGroupForm.style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error fetching groups:', error);
+            });
+    }
+
+    function addGroup(event) {
+        event.preventDefault(); // Предотвращаем отправку формы по умолчанию
+
+        const form = document.getElementById('addGroupForm');
+        const groupNameSelect = document.getElementById('groupName');
+        const selectedGroupId = groupNameSelect.value;
+
+        // Используем глобальную переменную для получения userId
+        const url = `{{ url_for('add_group_for_user', user_id='USER_ID', group_id=0) }}`.replace('USER_ID', currentUserId).replace(/\/\d+$/, `/${selectedGroupId}`);
+
+        // Отправляем POST запрос на сервер
+        fetch(url, {
+            method: 'POST',
+            body: new FormData(form),
+        }).then(response => response.json())
+        .then(data => {
+            alert(data.message);
+            location.reload(); // Перезагружаем страницу после добавления
+        });
+
+        return false; // Предотвращаем отправку формы по умолчанию
+    }
+        const deleteGroupUrl = '{{ url_for('delete_group_for_user', user_id=0, group_id=0) }}';
+
+        function deleteGroup(userId, groupId) {
+
+        if (confirm('Are you sure you want to delete this group?')) {
+            // Заменяем параметры в URL
+            const url = deleteGroupUrl.replace(/\/\d+\/\d+$/, `/${userId}/${groupId}`);
+
+            fetch(url, {
+                method: 'DELETE'
+            }).then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                location.reload();
+            });
+        }
+    }
+
+        function closeGroupListModal() {
+            document.getElementById('groupListModal').classList.remove('show');
+        }
+    </script>
+
+{% endblock %}

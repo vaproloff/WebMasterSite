@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api.auth.auth_config import current_user, RoleChecker
 from api.auth.models import User
 from api.config.models import Config, Group, List, ListLrSearchSystem, ListURI, LiveSearchList, LiveSearchListQuery, UserQueryCount, YandexLr
-from api.config.utils import get_config_names, get_group_names, get_lists_names, get_live_search_lists_names
+from api.config.utils import get_all_groups_for_user, get_all_roles, get_all_user, get_config_names, get_group_names, get_groups_names_dict, get_lists_names, get_live_search_lists_names
 from db.session import get_db_general
 
 from api.query_api.router import router as query_router
@@ -642,6 +642,47 @@ async def get_regions(
     regions = (await session.execute(select(YandexLr))).scalars().all()
     region_dict = {region.Geo: region.Geoid for region in regions}
     return region_dict
+
+
+@admin_router.get("/user_menu")
+async def show_user_menu(
+    request: Request,
+    user=Depends(current_user),
+    session: AsyncSession = Depends(get_db_general),
+    required: bool = Depends(RoleChecker(required_permissions={"Superuser"}))
+):
+    group_name = request.session["group"].get("name", "")
+    config_names = [elem[0] for elem in (await get_config_names(session, user, group_name))]
+    group_names = await get_group_names(session, user)
+
+    all_users = await get_all_user(session)
+
+    all_roles_dict = await get_all_roles(session)
+
+    all_roles_dict_reverse = {value: key for key, value in all_roles_dict.items()}
+
+    all_roles_names = all_roles_dict.values()
+
+    groups_dict = await get_groups_names_dict(session)
+
+    groups_dict_reverse = {value: key for key, value in groups_dict.items()}
+
+    groups_dict_names = groups_dict.values()
+
+    return templates.TemplateResponse("user_menu.html",
+                                    {"request": request,
+                                    "user": user,
+                                    "config_names": config_names,
+                                    "group_names": group_names,
+                                    "all_users": all_users,
+                                    "all_roles_dict": all_roles_dict,
+                                    "all_roles_names": all_roles_names,
+                                    "all_roles_dict_reverse": all_roles_dict_reverse,
+                                    "groups_dict_names": groups_dict_names,
+                                    "groups_dict": groups_dict,
+                                    "groups_dict_reverse": groups_dict_reverse, 
+                                    })
+
 
 
 

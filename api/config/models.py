@@ -77,7 +77,7 @@ class ListURI(Base):
 class UserQueryCount(Base):
     __tablename__ = "user_query_count"
 
-    user_id = Column(Integer, ForeignKey("user.id"), nullable=False, primary_key=True)
+    user_id = Column(Integer, ForeignKey("user.id", ondelete='CASCADE'), nullable=False, primary_key=True)
     query_count = Column(Integer, nullable=False, default=3000)
     last_update_date = Column(DateTime, nullable=False)
     
