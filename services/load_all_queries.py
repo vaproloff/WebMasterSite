@@ -32,8 +32,11 @@ async def add_data(data, last_update_date, async_session, mx_date=None):
             "demand": 0,
             "clicks": 0,
         }
-        for el in query['statistics']:
-            if date != el['date']:
+
+        element_count = len(query['statistics'])
+
+        for count, el in enumerate(query['statistics']):
+            if date != el['date'] or count == element_count - 1:
                 date = datetime.strptime(date, date_format)
                 if mx_date:
                     mx_date[0] = max(mx_date[0], date)
