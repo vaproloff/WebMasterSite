@@ -352,20 +352,27 @@
 
             document.getElementById('emailError').style.display = 'none';
 
-            const form = document.getElementById('userForm');
-            const formData = new FormData(form);
+            const data = {
+            email: email,
+            password: password,
+            is_active: true,
+            is_superuser: false,
+            is_verified: false,
+            id: 0
+            };
+
+            console.log(data)
             
             // Отправляем данные на сервер
-            fetch('/add_user', {
+            fetch('/auth/register', {
                 method: 'POST',
-                body: formData
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data),
             }).then(response => response.json())
               .then(data => {
-                  if (data.success) {
-                      location.reload(); // Перезагружаем страницу после добавления
-                  } else {
-                      alert('Failed to add user');
-                  }
+                    location.reload(); // Перезагружаем страницу после добавления
               });
 
             return false; // Предотвращаем отправку формы по умолчанию
@@ -374,7 +381,6 @@
         function showEditUserForm(userId, email, role) {
             document.getElementById('editUserId').value = userId;
             document.getElementById('editEmail').value = email;
-            document.getElementById('editRole').value = Object.keys(all_roles_dict).find(key => all_roles_dict[key] === role);
             document.getElementById('editUserForm').classList.add('show');
         }
 
@@ -383,23 +389,43 @@
         }
 
         function updateUser() {
-            const form = document.getElementById('editUserFormContent');
-            const formData = new FormData(form);
-            
-            // Отправляем данные на сервер
-            fetch('/update_user', {
-                method: 'POST',
-                body: formData
-            }).then(response => response.json())
-              .then(data => {
-                  if (data.success) {
-                      location.reload(); // Перезагружаем страницу после обновления
-                  } else {
-                      alert('Failed to update user');
-                  }
-              });
+            const userId = document.getElementById('editUserId').value;
+            const email = document.getElementById('editEmail').value;
+            const password = document.getElementById('editPassword').value;
+            const role = document.getElementById('editRole').value;
 
-            return false; // Предотвращаем отправку формы по умолчанию
+            // Собираем данные для отправки
+            const data = {
+                email: email,
+                password: password,
+                role: role
+            };
+
+            const url = "{{ url_for('edit_user', id='user_id') }}".replace('user_id', userId);
+
+            // Отправляем данные на сервер через PUT запрос
+            fetch(url, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 200) {
+                    alert(data.message);  // Сообщение об успешном обновлении
+                    location.reload();     // Перезагрузка страницы для обновления таблицы
+                } else {
+                    alert('Failed to update user');
+                }
+            })
+            .catch(error => {
+                console.error('Error updating user:', error);
+                alert('An error occurred while updating the user.');
+            });
+
+            return false;  // Предотвращаем отправку формы по умолчанию
         }
 
         function deleteUser(url) {
@@ -408,7 +434,8 @@
                     method: 'DELETE'
                 }).then(response => response.json())
                   .then(data => {
-                      if (data.success) {
+                      if (data.status === 200) {
+                          alert(data.message);
                           location.reload(); // Перезагружаем страницу после удаления
                       } else {
                           alert('Failed to delete user');
