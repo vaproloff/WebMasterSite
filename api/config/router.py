@@ -188,109 +188,6 @@ async def get_configs(
     return {"configs": result}  # Возвращаем JSON объект с ключом "roles"
 
 
-@router.post("/add_group")
-async def add_group(
-        request: Request,
-        formData: dict,
-        user=Depends(current_user),
-        session: AsyncSession = Depends(get_db_general),
-):
-    group_name = formData['group_name']
-    usernames = formData['usernames']
-    configs = formData['configs']
-
-    res = (await session.execute(select(Group).where(Group.name == group_name))).scalar()
-
-    if res:
-        return {
-            "status": "error",
-            "message": "group already exists"
-        }
-
-    # Создание новой группы
-    new_group = Group(name=group_name)
-
-    # Добавление пользователей
-    users = []
-    for username in usernames:
-        result = await session.execute(select(User).filter_by(username=username))
-        user = result.scalars().first()
-        if user:
-            users.append(user)
-        else:
-            raise HTTPException(status_code=404, detail=f"User '{username}' not found")
-
-    new_group.users = users
-
-    # Добавление конфигураций
-    configs_objects = []
-    for config_name in configs:
-        result = await session.execute(select(Config).filter_by(name=config_name))
-        config = result.scalars().first()
-        if config:
-            configs_objects.append(config)
-        else:
-            raise HTTPException(status_code=404, detail=f"Config '{config_name}' not found")
-
-    new_group.configs = configs_objects
-
-    # Добавление новой группы в базу данных
-    session.add(new_group)
-    await session.commit()
-
-    return {"status": "success", "group": new_group.id}
-
-
-@router.post("/delete_group")
-async def delete_group(
-        request: Request,
-        formData: dict,
-        user=Depends(current_user),
-        session: AsyncSession = Depends(get_db_general),
-):
-    try:
-        # Извлечение названия группы из данных формы
-        name = formData["group_name"]
-
-        # Поиск группы по имени
-        query = select(Group).where(Group.name == name)
-        result = await session.execute(query)
-        group = result.scalars().first()
-
-        if group:
-            # Удаление группы
-            await session.delete(group)
-            await session.commit()
-        else:
-            return {
-                "status": "error",
-                "message": "Group does not exist"
-            }
-
-        # Удаление баз данных
-        conn = await asyncpg.connect(user=DB_USER, password=DB_PASSWORD, host=DB_HOST, port=DB_PORT)
-        try:
-            # Получение списка всех баз данных
-            databases = await conn.fetch("SELECT datname FROM pg_database WHERE datistemplate = false;")
-            for db in databases:
-                db_name = db['datname']
-                # Удаление баз данных, содержащих в названии '_database_name'
-                if f"_{name}" in db_name:
-                    await conn.execute(f"DROP DATABASE {db_name}")
-        except Exception as e:
-            print(f"Error while deleting databases: {e}")
-        finally:
-            await conn.close()
-
-        return {
-            "status": "success",
-            "message": f"Group {name} deleted and corresponding databases removed"
-        }
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
 @router.post("/add-user-to-group")
 async def add_user_to_group(
         request: Request,
@@ -384,63 +281,6 @@ async def delete_user_from_group(
         }
     else:
         raise HTTPException(status_code=404, detail="User is not in the group.")
-
-
-@router.post("/add-config-to-group")
-async def add_config_to_group(
-        request: Request,
-        formData: dict,
-        user=Depends(current_user),
-        session: AsyncSession = Depends(get_db_general),
-):
-    group_name, config_name = formData.values()
-
-    group = ((await session.execute(select(Group).where(Group.name == group_name))).fetchone())
-    config = (await session.execute(select(Config).where(Config.name == config_name))).fetchone()
-
-    if group is None and config is None:
-        raise HTTPException(status_code=404, detail="Group and Config do not exist.")
-    elif group is None:
-        raise HTTPException(status_code=404, detail="Group does not exist.")
-    elif config is None:
-        raise HTTPException(status_code=404, detail="Config does not exist.")
-
-    group, config = group[0], config[0]
-    group.configs.append(config)
-    await session.commit()
-
-    return {
-        "status": "success",
-        "message": f"{config} added to {group_name}"
-    }
-
-
-@router.post("/delete-config-from-group")
-async def delete_config_from_group(
-        request: Request,
-        formData: dict,
-        user=Depends(current_user),
-        session: AsyncSession = Depends(get_db_general),
-):
-    group_name, config_name = formData.values()
-    group = ((await session.execute(select(Group).where(Group.name == group_name))).fetchone())
-    config = (await session.execute(select(Config).where(Config.name == config_name))).fetchone()
-
-    if group is None and config is None:
-        raise HTTPException(status_code=404, detail="Group and Config do not exist.")
-    elif group is None:
-        raise HTTPException(status_code=404, detail="Group does not exist.")
-    elif config is None:
-        raise HTTPException(status_code=404, detail="Config does not exist.")
-
-    group, config = group[0], config[0]
-    group.configs.remove(config)
-    await session.commit()
-
-    return {
-        "status": "success",
-        "message": f"{config} added to {group_name}"
-    }
 
 
 @router.put("/user/{id}")
@@ -554,6 +394,141 @@ async def add_group_for_user(
         "status": 200,
         "message": f"add group ID: {group_id} for user ID: {user_id}"
     }
+
+
+
+@router.post("/group")
+async def add_group(
+        request: Request,
+        formData: dict,
+        user=Depends(current_user),
+        session: AsyncSession = Depends(get_db_general),
+):
+    print(formData)
+    group_name = formData['name']
+    configs = [int(elem) for elem in formData['configs']]
+
+    res = (await session.execute(select(Group).where(Group.name == group_name))).scalar()
+
+    if res:
+        return {
+            "status": "error",
+            "message": "group already exists"
+        }
+
+    # Создание новой группы
+    new_group = Group(name=group_name)
+
+    # Добавление конфигураций
+    configs_objects = []
+    for config_id in configs:
+        result = await session.execute(select(Config).filter_by(id=config_id))
+        config = result.scalars().first()
+        if config:
+            configs_objects.append(config)
+        else:
+            raise HTTPException(status_code=404, detail=f"Config '{config_id}' not found")
+
+    new_group.configs = configs_objects
+
+    # Добавление новой группы в базу данных
+    session.add(new_group)
+    await session.commit()
+
+    return {"status": "success", "group": new_group.id}
+
+
+
+@router.delete("/group/{group_id}")
+async def delete_group(
+    request: Request,
+    group_id: int,
+    user=Depends(current_user),
+    session: AsyncSession = Depends(get_db_general),
+):
+    group_obj = (await session.execute(select(Group).where(Group.id == group_id))).scalar()
+
+    await session.delete(group_obj)
+
+    await session.commit()
+
+    return {
+        "status": 200,
+        "message": f"delete group ID: {group_id}"
+    }
+
+
+
+@router.get("/group/{group_id}")
+async def get_groups_config(
+    request: Request,
+    group_id: int,
+    user=Depends(current_user),
+    session: AsyncSession = Depends(get_db_general),
+):
+    # Получаем список групп для указанного user_id
+    configs = await session.execute(
+        select(GroupConfigAssociation.config_id)
+        .where(GroupConfigAssociation.group_id == group_id)
+    )
+    config_ids = configs.scalars().all()
+
+    # Получаем информацию о группах
+    configs_info = await session.execute(
+        select(Config).where(Config.id.in_(config_ids))
+    )
+    configs_data = configs_info.scalars().all()
+
+    print([{"id": group.id, "name": group.name} for group in configs_data])
+
+    return [{"id": group.id, "name": group.name} for group in configs_data]
+
+
+@router.delete("/group_config/{group_id}/{config_id}")
+async def delete_config_from_group(
+    request: Request,
+    group_id: int,
+    config_id: int,
+    user=Depends(current_user),
+    session: AsyncSession = Depends(get_db_general),
+):
+    stmt = select(GroupConfigAssociation).where(
+        and_(GroupConfigAssociation.group_id == group_id, GroupConfigAssociation.config_id == config_id))
+    group_config_obj = (await session.execute(stmt)).scalar()
+
+    await session.delete(group_config_obj)
+
+    await session.commit()
+
+    return {
+        "status": 200,
+        "message": f"delete config ID: {config_id} from group ID: {group_id}"
+    }
+
+
+@router.post("/group_config/{group_id}/{config_id}")
+async def add_group_for_user(
+    request: Request,
+    group_id: int,
+    config_id: int,
+    user=Depends(current_user),
+    session: AsyncSession = Depends(get_db_general),
+):
+    session.add(GroupConfigAssociation(group_id = group_id, config_id=config_id))
+
+    await session.commit()
+
+    return {
+        "status": 200,
+        "message": f"add config ID: {config_id} for group ID: {group_id}"
+    }
+
+
+
+
+
+
+
 
     
 

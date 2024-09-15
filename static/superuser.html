@@ -146,18 +146,6 @@
     <div class="header">
         <h1>{{ user.username }}</h1>
     </div>
-    <div class="change-role">
-        <h2>Change Role</h2>
-        <div class="form">
-            <input type="text" id="username" placeholder="Username">
-            <div class="select-wrapper">
-                <select id="role-select" placeholder="Select Role">
-                    <!-- Опции будут добавлены через JavaScript -->
-                </select>
-            </div>
-            <button type="button" onclick="ChangeRole('{{ url_for('change_user_role') }}')">Change Role</button>
-        </div>
-    </div>
     <div class="new-block">
         <h2>Add config</h2>
         <div class="form">
@@ -169,65 +157,8 @@
             <button type="button" onclick="submitForm()">Add</button>
         </div>
     </div>
-    <div class="add-group">
-        <h2>Add Group</h2>
-        <div id="group-form">
-            <div class="form">
-                <input type="text" class="group-name" placeholder="Name">
-                <div class="select-wrapper" id="username-fields">
-                    <select class="group-username" placeholder="Select Username">
-                        <!-- Опции будут добавлены через JavaScript -->
-                    </select>
-                </div>
-                <button type="button" onclick="addUsernameField()">Add More Usernames</button>
-                <div class="select-wrapper" id="config-fields">
-                    <select class="group-config" placeholder="Select Config">
-                        <!-- Опции будут добавлены через JavaScript -->
-                    </select>
-                </div>
-                <button type="button" onclick="addConfigField()">Add More Configs</button>
-                <button type="button" onclick="AddGroup()">Add Group</button>
-            </div>
-        </div>
     </div>
-    <div class="delete-group">
-        <h2>Delete Group</h2>
-        <div class="form">
-            <input type="text" id="group-name-delete" placeholder="Group Name">
-            <button type="button" onclick="DeleteGroup('{{ url_for('delete_group') }}')">Delete Group</button>
-        </div>
     </div>
-    <div class="delete-group">
-        <h2>Add User To Group</h2>
-        <div class="form">
-            <input type="text" id="group-name-add-user" placeholder="Group Name">
-            <input type="text" id="username-add-user" placeholder="Username">
-            <button type="button" onclick="AddUserToGroup('{{ url_for('add_user_to_group') }}')">Add User</button>
-        </div>
-    </div>
-        <div class="delete-group">
-        <h2>Delete User From Group</h2>
-        <div class="form">
-            <input type="text" id="group-name-delete-user" placeholder="Group Name">
-            <input type="text" id="username-delete-user" placeholder="Username">
-            <button type="button" onclick="DeleteUserFromGroup('{{ url_for('delete_user_from_group') }}')">Delete User</button>
-        </div>
-    </div>
-        <div class="delete-group">
-        <h2>Add Config to Group</h2>
-        <div class="form">
-            <input type="text" id="group-name-add-config" placeholder="Group Name">
-            <input type="text" id="username-add-config" placeholder="Name">
-            <button type="button" onclick="AddConfigToGroup('{{ url_for('add_config_to_group') }}')">Add Config</button>
-        </div>
-    </div>
-        <div class="delete-group">
-        <h2>Delete Config from Group</h2>
-        <div class="form">
-            <input type="text" id="group-name-delete-config" placeholder="Group Name">
-            <input type="text" id="username-delete-config" placeholder="Name">
-            <button type="button" onclick="DeleteConfigFromGroup('{{ url_for('delete_config_from_group') }}')">Delete Config</button>
-        </div>
     </div>
 </div>
 <div class="loader" style="display: none;"></div>
@@ -297,39 +228,6 @@
         $('.loader').hide();
     });
 }
-
-    function AddUserToGroup(url) {
-        $('.loader').show();
-        const groupName = $('#group-name-add-user').val();
-        const username = $('#username-add-user').val();
-
-        fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ group_name: groupName, username: username })
-        })
-        .then(response => {
-            if (!response.ok) {
-                return response.json().then(errorData => {
-                    throw new Error(errorData.detail || 'An unknown error occurred.');
-                });
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('Success:', data);
-            // Обработка успешного ответа
-            $('.loader').hide();
-            window.location.reload();
-        })
-        .catch((error) => {
-            console.error('Error:', error);
-            alert(error.message); // Показываем сообщение об ошибке
-            $('.loader').hide();
-        });
-    }
 
     function DeleteUserFromGroup(url) {
         $('.loader').show();
@@ -402,42 +300,6 @@
         });
     }
 
-
-    function AddGroup() {
-        $('.loader').show();
-
-        // Собираем данные из формы
-        const groupName = $('.group-name').val();
-        const usernames = $('.group-username').map(function() { return $(this).val(); }).get();
-        const configs = $('.group-config').map(function() { return $(this).val(); }).get();
-
-        const formData = {
-            group_name: groupName,
-            usernames: usernames,
-            configs: configs
-        };
-
-        fetch('{{ url_for('add_group') }}', {  // Замените на URL вашего эндпоинта
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(formData)
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log('Success:', data);
-            $('.loader').hide();
-            // Перезагружаем страницу или показываем сообщение об успешном добавлении
-            window.location.reload();  // Если нужно перезагрузить страницу
-        })
-        .catch((error) => {
-            console.error('Error:', error);
-            $('.loader').hide();
-            // Покажите сообщение об ошибке или выполните другие действия
-        });
-    }
-
     document.addEventListener('DOMContentLoaded', function() {
         // Загрузка списка ролей при загрузке страницы
         fetch('{{ url_for('get_roles') }}')  // URL вашего эндпоинта для получения ролей
@@ -487,32 +349,6 @@
                 console.error('Error loading configs:', error);
             });
     });
-
-    function ChangeRole(url) {
-        $('.loader').show();
-        const formData = {
-            username: $('#username').val(),
-            new_role: $('#role-select').val()  // Используем выбранную роль
-        };
-
-        fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(formData)
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log('Success:', data);
-            $('.loader').hide();
-            window.location.reload();
-        })
-        .catch((error) => {
-            console.error('Error:', error);
-            $('.loader').hide();
-        });
-    }
 
     function addUsernameField() {
         // Создаем новый контейнер для select
@@ -576,30 +412,6 @@
                     console.error('Error loading configs:', error);
                 });
         }, 100); // Задержка в 100 миллисекунд
-    }
-
-    function DeleteGroup(url) {
-        $('.loader').show();
-        const groupName = $('#group-name-delete').val();
-        fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ group_name: groupName })
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log('Success:', data);
-            // Обработка успешного ответа
-            $('.loader').hide();
-            window.location.reload();
-        })
-        .catch((error) => {
-            console.error('Error:', error);
-            // Обработка ошибки
-            $('.loader').hide();
-        });
     }
 </script>
 {% endblock %}

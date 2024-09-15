@@ -235,23 +235,15 @@
 
     <h1>Users</h1>
     
-    <!-- Кнопка для добавления нового пользователя -->
+    <!-- Кнопка для добавления новой группы -->
     <button class="add-btn" onclick="toggleAddUserForm()">+ Add New Group</button>
     
     <div id="addUserForm">
-        <h3>Add New User</h3>
-        <form id="userForm" onsubmit="return addUser()">
+        <h3>Add New Group</h3>
+        <form id="addGroupForm" onsubmit="return addGroup(event)" method="POST">
             <div class="form-group">
                 <label for="addName">Name:</label>
                 <input class="form-control item" type="text" id="addName" name="name" required>
-            </div>
-            <div class="form-group">
-                <label for="addConfig">Config:</label>
-                <select class="form-control item" id="addConfig" name="config" required>
-                    {% for config in all_configs %}
-                    <option value="{{ config.id }}">{{ config.name }}</option>
-                    {% endfor %}
-                </select>
             </div>
 
             <div id="configsContainer">
@@ -276,87 +268,58 @@
             <div class="cell">{{ loop.index }}</div> <!-- Порядковый номер -->
             <div class="cell">{{ group.name }}</div>
             <div class="cell">
-                <button class="delete-btn" onclick="deleteUser('{{ url_for('delete_user', id=user.id) }}')">Delete</button>
-                <button class="group-list-btn" data-user-id="{{ user.id }}" onclick="showGroupList(this)">Group List</button>
+                <button class="delete-btn" onclick="deleteGroup('{{ url_for('delete_group', group_id=group.id) }}')">Delete</button>
+                <button class="group-list-btn" data-group-id="{{ group.id }}" onclick="showGroupList(this)">Config List</button>
             </div>
         </div>
         {% endfor %}
     </div>
     
-    <!-- Форма для редактирования пользователя -->
-    <div id="editUserForm">
-        <h3>Edit User</h3>
-        <form id="editUserFormContent" onsubmit="return updateUser()">
-            <input type="hidden" id="editUserId" name="user_id">
-            <div class="form-group">
-                <label for="editEmail">Email:</label>
-                <input class="form-control item" type="email" id="editEmail" name="email" maxlength="320" minlength="5"
-                    pattern="^[a-zA-Z0-9_.\-]+@[a-zA-Z0-9_.\-]+\.[a-zA-Z]{2,}$" required>
-            </div>
-            <div class="form-group">
-                <label for="editPassword">Password:</label>
-                <input class="form-control item" type="password" id="editPassword" name="password">
-            </div>
-            <div class="form-group">
-                <label for="editRole">Role:</label>
-                <select class="form-control item" id="editRole" name="role">
-                    {% for role_key, role_value in all_roles_dict.items() %}
-                    <option value="{{ role_key }}">{{ role_value }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="form-group">
-                <button class="btn btn-primary btn-block" type="submit">Save</button>
-                <button class="close-btn" type="button" onclick="closeEditUserForm()">Close</button>
-            </div>
-        </form>
-    </div>
-    
     <!-- Модальное окно для отображения групп -->
     <div id="groupListModal">
-        <h3>User Group</h3>
-        <div id="groupTableContainer">
-            <!-- Таблица групп будет создана динамически здесь -->
+        <h3>Group Configs</h3>
+        <div id="configTableContainer">
+            <!-- Таблица конфигов будет создана динамически здесь -->
         </div>
-        <form id="addGroupForm" onsubmit="return addGroup(event)">
-            <h3>Add New Group</h3>
+        <form id="addConfigForm" onsubmit="return addConfigToGroup(event)">
+            <h3>Add New Config</h3>
             <div class="form-group">
-                <label for="groupName">Group Name:</label>
+                <label for="groupName">Config Name:</label>
                 <select class="form-control item" id="groupName" name="group_name" required>
-                    {% for id, name in groups_dict.items() %}
-                    <option value="{{ id }}">{{ name }}</option>
+                    {% for config in all_configs %}
+                    <option value="{{ config.id }}">{{ config.name }}</option>
                     {% endfor %}
                 </select>
             </div>
             <div class="form-group">
-                <button class="btn btn-primary btn-block" type="submit">Add Group</button>
+                <button class="btn btn-primary btn-block" type="submit">Add Config</button>
             </div>
             <button class="close-btn" type="button" onclick="closeGroupListModal()">Close</button>
         </form>
     </div>
     
-    <script>
+<script>
     let configCounter = 1; // Счетчик для уникальных id полей конфигов
 
-function addConfigField() {
-    // Создание нового элемента для выбора конфига
-    const configContainer = document.createElement('div');
-    configContainer.classList.add('form-group', 'config-select');
-    configContainer.innerHTML = `
-        <label for="addConfig${configCounter}">Config:</label>
-        <select class="form-control item" id="addConfig${configCounter}" name="configs[]" required>
-            {% for config in all_configs %}
-            <option value="{{ config.id }}">{{ config.name }}</option>
-            {% endfor %}
-        </select>
-        <button type="button" class="btn btn-danger remove-btn" onclick="removeConfigField(this)">Remove</button>
-    `;
+    function addConfigField() {
+        // Создание нового элемента для выбора конфига
+        const configContainer = document.createElement('div');
+        configContainer.classList.add('form-group', 'config-select');
+        configContainer.innerHTML = `
+            <label for="addConfig${configCounter}">Config:</label>
+            <select class="form-control item" id="addConfig${configCounter}" name="configs[]" required>
+                {% for config in all_configs %}
+                <option value="{{ config.id }}">{{ config.name }}</option>
+                {% endfor %}
+            </select>
+            <button type="button" class="btn btn-danger remove-btn" onclick="removeConfigField(this)">Remove</button>
+        `;
 
-    // Добавление нового элемента в контейнер
-    document.getElementById('configsContainer').appendChild(configContainer);
+        // Добавление нового элемента в контейнер
+        document.getElementById('configsContainer').appendChild(configContainer);
 
-    // Увеличиваем счетчик для следующего добавленного поля
-    configCounter++;
+        // Увеличиваем счетчик для следующего добавленного поля
+        configCounter++;
     }
 
     function removeConfigField(button) {
@@ -407,44 +370,18 @@ function addConfigField() {
             return false; // Предотвращаем отправку формы по умолчанию
         }
 
-        function showEditUserForm(userId, email, role) {
-            document.getElementById('editUserId').value = userId;
-            document.getElementById('editEmail').value = email;
-            document.getElementById('editRole').value = Object.keys(all_roles_dict).find(key => all_roles_dict[key] === role);
-            document.getElementById('editUserForm').classList.add('show');
+        function addGroup(event) {
+            console.log("check");
         }
 
-        function closeEditUserForm() {
-            document.getElementById('editUserForm').classList.remove('show');
-        }
-
-        function updateUser() {
-            const form = document.getElementById('editUserFormContent');
-            const formData = new FormData(form);
-            
-            // Отправляем данные на сервер
-            fetch('/update_user', {
-                method: 'POST',
-                body: formData
-            }).then(response => response.json())
-              .then(data => {
-                  if (data.success) {
-                      location.reload(); // Перезагружаем страницу после обновления
-                  } else {
-                      alert('Failed to update user');
-                  }
-              });
-
-            return false; // Предотвращаем отправку формы по умолчанию
-        }
-
-        function deleteUser(url) {
+        function deleteGroup(url) {
             if (confirm('Are you sure you want to delete this user?')) {
                 fetch(url, {
                     method: 'DELETE'
                 }).then(response => response.json())
                   .then(data => {
-                      if (data.success) {
+                      if (data.status === 200) {
+                          alert(data.message);
                           location.reload(); // Перезагружаем страницу после удаления
                       } else {
                           alert('Failed to delete user');
@@ -453,95 +390,148 @@ function addConfigField() {
             }
         }
 
-        const getGroupsUrl = '{{ url_for('get_users_group', user_id=0) }}'; // Обратите внимание, что user_id = 0
+        const getGroupsUrl = '{{ url_for('get_groups_config', group_id=0) }}'; // Обратите внимание, что user_id = 0
 
-        let currentUserId = null; // Глобальная переменная для хранения текущего userId
+        let currentGroupId = 0; // Хранение текущего groupId для обновления после удаления
 
-    function showGroupList(buttonElement) {
-        // Получаем userId из data-атрибута кнопки
-        currentUserId = buttonElement.getAttribute('data-user-id'); // Обновляем глобальную переменную
-        const url = getGroupsUrl.replace('/0', `/${currentUserId}`);
+function showGroupList(buttonElement) {
+    currentGroupId = buttonElement.getAttribute('data-group-id'); // Сохраняем текущий groupId
 
-        fetch(url)
-            .then(response => response.json())
-            .then(groups => {
-                const groupTableContainer = document.getElementById('groupTableContainer');
-                const addGroupForm = document.getElementById('addGroupForm');
+    // Формируем URL для запроса
+    const url = getGroupsUrl.replace('/0', `/${currentGroupId}`);
 
-                // Очищаем таблицу перед добавлением новых элементов
-                groupTableContainer.innerHTML = '';
+    fetch(url)
+        .then(response => response.json())
+        .then(configs => {
+            const configTableContainer = document.getElementById('configTableContainer');
+            const addGroupForm = document.getElementById('addGroupForm');
 
-                // Генерируем таблицу групп
-                groups.forEach((group, index) => {
-                    const row = document.createElement('div');
-                    row.classList.add('row');
-                    
-                    row.innerHTML = `
-                        <div class="cell">${index + 1}</div>
-                        <div class="cell">${group.name}</div>
-                        <div class="cell">
-                            <button class="delete-btn" onclick="deleteGroup(${currentUserId}, ${group.id})">Delete</button>
-                        </div>
-                    `;
-                    
-                    groupTableContainer.appendChild(row);
-                });
+            // Очищаем таблицу перед добавлением новых элементов
+            configTableContainer.innerHTML = '';
 
-                // Показываем модальное окно
-                const groupListModal = document.getElementById('groupListModal');
-                groupListModal.classList.add('show');
+            // Генерируем таблицу конфигов
+            configs.forEach((config, index) => {
+                const row = document.createElement('div');
+                row.classList.add('row');
 
-                // Показываем форму добавления группы
-                addGroupForm.style.display = 'block';
-            })
-            .catch(error => {
-                console.error('Error fetching groups:', error);
+                row.innerHTML = `
+                    <div class="cell">${index + 1}</div>
+                    <div class="cell">${config.name}</div>
+                    <div class="cell">
+                        <button class="delete-btn" onclick="deleteConfigFromGroup(${config.id})">Delete</button>
+                    </div>
+                `;
+
+                configTableContainer.appendChild(row);
             });
-    }
 
-    function addGroup(event) {
-        event.preventDefault(); // Предотвращаем отправку формы по умолчанию
+            // Показываем модальное окно
+            const groupListModal = document.getElementById('groupListModal');
+            groupListModal.classList.add('show');
 
-        const form = document.getElementById('addGroupForm');
-        const groupNameSelect = document.getElementById('groupName');
-        const selectedGroupId = groupNameSelect.value;
-
-        // Используем глобальную переменную для получения userId
-        const url = `{{ url_for('add_group_for_user', user_id='USER_ID', group_id=0) }}`.replace('USER_ID', currentUserId).replace(/\/\d+$/, `/${selectedGroupId}`);
-
-        // Отправляем POST запрос на сервер
-        fetch(url, {
-            method: 'POST',
-            body: new FormData(form),
-        }).then(response => response.json())
-        .then(data => {
-            alert(data.message);
-            location.reload(); // Перезагружаем страницу после добавления
+            // Показываем форму добавления группы
+            addGroupForm.style.display = 'block';
+        })
+        .catch(error => {
+            console.error('Error fetching configs:', error);
         });
+}
 
-        return false; // Предотвращаем отправку формы по умолчанию
-    }
-        const deleteGroupUrl = '{{ url_for('delete_group_for_user', user_id=0, group_id=0) }}';
+function addConfigToGroup(event) {
+    event.preventDefault(); // Предотвращаем отправку формы по умолчанию
 
-        function deleteGroup(userId, groupId) {
+    const selectElement = document.getElementById('groupName');
+    const configId = selectElement.value; // Получаем выбранное значение из селекта
 
-        if (confirm('Are you sure you want to delete this group?')) {
-            // Заменяем параметры в URL
-            const url = deleteGroupUrl.replace(/\/\d+\/\d+$/, `/${userId}/${groupId}`);
+    const url = `{{ url_for('add_group_for_user', group_id='${currentGroupId}', config_id='${configId}') }}`;
 
-            fetch(url, {
-                method: 'DELETE'
-            }).then(response => response.json())
-            .then(data => {
+    // Отправляем запрос на сервер
+    fetch(url, {
+        method: 'POST'
+    }).then(response => response.json())
+      .then(data => {
+          if (data.status === 200) {
+              alert(data.message);
+              showGroupList({ getAttribute: () => currentGroupId }); // Обновляем список после добавления
+          } else {
+              alert('Failed to add config');
+          }
+      }).catch(error => {
+          console.error('Error adding config:', error);
+      });
+
+    return false; // Предотвращаем отправку формы по умолчанию
+}
+
+function deleteConfigFromGroup(configId) {
+    if (confirm('Are you sure you want to delete this config from the group?')) {
+        const url = `{{ url_for('delete_config_from_group', group_id='${currentGroupId}', config_id='${configId}') }}`;
+        
+        fetch(url, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 200) {
                 alert(data.message);
-                location.reload();
-            });
-        }
+                showGroupList({ getAttribute: () => currentGroupId }); // Обновляем список после добавления
+            } else {
+                alert('Failed to delete config');
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting config:', error);
+        });
     }
+}
 
         function closeGroupListModal() {
             document.getElementById('groupListModal').classList.remove('show');
         }
-    </script>
+
+    function addGroup(event) {
+    event.preventDefault(); // Предотвращаем отправку формы по умолчанию
+
+    const groupNameInput = document.getElementById('addName');
+    const groupName = groupNameInput.value; // Получаем значение из поля ввода имени
+
+    // Получаем все выбранные конфиги
+    const configSelects = document.querySelectorAll('select[name="configs[]"]');
+    const configs = Array.from(configSelects).map(select => select.value);
+
+    // Выводим конфиги в консоль для отладки
+    console.log('Selected configs:', configs);
+
+    // Формируем объект для отправки
+    const formData = {
+        name: groupName, // Используем правильное имя поля
+        configs: configs // Массив конфигураций
+    };
+
+    const url = `{{ url_for('add_group') }}`; // URL ручки на бэке
+
+    // Отправка данных на бэк в формате JSON
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json', // Указываем тип данных
+        },
+        body: JSON.stringify(formData), // Преобразуем объект в JSON
+    }).then(response => response.json())
+      .then(data => {
+          if (data.status === "success") {
+              alert('Group added successfully!');
+              location.reload(); // Перезагружаем страницу после добавления
+          } else {
+              alert(data.message); // Показываем сообщение об ошибке
+          }
+      }).catch(error => {
+          console.error('Error adding group:', error);
+          alert('Failed to add group.');
+      });
+
+    return false; // Предотвращаем отправку формы по умолчанию
+}
+</script>
 
 {% endblock %}

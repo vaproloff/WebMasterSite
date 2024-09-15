@@ -485,7 +485,7 @@
         }).then(response => response.json())
         .then(data => {
             alert(data.message);
-            location.reload(); // Перезагружаем страницу после добавления
+            showGroupList({ getAttribute: () => currentUserId }); // Обновляем список после добавления
         });
 
         return false; // Предотвращаем отправку формы по умолчанию
@@ -503,7 +503,7 @@
             }).then(response => response.json())
             .then(data => {
                 alert(data.message);
-                location.reload();
+                showGroupList({ getAttribute: () => currentUserId }); // Обновляем список после добавления
             });
         }
     }
