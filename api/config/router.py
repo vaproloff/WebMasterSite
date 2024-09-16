@@ -49,7 +49,7 @@ async def add_config(request: Request,
     session.add(config)
     await session.commit()
 
-    conn = await asyncpg.connect(user=DB_USER, password=DB_PASSWORD, host=DB_HOST, port=DB_PORT)
+    conn = await asyncpg.connect(user=DB_USER, password=DB_PASSWORD, host=DB_HOST, port=DB_PORT, database="postgres")
     try:
         await conn.execute(f'CREATE DATABASE "{database_name}"')
         print(f"CREATE DATABASE {database_name}: successfully")
