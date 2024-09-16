@@ -1831,7 +1831,6 @@ function sendRequest(url) {
         .then(response => {
             // Проверяем статус ответа
             if (!response.ok) {
-                console.log("qqq")
                 return response.json().then(errData => {
                     // Обработка ошибки в зависимости от статуса
                     if (response.status === 400) {
@@ -1845,6 +1844,7 @@ function sendRequest(url) {
             console.log('Success:', data);
             // Обработка успешного ответа
             $('.loader').hide();
+            alert(data.message)
             window.location.reload();  // Обновление страницы
         })
         .catch((error) => {

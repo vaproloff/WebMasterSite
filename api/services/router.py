@@ -30,7 +30,7 @@ async def load_queries_script(
     res = await get_all_data_queries(request_session)
     if res["status"] == 400:
         raise HTTPException(status_code=400, detail="Нет новых обновлений")
-    return {"status": 200}
+    return res
 
 
 @router.get('/load-urls-script')
@@ -42,7 +42,7 @@ async def load_urls_script(
     res = await get_all_data_urls(request_session)
     if res["status"] == 400:
         raise HTTPException(status_code=400, detail="Нет новых обновлений")
-    return {"status": 200}
+    return res
 
 
 @router.get('/load-history-script')

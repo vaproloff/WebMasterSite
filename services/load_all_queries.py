@@ -129,8 +129,10 @@ async def get_all_data(request_session):
     if not last_update_date:
         last_update_date = datetime.strptime("1900-01-01", date_format)
     mx_date = [datetime.strptime("1900-01-01", date_format)]
+    query_count = 0
     try:
         await add_data(data, last_update_date, async_session, mx_date)
+        query_count += 500
     except Exception as e:
         print("Erorr: ", e)
     if mx_date[0] <= last_update_date:
@@ -141,13 +143,14 @@ async def get_all_data(request_session):
         print(f"[INFO] PAGE{offset} DONE!")
         curr = datetime.now()
         try:
+            query_count += 500
             await get_data_by_page(offset, last_update_date, URL, ACCESS_TOKEN, async_session)
         except Exception as e:
             print("Error: ", e)
         print(datetime.now() - curr)
     
     return {"status": 200,
-            "detail": "Ok"
+            "message": f"load {query_count} records"
             }
 
 

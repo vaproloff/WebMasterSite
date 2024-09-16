@@ -1853,6 +1853,7 @@ function sendRequest(url) {
             console.log('Success:', data);
             // Обработка успешного ответа
             $('.loader').hide();
+            alert(data.message);
             window.location.reload();  // Обновление страницы
         })
         .catch((error) => {
