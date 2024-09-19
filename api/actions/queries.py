@@ -45,3 +45,19 @@ async def _get_urls_with_pagination_and_like_sort_query(page, per_page, date_sta
             page, per_page, date_start, date_end, search_text, sort_desc
         )
         return urls
+
+async def _get_metrics_daily_summary(date_start, date_end, session):
+    async with session() as s:
+        url_dal = QueryDAL(s)
+        urls = await url_dal.get_metrics_daily_summary(
+            date_start, date_end
+        )
+        return urls
+
+async def _get_metrics_daily_summary_like(date_start, date_end, search_text, session):
+    async with session() as s:
+        url_dal = QueryDAL(s)
+        urls = await url_dal.get_metrics_daily_summary_like(
+            date_start, date_end, search_text
+        )
+        return urls

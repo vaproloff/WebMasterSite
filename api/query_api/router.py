@@ -1,6 +1,7 @@
 import csv
 from datetime import datetime, timedelta
 import io
+from cmath import inf
 from itertools import groupby
 import logging
 import sys
@@ -11,7 +12,7 @@ from fastapi.templating import Jinja2Templates
 from openpyxl import Workbook
 from sqlalchemy import delete, select
 from api.actions.actions import get_last_date, get_last_load_date
-from api.actions.queries import _get_urls_with_pagination_and_like_query, _get_urls_with_pagination_and_like_sort_query, _get_urls_with_pagination_query, _get_urls_with_pagination_sort_query
+from api.actions.queries import _get_urls_with_pagination_and_like_query, _get_urls_with_pagination_and_like_sort_query, _get_urls_with_pagination_query, _get_urls_with_pagination_sort_query, _get_metrics_daily_summary, _get_metrics_daily_summary_like
 from api.auth.models import User
 from api.config.utils import get_config_names, get_group_names
 from db.models import LastUpdateDate, MetricsQuery
@@ -247,11 +248,76 @@ async def get_queries(
                               </div>"""
         data.append(res)
 
+        metricks_data = []
+        if data_request["search_text"] == "":
+            metricks = await _get_metrics_daily_summary(
+                        start_date,
+                        end_date,
+                        async_session,
+                        )
+            #with open('data_output.txt', 'w', encoding='utf-8') as f: f.write(str(metricks))
+        else:
+            metricks = await _get_metrics_daily_summary_like(
+                        start_date,
+                        end_date,
+                        data_request["search_text"], 
+                        async_session,
+                        )
+            #with open('data_output.txt', 'w', encoding='utf-8') as f: f.write(str(metricks))
+        
+        total_clicks_days = 0
+        total_impession_days = 0
+        res_clicks = {"query":
+                    f"<div style='width:355px; height: 55px; overflow: auto; white-space: nowrap;'><span>Суммарные клики</span></div>"}
+        res_impressions = {"query":
+                    f"<div style='width:355px; height: 55px; overflow: auto; white-space: nowrap;'><span>Суммарные показы</span></div>"}
+        prev_clicks_value = -inf
+        prev_impression_value = -inf
+        for date, clicks_count, impressions_count in sorted(metricks, key=lambda x: x[0]):
+            if clicks_count >= prev_clicks_value:
+                color = "#9DE8BD"  # green
+            else:
+                color = "#FDC4BD"  # red
+            if clicks_count > 0:
+                res_clicks[date.strftime(
+                    date_format_2)] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: {color}; text-align: center; display: flex; align-items: center; justify-content: center;'>
+                                        <span style='font-size: 18px'>{clicks_count}</span>
+                                        </div>"""
+                total_clicks_days += clicks_count
+            else:
+                res_clicks[date.strftime(date_format_2)] = "0"
+            prev_clicks_value = clicks_count
+            
+            if impressions_count >= prev_impression_value:
+                color = "#9DE8BD"  # green
+            else:
+                color = "#FDC4BD"  # red
+            if impressions_count > 0:
+                res_impressions[date.strftime(
+                    date_format_2)] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: {color}; text-align: center; display: flex; align-items: center; justify-content: center;'>
+                                        <span style='font-size: 18px'>{impressions_count}</span>
+                                        </div>"""
+                total_impession_days += impressions_count
+            else:
+                res_impressions[date.strftime(date_format_2)] = "0"
+            prev_impression_value = impressions_count
+        res_clicks["result"] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD; text-align: center; display: flex; align-items: center; justify-content: center;'>
+                                        <span style='font-size: 18px'>{total_clicks_days}</span>
+                                        </div>"""
+        res_impressions["result"] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD; text-align: center; display: flex; align-items: center; justify-content: center;'>
+                                        <span style='font-size: 18px'>{total_impession_days}</span>
+                                        </div>"""
+        metricks_data.append(res_clicks)
+        metricks_data.append(res_impressions)
+
+    json_metricks_data = jsonable_encoder(metricks_data)
     json_data = jsonable_encoder(data)
 
     logger.info("get query data success")
     # return JSONResponse({"data": json_data, "recordsTotal": limit, "recordsFiltered": 50000})
-    return JSONResponse({"data": json_data})
+    return JSONResponse({"data": json_data,
+                        "metricks_data": json_metricks_data
+                        })
 
 @router.delete("/")
 async def delete_query(

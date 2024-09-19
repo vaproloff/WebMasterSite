@@ -14,7 +14,7 @@
         <a href="{{ url_for('show_profile', username=user.username) }}" class="back-to-menu">Back to profile</a>
         <input type="button" value="Update Data Query" onclick="sendRequest('{{ url_for('load_queries_script') }}')">
         <label for="last_update_date">Last Update Date: {{ last_update_date }}</label>
-        <label for="last_update_date">Данные есть до: {{ last_date }}</label>
+        <label id="last_date" for="last_update_date" title={{last_date}}>Данные есть до: {{ last_date }}</label>
         <input type="number" id="days" placeholder="Days" min="1" max="13">
         <input type="button" value="Delete Data for the Last" onclick="deleteDataForLast('{{ url_for('delete_query') }}');">
     </div>
@@ -32,7 +32,7 @@
     <input type="button" value="Csv" onclick="generateCsv('{{ url_for('generate_csv_query')}}');">
     
     <table id="example" class="display nowrap" style="width:100%;">
-        <thead>
+        <thead id="thead_t">
             <tr id="head_t">
                 <!-- Table headers will be inserted here dynamically -->
             </tr>
@@ -272,16 +272,17 @@
 // Добавляем контейнер в ячейку
             nameCell.appendChild(buttonContainer);
 
-            row.appendChild(nameCell);
-
-        columns = [
+            row.appendChild(nameCell);        
+            
+            columns = [
             {"title": "query"},
             {"title": "result"},
         ]
-
+        
         amount = calculateDays();
 
         for (let i = amount; i >= 0; i--) {  // Используем `let` вместо `var`
+
             let date = IncrementDate(document.getElementById('start_date').value, i);  // Используем `let`
             columns.push({"title": date});
 
@@ -447,7 +448,35 @@
             .then(response => response.json())
             .then(data => {
                 // Обработка ответа
+                metricks_data = data.metricks_data;
                 data = data.data;
+                // Добавление суммарных показателей в таблицу
+                var table = $('#thead_t');
+                empty = `<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #B9BDBC;
+                text-align: center; display: flex; align-items: center; justify-content: center;'>
+            <span style='font-size: 18px'><span style='color:red'>NAN</span></span><br>
+            </div>`
+                zero = `<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #B9BDBC;
+                text-align: center; display: flex; align-items: center; justify-content: center;'>
+            <span style='font-size: 18px'><span style='color:red'>0.0</span></span><br>
+            </div>`
+                for (i = 0; i < 2; i++) {
+                    var newRow = '<tr>';
+                    $.each(columns, function (index_c, cell) {
+                        if (metricks_data[i][columns[index_c]["title"]]) {
+                            if (metricks_data[i][columns[index_c]["title"]] != "0") {
+                                newRow += '<td>' + metricks_data[i][columns[index_c]["title"]] + '</td>';
+                            }
+                            else
+                                newRow += '<td>' + zero + '</td>';
+                        } else {
+                            newRow += '<td>' + empty + '</td>';
+                        }
+                    });
+                    newRow += '</tr>';
+                    table.append(newRow);
+                }
+                // Добавление данных в таблицу
                 var table = $('#body_t');
                 empty = `<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #B9BDBC'>
             <span style='font-size: 18px'><span style='color:red'>NAN</span></span><br>
@@ -472,6 +501,8 @@
                 // Обработка ошибки
                 console.error("Error:", error);
             });
+
+        
 
     }
 
@@ -641,7 +672,7 @@
             nameCell.appendChild(buttonContainer);
 
             row.appendChild(nameCell);
-
+        
         columns = [
             {"title": "query"},
             {"title": "result"},
@@ -816,6 +847,7 @@
 
             row.appendChild(nameCell);
         }
+
         var CurPage = document.getElementById("cur").innerHTML;
         CurPage = Number.parseInt(CurPage, 10)
         var url = "{{ url_for('get_queries') }}";
@@ -845,7 +877,42 @@
             .then(response => response.json())
             .then(data => {
                 console.log(data);
+                metricks_data = data.metricks_data;
                 data = data.data;
+                
+                var table = $('#thead_t');
+
+                var elmtTable = document.getElementById('thead_t');
+                var rows = elmtTable.getElementsByTagName('tr');
+                var rowCount = rows.length;
+                for (var x = 2; x >= 1; x--) {
+                    elmtTable.removeChild(rows[x]);
+                }
+                
+                empty = `<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #B9BDBC;
+                text-align: center; display: flex; align-items: center; justify-content: center;'>
+            <span style='font-size: 18px'><span style='color:red'>NAN</span></span><br>
+            </div>`
+            zero = `<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #B9BDBC;
+                text-align: center; display: flex; align-items: center; justify-content: center;'>
+            <span style='font-size: 18px'><span style='color:red'>0.0</span></span><br>
+            </div>`
+                for (i = 0; i < 2; i++) {
+                    var newRow = '<tr>';
+                    $.each(columns, function (index_c, cell) {
+                        if (metricks_data[i][columns[index_c]["title"]]) {
+                            if (metricks_data[i][columns[index_c]["title"]] != "0") {
+                                newRow += '<td>' + metricks_data[i][columns[index_c]["title"]] + '</td>';
+                            }
+                            else
+                                newRow += '<td>' + zero + '</td>';
+                        } else {
+                            newRow += '<td>' + empty + '</td>';
+                        }
+                    });
+                    newRow += '</tr>';
+                    table.append(newRow);
+                }
                 var table = $('#body_t');
 
                 var elmtTable = document.getElementById('body_t');

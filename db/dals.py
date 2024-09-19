@@ -703,6 +703,29 @@ class QueryDAL:
         if len(product_row) != 0:
             return product_row
 
+    async def get_metrics_daily_summary_like(self, date_start, date_end, search_text):
+        sub = select(Query).filter(Query.query.like(f"%{search_text.strip()}%")).subquery()
+        query = select(MetricsQuery.date, 
+                    func.sum(MetricsQuery.clicks).label('total_clicks'),
+                    func.sum(MetricsQuery.impression).label('total_impressions')
+                    ).join(sub, MetricsQuery.query == sub.c.query
+                    ).group_by(MetricsQuery.date,
+                    ).having(and_(MetricsQuery.date <= date_end, MetricsQuery.date >= date_start))
+        res = await self.db_session.execute(query)
+        product_row = res.fetchall()
+        if len(product_row) != 0:
+            return product_row
+
+    async def get_metrics_daily_summary(self, date_start, date_end):
+        query = select(MetricsQuery.date, 
+                    func.sum(MetricsQuery.clicks).label('total_clicks'),
+                    func.sum(MetricsQuery.impression).label('total_impressions')
+                    ).group_by(MetricsQuery.date,
+                    ).having(and_(MetricsQuery.date <= date_end, MetricsQuery.date >= date_start))
+        res = await self.db_session.execute(query)
+        product_row = res.fetchall()
+        if len(product_row) != 0:
+            return product_row
 
 class MetricQueryDAL:
     """Data Access Layer for operating user info"""
