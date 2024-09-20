@@ -554,7 +554,7 @@ async def show_list_menu(
     list_id: int,
     user=Depends(current_user),
     session: AsyncSession = Depends(get_db_general),
-    required: bool = Depends(RoleChecker(required_permissions={"User", "Administrator", "Superuser"}))
+    required: bool = Depends(RoleChecker(required_permissions={"User", "Administrator", "Superuser", "Search"}))
 ):
     group_name = request.session["group"].get("name", "")
     config_names = [elem[0] for elem in (await get_config_names(session, user, group_name))]
@@ -634,12 +634,12 @@ async def delete_lr_list(
     }
 
 
-@admin_router.get("list_menu/regions")
+@admin_router.get("/list_menu/regions")
 async def get_regions(
     request: Request,
     user=Depends(current_user),
     session: AsyncSession = Depends(get_db_general),
-    required: bool = Depends(RoleChecker(required_permissions={"User", "Administrator", "Superuser"}))
+    required: bool = Depends(RoleChecker(required_permissions={"User", "Administrator", "Superuser", "Search"}))
 ):
     regions = (await session.execute(select(YandexLr))).scalars().all()
     region_dict = {region.Geo: region.Geoid for region in regions}
