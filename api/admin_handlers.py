@@ -587,7 +587,7 @@ async def add_lr_list(
     data: dict,
     user=Depends(current_user),
     session: AsyncSession = Depends(get_db_general),
-    required: bool = Depends(RoleChecker(required_permissions={"User", "Administrator", "Superuser"}))
+    required: bool = Depends(RoleChecker(required_permissions={"User", "Administrator", "Superuser", "Search"}))
 ):
     list_id, region_code, search_system = data.values()
     list_id, region_code = int(list_id), int(region_code)
@@ -612,7 +612,7 @@ async def delete_lr_list(
     data: dict,
     user=Depends(current_user),
     session: AsyncSession = Depends(get_db_general),
-    required: bool = Depends(RoleChecker(required_permissions={"User", "Administrator", "Superuser"}))
+    required: bool = Depends(RoleChecker(required_permissions={"User", "Administrator", "Superuser", "Search"}))
 ):
     print(data)
     list_id, region_code, search_system = data.values()

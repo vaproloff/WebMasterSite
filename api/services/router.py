@@ -77,7 +77,7 @@ async def load_live_search_list(
     data: dict,
     session: AsyncSession = Depends(get_db_general),
     user: User = Depends(current_user),
-    required: bool = Depends(RoleChecker(required_permissions={"Administrator", "Superuser"}))
+    required: bool = Depends(RoleChecker(required_permissions={"Administrator", "Superuser", "Search"}))
 ):
     list_lr_id = int(data["list_lr_id"])
     print(list_lr_id)
