@@ -11,8 +11,9 @@
 </head>
 <body>
     <div class="button-container">
-        <a href="{{ url_for('show_profile', username=user.username) }}" class="back-to-menu">Back to profile</a>
-
+        {% if user.role in (1, 2, 3) %}
+            <a href="{{ url_for('show_profile', username=user.username) }}" class="back-to-menu">Back to profile</a>
+        {% endif %}
         <!-- New section for displaying current system and region -->
         <div class="current-info">
             <p style="font-size: 1.5em; font-weight: bold;">Текущая Система: {{ search_system }}</p>

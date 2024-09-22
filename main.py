@@ -1,6 +1,8 @@
 import uvicorn
 from starlette.middleware.sessions import SessionMiddleware
 
+# import settings
+import config
 from fastapi import FastAPI, HTTPException
 from fastapi import APIRouter
 from fastapi.staticfiles import StaticFiles
