@@ -248,6 +248,14 @@
                 <input class="form-control item" type="password" id="addPassword" name="password" required>
             </div>
             <div class="form-group">
+                <label for="addName">Name:</label>
+                <input class="form-control item" type="text" id="addName" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="addIsActive">Is active?:</label>
+                <input class="form-control item" type="checkbox" id="addIsActive" name="isactive" checked>
+            </div>
+            <div class="form-group">
                 <button class="btn btn-primary btn-block create-account" type="submit">Submit</button>
             </div>
         </form>
@@ -258,6 +266,8 @@
             <div class="cell">#</div>
             <div class="cell">Email</div>
             <div class="cell">Role</div>
+            <div class="cell">Name</div>
+            <div class="cell">Is active?</div>
             <div class="cell">Actions</div>
         </div>
         {% for user in all_users %}
@@ -265,8 +275,10 @@
             <div class="cell">{{ loop.index }}</div> <!-- Порядковый номер -->
             <div class="cell">{{ user.email }}</div>
             <div class="cell">{{ all_roles_dict[user.role] }}</div>
+            <div class="cell">{{ user.username }}</div>
+            <div class="cell">{{ user.is_active }}</div>
             <div class="cell">
-                <button class="edit-btn" onclick="showEditUserForm({{ user.id }}, '{{ user.email }}', '{{ user.role }}')">Edit</button>
+                <button class="edit-btn" onclick="showEditUserForm({{ user.id }}, '{{ user.email }}', '{{ user.role }}', '{{ user.username }}', '{{ user.is_active }}')">Edit</button>
                 <button class="delete-btn" onclick="deleteUser('{{ url_for('delete_user', id=user.id) }}')">Delete</button>
                 <button class="group-list-btn" data-user-id="{{ user.id }}" data-user-email="{{ user.email }}" onclick="showGroupList(this)">Group List</button>
             </div>
@@ -295,6 +307,14 @@
                     <option value="{{ role_key }}">{{ role_value }}</option>
                     {% endfor %}
                 </select>
+            </div>
+            <div class="form-group">
+                <label for="editUsername">Username:</label>
+                <input class="form-control item" type="text" id="editUsername" name="username">
+            </div>
+            <div class="form-group">
+                <label for="editIsActive">Is active?</label>
+                <input class="form-control item" type="checkbox" id="editIsActive" name="isactive">
             </div>
             <div class="form-group">
                 <button class="btn btn-primary btn-block" type="submit">Save</button>
@@ -342,7 +362,9 @@
         function addUser() {
             const email = document.getElementById('addEmail').value;
             const password = document.getElementById('addPassword').value;
-            
+            const name = document.getElementById('addName').value;
+            const is_active = document.getElementById('addIsActive').checked;
+
             // Проверяем email
             const emailPattern = /^[a-zA-Z0-9_.\-]+@[a-zA-Z0-9_.\-]+\.[a-zA-Z]{2,}$/;
             if (!emailPattern.test(email)) {
@@ -351,11 +373,11 @@
             }
 
             document.getElementById('emailError').style.display = 'none';
-
             const data = {
             email: email,
             password: password,
-            is_active: true,
+            username: name,
+            is_active: is_active,
             is_superuser: false,
             is_verified: false,
             id: 0
@@ -378,9 +400,11 @@
             return false; // Предотвращаем отправку формы по умолчанию
         }
 
-        function showEditUserForm(userId, email, role) {
+        function showEditUserForm(userId, email, role, username, is_active) {
             document.getElementById('editUserId').value = userId;
             document.getElementById('editEmail').value = email;
+            document.getElementById('editUsername').value = username;
+            document.getElementById('editIsActive').checked = (is_active.toLowerCase() === 'true');
             document.getElementById('editUserForm').classList.add('show');
         }
 
@@ -393,14 +417,17 @@
             const email = document.getElementById('editEmail').value;
             const password = document.getElementById('editPassword').value;
             const role = document.getElementById('editRole').value;
+            const username = document.getElementById('editUsername').value;
+            const is_active = document.getElementById('editIsActive').checked;
 
             // Собираем данные для отправки
             const data = {
                 email: email,
                 password: password,
-                role: role
+                role: role,
+                username: username,
+                is_active: is_active
             };
-
             const url = "{{ url_for('edit_user', id='user_id') }}".replace('user_id', userId);
 
             // Отправляем данные на сервер через PUT запрос
