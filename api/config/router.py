@@ -291,7 +291,8 @@ async def edit_user(
     user=Depends(current_user),
     session: AsyncSession = Depends(get_db_general),
 ):
-    email, password, role = formData.get('email'), formData.get('password'), int(formData.get('role'))
+    email, password, role, username, is_active = (formData.get('email'), formData.get('password'),
+                                                  int(formData.get('role')), formData.get('username'), formData.get('is_active'))
     user = (await session.execute(select(User).where(User.id == id))).scalars().first()
 
     if email:
@@ -301,8 +302,9 @@ async def edit_user(
         user.hashed_password = password_helper.hash(password)
     if role:
         user.role = role
-    
-    print(user.email, user.role)
+    if username:
+        user.username = username
+    user.is_active = is_active
 
     await session.commit()
 

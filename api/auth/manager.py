@@ -49,6 +49,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
         if existing_user is not None:
             raise exceptions.UserAlreadyExists()
 
+        safe = False
         user_dict = (
             user_create.create_update_dict()
             if safe
@@ -96,7 +97,6 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
             user: User,
             request: Optional[Request] = None,
             ):
-        
         async with async_session_general() as session:
             session.add(UserQueryCount(
                 user_id=user.id,
