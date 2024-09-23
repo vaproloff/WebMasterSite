@@ -86,13 +86,16 @@ async def show_superuser(
     group_name = request.session["group"].get("name", "")
     config_names = [elem[0] for elem in (await get_config_names(session, user, group_name))]
 
+    all_configs = [elem for elem in (await get_all_configs(session))]
+
     group_names = await get_group_names(session, user)
 
     return templates.TemplateResponse("superuser.html",
                                       {"request": request,
                                        "user": user,
                                        "config_names": config_names,
-                                       "group_names": group_names})
+                                       "group_names": group_names,
+                                       "all_configs": all_configs,})
 
 
 @admin_router.get("/list/{username}")
