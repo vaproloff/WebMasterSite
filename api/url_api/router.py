@@ -657,8 +657,8 @@ async def get_urls(
     # return JSONResponse({"data": json_data, "recordsTotal": limit, "recordsFiltered": 50000})
     return JSONResponse({"data": json_data#, "metricks_data": json_metricks_data
                         })
-@router.post("/get_total_sum")
-async def get_total_sum(
+@router.post("/get_total_sum_urls/")
+async def get_total_sum_urls(
     request: Request, 
     data_request: dict, 
     user: User = Depends(current_user),
@@ -676,7 +676,9 @@ async def get_total_sum(
         metricks = await _get_metrics_daily_summary(
                     start_date,
                     end_date,
+                    data_request["list_name"],
                     async_session,
+                    general_session,
                     )
         #with open('data_output.txt', 'w', encoding='utf-8') as f: f.write(str(metricks))
     else:
@@ -684,24 +686,31 @@ async def get_total_sum(
                     start_date,
                     end_date,
                     data_request["search_text"], 
+                    data_request["list_name"],
                     async_session,
+                    general_session,
                     )
         #with open('data_output.txt', 'w', encoding='utf-8') as f: f.write(str(metricks))
     
     total_clicks_days = 0
     total_impession_days = 0
+    total_not_void = 0
     res_clicks = {"url":
                 f"<div style='width:355px; height: 55px; overflow: auto; white-space: nowrap;'><span>Суммарные клики</span></div>"}
     res_impressions = {"url":
                 f"<div style='width:355px; height: 55px; overflow: auto; white-space: nowrap;'><span>Суммарные показы</span></div>"}
+    res_not_void = {"url":
+                f"<div style='width:355px; height: 55px; overflow: auto; white-space: nowrap;'><span>Строки с данными</span></div>"}
     prev_clicks_value = -inf
     prev_impression_value = -inf
     for date, clicks_count, impressions_count in sorted(metricks, key=lambda x: x[0]):
+        not_void_count = 0
         if clicks_count >= prev_clicks_value:
             color = "#9DE8BD"  # green
         else:
             color = "#FDC4BD"  # red
         if clicks_count > 0:
+            not_void_count += 1
             res_clicks[date.strftime(
                 date_format_2)] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: {color}; text-align: center; display: flex; align-items: center; justify-content: center;'>
                                     <span style='font-size: 18px'>{clicks_count}</span>
@@ -716,6 +725,7 @@ async def get_total_sum(
         else:
             color = "#FDC4BD"  # red
         if impressions_count > 0:
+            not_void_count += 1
             res_impressions[date.strftime(
                 date_format_2)] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: {color}; text-align: center; display: flex; align-items: center; justify-content: center;'>
                                     <span style='font-size: 18px'>{impressions_count}</span>
@@ -724,14 +734,24 @@ async def get_total_sum(
         else:
             res_impressions[date.strftime(date_format_2)] = "0"
         prev_impression_value = impressions_count
+
+        total_not_void += not_void_count
+        res_not_void[date.strftime(
+                date_format_2)] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD; text-align: center; display: flex; align-items: center; justify-content: center;'>
+                                    <span style='font-size: 18px'>{not_void_count}</span>
+                                    </div>"""
     res_clicks["result"] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD; text-align: center; display: flex; align-items: center; justify-content: center;'>
                                     <span style='font-size: 18px'>{total_clicks_days}</span>
                                     </div>"""
     res_impressions["result"] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD; text-align: center; display: flex; align-items: center; justify-content: center;'>
                                     <span style='font-size: 18px'>{total_impession_days}</span>
                                     </div>"""
+    res_not_void["result"] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD; text-align: center; display: flex; align-items: center; justify-content: center;'>
+                                    <span style='font-size: 18px'>{total_not_void}</span>
+                                    </div>"""
     metricks_data.append(res_clicks)
     metricks_data.append(res_impressions)
+    metricks_data.append(res_not_void)
 
     json_metricks_data = jsonable_encoder(metricks_data)
 

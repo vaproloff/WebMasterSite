@@ -34,7 +34,7 @@
     <input type="button" value="Отфильтровать" onclick="UpdateTable();">
     <input type="button" value="Excel" onclick="generateExcel('{{ url_for('generate_excel_url')}}');">
     <input type="button" value="Csv" onclick="generateCsv('{{ url_for('generate_csv_url')}}');">
-    <input type="button" value="Вычислить суммы" onclick="getTotalSum('{{ url_for('get_total_sum')}}');">
+    <input type="button" value="Вычислить суммы" onclick="getTotalSum('{{ url_for('get_total_sum_urls')}}');">
     
     <table id="example" class="display nowrap" style="width:100%;">
         <thead id="thead_t">
@@ -428,7 +428,7 @@
 
             row.appendChild(nameCell);
         }
-        
+
         prev_start_date = document.getElementById('start_date').value;
         prev_end_date = document.getElementById('end_date').value;
         prev_search_text = document.getElementById("search_field").value;
@@ -1824,7 +1824,8 @@
     var params = {
             start_date: prev_start_date, // Дата начала поиска
             end_date: prev_end_date, // Дата окончания поиска
-            search_text: prev_search_text
+            search_text: prev_search_text,
+            list_name: "{{ list_name }}"
             //total_sum_flag: "result",
         };
 
@@ -1859,7 +1860,7 @@
             text-align: center; display: flex; align-items: center; justify-content: center;'>
         <span style='font-size: 18px'><span style='color:red'>0.0</span></span><br>
         </div>`
-            for (i = 0; i < 2; i++) {
+            for (i = 0; i < 3; i++) {
                 var newRow = '<tr>';
                 $.each(columns, function (index_c, cell) {
                     if (metricks_data[i][columns[index_c]["title"]]) {

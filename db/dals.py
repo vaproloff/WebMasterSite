@@ -414,23 +414,66 @@ class UrlDAL:
         product_row = res.fetchall()
         if len(product_row) != 0:
             return product_row
-    async def get_metrics_daily_summary_like(self, date_start, date_end, search_text):
-        sub = select(Url).filter(Url.url.like(f"%{search_text.strip()}%")).subquery()
-        url = select(Metrics.date, 
+        
+    async def get_metrics_daily_summary_like(self, date_start, date_end, search_text, list_name, general_db):
+
+        filter_query = None
+
+        if list_name != "None":
+            list_id = (await general_db.execute(
+                select(List_model.id).where(List_model.name == list_name)
+            )).fetchone()[0]
+
+            uri_list = (await general_db.execute(
+                select(ListURI.uri).where(ListURI.list_id == list_id)
+            )).scalars().all()
+
+            filter_query = Url.url.in_(uri_list)
+        sub_query = select(Url)
+            
+        if filter_query is not None:
+            sub_query = sub_query.filter(filter_query)
+
+        sub = sub_query.filter(Url.url.like(f"%{search_text.strip()}%")).subquery()
+        query = select(Metrics.date, Metrics.clicks, Metrics.impression
+                    ).join(sub, Metrics.url == sub.c.url
+                    ).group_by(Metrics.date,
+                    ).having(and_(Metrics.date <= date_end, Metrics.date >= date_start))
+        query = select(Metrics.date, 
                     func.sum(Metrics.clicks).label('total_clicks'),
                     func.sum(Metrics.impression).label('total_impressions')
                     ).join(sub, Metrics.url == sub.c.url
                     ).group_by(Metrics.date,
                     ).having(and_(Metrics.date <= date_end, Metrics.date >= date_start))
-        res = await self.db_session.execute(url)
+        res = await self.db_session.execute(query)
         product_row = res.fetchall()
         if len(product_row) != 0:
             return product_row
 
-    async def get_metrics_daily_summary(self, date_start, date_end):
+    async def get_metrics_daily_summary(self, date_start, date_end, list_name, general_db):
+
+        filter_query = None
+
+        if list_name != "None":
+            list_id = (await general_db.execute(
+                select(List_model.id).where(List_model.name == list_name)
+            )).fetchone()[0]
+
+            uri_list = (await general_db.execute(
+                select(ListURI.uri).where(ListURI.list_id == list_id)
+            )).scalars().all()
+
+            filter_query = Url.url.in_(uri_list)
+        sub_query = select(Url)
+            
+        if filter_query is not None:
+            sub_query = sub_query.filter(filter_query)
+
+        sub = sub_query.subquery()
         query = select(Metrics.date, 
                     func.sum(Metrics.clicks).label('total_clicks'),
                     func.sum(Metrics.impression).label('total_impressions')
+                    ).join(sub, Metrics.url == sub.c.url
                     ).group_by(Metrics.date,
                     ).having(and_(Metrics.date <= date_end, Metrics.date >= date_start))
         res = await self.db_session.execute(query)

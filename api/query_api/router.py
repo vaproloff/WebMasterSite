@@ -253,7 +253,7 @@ async def get_queries(
     # return JSONResponse({"data": json_data, "recordsTotal": limit, "recordsFiltered": 50000})
     return JSONResponse({"data": json_data,
                         })
-@router.post("/get_total_sum")
+@router.post("/get_total_sum/")
 async def get_total_sum(
     request: Request, 
     data_request: dict, 
