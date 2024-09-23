@@ -414,7 +414,29 @@ class UrlDAL:
         product_row = res.fetchall()
         if len(product_row) != 0:
             return product_row
+    async def get_metrics_daily_summary_like(self, date_start, date_end, search_text):
+        sub = select(Url).filter(Url.url.like(f"%{search_text.strip()}%")).subquery()
+        url = select(Metrics.date, 
+                    func.sum(Metrics.clicks).label('total_clicks'),
+                    func.sum(Metrics.impression).label('total_impressions')
+                    ).join(sub, Metrics.url == sub.c.url
+                    ).group_by(Metrics.date,
+                    ).having(and_(Metrics.date <= date_end, Metrics.date >= date_start))
+        res = await self.db_session.execute(url)
+        product_row = res.fetchall()
+        if len(product_row) != 0:
+            return product_row
 
+    async def get_metrics_daily_summary(self, date_start, date_end):
+        query = select(Metrics.date, 
+                    func.sum(Metrics.clicks).label('total_clicks'),
+                    func.sum(Metrics.impression).label('total_impressions')
+                    ).group_by(Metrics.date,
+                    ).having(and_(Metrics.date <= date_end, Metrics.date >= date_start))
+        res = await self.db_session.execute(query)
+        product_row = res.fetchall()
+        if len(product_row) != 0:
+            return product_row
 
 class MetricDAL:
     """Data Access Layer for operating user info"""
