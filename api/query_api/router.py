@@ -195,13 +195,12 @@ async def get_queries(
                             ))[2]
                         ),
                         reverse=data_request["button_state"] == "decrease"
-                    )              
+                    ) 
     except TypeError as e:
         return JSONResponse({"data": []})
 
     if len(grouped_data) == 0:
         return JSONResponse({"data": []})
-
     data = []
     for el in grouped_data:
         res = {"query":

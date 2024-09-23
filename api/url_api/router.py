@@ -605,7 +605,6 @@ async def get_urls(
 
     if len(grouped_data) == 0:
         return JSONResponse({"data": []})
-
     data = []
     for el in grouped_data:
         res = {"url":

@@ -142,7 +142,7 @@
         // Set the default value of the second input to two weeks ago
         document.getElementById('start_date').value = getDate(14);
     }
-
+    
 
     function SetDataTable() {
 
@@ -315,7 +315,7 @@
             rButton.style.height = '20px'; // Высота кнопки
             rButton.style.fontSize = '12px'; // Размер шрифта
             rButton.style.padding = '2px 2px'; // Отступы внутри кнопки
-            rButton.innerHTML = "R";
+            rButton.innerHTML = "R↓";
             let cButton = document.createElement('button');
             cButton.style.width = '20px';  // Ширина кнопки
             cButton.style.height = '20px'; // Высота кнопки
@@ -428,6 +428,11 @@
 
             row.appendChild(nameCell);
         }
+        
+        // Сортировка по показам по умолчанию
+        state_type = "result";                
+        state = "decrease";
+        metric_type = "R";
 
         prev_start_date = document.getElementById('start_date').value;
         prev_end_date = document.getElementById('end_date').value;
