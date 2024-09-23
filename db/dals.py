@@ -5,7 +5,7 @@ from fastapi import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import asc, case, select, distinct, delete, text
 from sqlalchemy import and_
-from sqlalchemy import desc, func
+from sqlalchemy import desc, func, or_
 
 from db.models import QueryIndicator, QueryUrlTop, QueryUrlsMerge, Url
 from db.models import Metrics
@@ -439,16 +439,25 @@ class UrlDAL:
                     ).join(sub, Metrics.url == sub.c.url
                     ).group_by(Metrics.date,
                     ).having(and_(Metrics.date <= date_end, Metrics.date >= date_start))
+        
         query = select(Metrics.date, 
                     func.sum(Metrics.clicks).label('total_clicks'),
-                    func.sum(Metrics.impression).label('total_impressions')
+                    func.sum(Metrics.impression).label('total_impressions'),
+                    
                     ).join(sub, Metrics.url == sub.c.url
                     ).group_by(Metrics.date,
                     ).having(and_(Metrics.date <= date_end, Metrics.date >= date_start))
+        
         res = await self.db_session.execute(query)
+        
         product_row = res.fetchall()
-        if len(product_row) != 0:
-            return product_row
+        
+        query = select(func.count()).select_from(Metrics
+                    ).join(sub, Metrics.url == sub.c.url).limit(1)
+        total_records = await self.db_session.execute(query)
+        #return {"total_records": total_records, "data": product_row}
+        if len(product_row) != 0:   
+            return product_row, total_records.first()
 
     async def get_metrics_daily_summary(self, date_start, date_end, list_name, general_db):
 
@@ -469,15 +478,89 @@ class UrlDAL:
         if filter_query is not None:
             sub_query = sub_query.filter(filter_query)
 
-        sub = sub_query.subquery()
+        sub = sub_query.subquery()    
+
         query = select(Metrics.date, 
                     func.sum(Metrics.clicks).label('total_clicks'),
-                    func.sum(Metrics.impression).label('total_impressions')
+                    func.sum(Metrics.impression).label('total_impressions'),
                     ).join(sub, Metrics.url == sub.c.url
                     ).group_by(Metrics.date,
-                    ).having(and_(Metrics.date <= date_end, Metrics.date >= date_start))
+                    ).having(and_(Metrics.date <= date_end, Metrics.date >= date_start)      
+                )  
+        
         res = await self.db_session.execute(query)
         product_row = res.fetchall()
+
+        query = select(func.count()).select_from(Metrics).limit(1)
+        total_records = await self.db_session.execute(query)
+        if len(product_row) != 0:   
+            return product_row, total_records.first()
+        
+    async def get_not_void_count_daily_summary_like(self, date_start, date_end, search_text, list_name, general_db):
+
+        filter_query = None
+
+        if list_name != "None":
+            list_id = (await general_db.execute(
+                select(List_model.id).where(List_model.name == list_name)
+            )).fetchone()[0]
+
+            uri_list = (await general_db.execute(
+                select(ListURI.uri).where(ListURI.list_id == list_id)
+            )).scalars().all()
+
+            filter_query = Url.url.in_(uri_list)
+        sub_query = select(Url)
+            
+        if filter_query is not None:
+            sub_query = sub_query.filter(filter_query)
+
+        sub = sub_query.filter(Url.url.like(f"%{search_text.strip()}%")).subquery()
+
+        sub_count_query = select(Metrics.date.label("date"), func.count().label("count_line")                
+                ).join(sub, Metrics.url == sub.c.url
+                ).where(Metrics.position > 0
+                ).group_by(Metrics.date
+                ).having(and_(Metrics.date <= date_end, Metrics.date >= date_start)
+                )
+        res = await self.db_session.execute(sub_count_query)
+
+        product_row = res.fetchall()
+        
+        if len(product_row) != 0:
+            return product_row
+        
+    async def get_not_void_count_daily_summary(self, date_start, date_end, list_name, general_db):
+
+        filter_query = None
+
+        if list_name != "None":
+            list_id = (await general_db.execute(
+                select(List_model.id).where(List_model.name == list_name)
+            )).fetchone()[0]
+
+            uri_list = (await general_db.execute(
+                select(ListURI.uri).where(ListURI.list_id == list_id)
+            )).scalars().all()
+
+            filter_query = Url.url.in_(uri_list)
+        sub_query = select(Url)
+            
+        if filter_query is not None:
+            sub_query = sub_query.filter(filter_query)
+
+        sub = sub_query.subquery()    
+
+        sub_count_query = select(Metrics.date.label("date"), func.count().label("count_line")                
+                ).join(sub, Metrics.url == sub.c.url
+                ).where(Metrics.position > 0
+                ).group_by(Metrics.date
+                ).having(and_(Metrics.date <= date_end, Metrics.date >= date_start)
+                )
+        res = await self.db_session.execute(sub_count_query)
+
+        product_row = res.fetchall()
+        
         if len(product_row) != 0:
             return product_row
 
@@ -778,8 +861,13 @@ class QueryDAL:
                     ).having(and_(MetricsQuery.date <= date_end, MetricsQuery.date >= date_start))
         res = await self.db_session.execute(query)
         product_row = res.fetchall()
-        if len(product_row) != 0:
-            return product_row
+        
+        query = select(func.count()).select_from(MetricsQuery
+                    ).join(sub, MetricsQuery.query == sub.c.query).limit(1)
+        total_records = await self.db_session.execute(query)
+        #return {"total_records": total_records, "data": product_row}
+        if len(product_row) != 0:   
+            return product_row, total_records.first()
 
     async def get_metrics_daily_summary(self, date_start, date_end):
         query = select(MetricsQuery.date, 
@@ -789,6 +877,37 @@ class QueryDAL:
                     ).having(and_(MetricsQuery.date <= date_end, MetricsQuery.date >= date_start))
         res = await self.db_session.execute(query)
         product_row = res.fetchall()
+        
+        query = select(func.count()).select_from(MetricsQuery).limit(1)
+        total_records = await self.db_session.execute(query)
+        #for i in total_records:
+        #return {"total_records": total_records, "data": product_row}
+        if len(product_row) != 0:   
+            return product_row, total_records.first()
+        
+    async def get_not_void_count_daily_summary_like(self, date_start, date_end, search_text):
+        sub = select(Query).filter(Query.query.like(f"%{search_text.strip()}%")).subquery()
+        sub_count_query = select(MetricsQuery.date.label("date"), func.count().label("count_line")                
+                ).join(sub, MetricsQuery.query == sub.c.query
+                ).where(MetricsQuery.position > 0
+                ).group_by(MetricsQuery.date
+                ).having(and_(MetricsQuery.date <= date_end, MetricsQuery.date >= date_start)
+                )
+        res = await self.db_session.execute(sub_count_query)
+        product_row = res.fetchall()
+        
+        if len(product_row) != 0:
+            return product_row
+        
+    async def get_not_void_count_daily_summary(self, date_start, date_end):   
+        sub_count_query = select(MetricsQuery.date.label("date"), func.count().label("count_line")                
+                ).where(MetricsQuery.position > 0
+                ).group_by(MetricsQuery.date
+                ).having(and_(MetricsQuery.date <= date_end, MetricsQuery.date >= date_start)
+                )
+        res = await self.db_session.execute(sub_count_query)
+        product_row = res.fetchall()
+        
         if len(product_row) != 0:
             return product_row
 

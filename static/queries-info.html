@@ -847,6 +847,8 @@
         prev_end_date = document.getElementById('end_date').value;
         prev_search_text = document.getElementById("search_field").value;
 
+        document.querySelector('#head_t td:first-child').textContent = `query`; // Обновляем текст, убираем количество записей после 'query'
+
         var CurPage = document.getElementById("cur").innerHTML;
         CurPage = Number.parseInt(CurPage, 10)
         var url = "{{ url_for('get_queries') }}";
@@ -1829,9 +1831,10 @@
         .then(data => {
             console.log(data);
             metricks_data = data.metricks_data;
+            var totalRecords = data.total_records; // Получаем общее количество записей
+            document.querySelector('#head_t td:first-child').textContent = `query (${totalRecords})`; // Обновляем текст
 
-            var table = $('#thead_t');
-
+            var table = $('#thead_t')
             var elmtTable = document.getElementById('thead_t');
             var rows = elmtTable.getElementsByTagName('tr');
             var rowCount = rows.length;
@@ -1848,7 +1851,7 @@
             text-align: center; display: flex; align-items: center; justify-content: center;'>
         <span style='font-size: 18px'><span style='color:red'>0.0</span></span><br>
         </div>`
-            for (i = 0; i < 2; i++) {
+            for (i = 0; i < 3; i++) {
                 var newRow = '<tr>';
                 $.each(columns, function (index_c, cell) {
                     if (metricks_data[i][columns[index_c]["title"]]) {

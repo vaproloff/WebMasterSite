@@ -850,6 +850,9 @@
         prev_end_date = document.getElementById('end_date').value;
         prev_search_text = document.getElementById("search_field").value;
         
+
+        document.querySelector('#head_t td:first-child').textContent = `url`; // Обновляем текст, убираем количество записей после 'url'
+        
         // Получение данных из API
         var CurPage = document.getElementById("cur").innerHTML;
         CurPage = Number.parseInt(CurPage, 10)
@@ -1825,7 +1828,7 @@
             start_date: prev_start_date, // Дата начала поиска
             end_date: prev_end_date, // Дата окончания поиска
             search_text: prev_search_text,
-            list_name: "{{ list_name }}"
+            list_name: "{{ list_name }}",
             //total_sum_flag: "result",
         };
 
@@ -1841,7 +1844,9 @@
         .then(data => {
             console.log(data);
             metricks_data = data.metricks_data;
-
+            var totalRecords = data.total_records; // Получаем общее количество записей
+            document.querySelector('#head_t td:first-child').textContent = `url (${totalRecords})`; // Обновляем текст
+            
             var table = $('#thead_t');
 
             var elmtTable = document.getElementById('thead_t');

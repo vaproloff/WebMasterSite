@@ -12,7 +12,7 @@ from fastapi.templating import Jinja2Templates
 from openpyxl import Workbook
 from sqlalchemy import delete, select
 from api.actions.actions import get_last_date, get_last_load_date
-from api.actions.queries import _get_urls_with_pagination_and_like_query, _get_urls_with_pagination_and_like_sort_query, _get_urls_with_pagination_query, _get_urls_with_pagination_sort_query, _get_metrics_daily_summary, _get_metrics_daily_summary_like
+from api.actions.queries import _get_urls_with_pagination_and_like_query, _get_urls_with_pagination_and_like_sort_query, _get_urls_with_pagination_query, _get_urls_with_pagination_sort_query, _get_metrics_daily_summary, _get_metrics_daily_summary_like, _get_not_void_count_daily_summary, _get_not_void_count_daily_summary_like
 from api.auth.models import User
 from api.config.utils import get_config_names, get_group_names
 from db.models import LastUpdateDate, MetricsQuery
@@ -125,7 +125,7 @@ async def get_queries(
         
         grouped_data = [(key, sorted(list(group), key=lambda x: x[0])) for key, group in
                         groupby(urls, key=lambda x: x[-1])]
-
+        #with open('data_output.txt', 'w', encoding='utf-8') as f: f.write(str(urls)) 
         if data_request["button_state"]:
             if state_date and data_request["state_type"] == "date":
                 if data_request["metric_type"] == "P":
@@ -269,27 +269,42 @@ async def get_total_sum(
     metricks_data = []
 
     if data_request["search_text"] == "":
-        metricks = await _get_metrics_daily_summary(
+        metricks, total_records = await _get_metrics_daily_summary(
                     start_date,
                     end_date,
                     async_session,
                     )
-        #with open('data_output.txt', 'w', encoding='utf-8') as f: f.write(str(metricks))
     else:
-        metricks = await _get_metrics_daily_summary_like(
+        metricks, total_records = await _get_metrics_daily_summary_like(
                     start_date,
                     end_date,
                     data_request["search_text"], 
                     async_session,
                     )
-        #with open('data_output.txt', 'w', encoding='utf-8') as f: f.write(str(metricks))
     
+    if data_request["search_text"] == "":
+        not_void_count_metricks = await _get_not_void_count_daily_summary(
+                    start_date,
+                    end_date,
+                    async_session,
+                    )
+    else:
+        not_void_count_metricks = await _get_not_void_count_daily_summary_like(
+                    start_date,
+                    end_date,
+                    data_request["search_text"], 
+                    async_session,
+                    )
+    #with open('data_output.txt', 'w', encoding='utf-8') as f: f.write(str(total_records)) 
     total_clicks_days = 0
     total_impession_days = 0
+    total_not_void = 0
     res_clicks = {"query":
                 f"<div style='width:355px; height: 55px; overflow: auto; white-space: nowrap;'><span>Суммарные клики</span></div>"}
     res_impressions = {"query":
                 f"<div style='width:355px; height: 55px; overflow: auto; white-space: nowrap;'><span>Суммарные показы</span></div>"}
+    res_not_void = {"query":
+                f"<div style='width:355px; height: 55px; overflow: auto; white-space: nowrap;'><span>Строки с данными</span></div>"}
     prev_clicks_value = -inf
     prev_impression_value = -inf
     for date, clicks_count, impressions_count in sorted(metricks, key=lambda x: x[0]):
@@ -320,20 +335,33 @@ async def get_total_sum(
         else:
             res_impressions[date.strftime(date_format_2)] = "0"
         prev_impression_value = impressions_count
+
+    for date, not_void_count in sorted(not_void_count_metricks, key=lambda x: x[0]):
+        total_not_void += not_void_count
+        res_not_void[date.strftime(
+                date_format_2)] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD; text-align: center; display: flex; align-items: center; justify-content: center;'>
+                                    <span style='font-size: 18px'>{not_void_count}</span>
+                                    </div>"""
+        
     res_clicks["result"] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD; text-align: center; display: flex; align-items: center; justify-content: center;'>
                                     <span style='font-size: 18px'>{total_clicks_days}</span>
                                     </div>"""
     res_impressions["result"] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD; text-align: center; display: flex; align-items: center; justify-content: center;'>
                                     <span style='font-size: 18px'>{total_impession_days}</span>
                                     </div>"""
+    res_not_void["result"] = f"""<div style='height: 55px; width: 100px; margin: 0px; padding: 0px; background-color: #9DE8BD; text-align: center; display: flex; align-items: center; justify-content: center;'>
+                                    <span style='font-size: 18px'>{total_not_void}</span>
+                                    </div>"""
     metricks_data.append(res_clicks)
     metricks_data.append(res_impressions)
+    metricks_data.append(res_not_void)
 
+    json_total_records = jsonable_encoder(*total_records)
     json_metricks_data = jsonable_encoder(metricks_data)
 
     logger.info("get query data success")
     # return JSONResponse({"data": json_data, "recordsTotal": limit, "recordsFiltered": 50000})
-    return JSONResponse({"metricks_data": json_metricks_data
+    return JSONResponse({"metricks_data": json_metricks_data, "total_records": json_total_records
                         })
 @router.delete("/")
 async def delete_query(
