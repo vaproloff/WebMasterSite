@@ -523,6 +523,63 @@ async def add_group_for_user(
         "message": f"add config ID: {config_id} for group ID: {group_id}"
     }
 
+# ----------------
+@router.put("/config/{id}")
+async def edit_config(
+        request: Request,
+        id: int,
+        formData: dict,
+        user=Depends(current_user),
+        session: AsyncSession = Depends(get_db_general),
+):
+    # email, password, role = formData.get('email'), formData.get('password'), int(formData.get('role'))
+    name, database_name, access_token, user_id, host_id = formData.get('name'), formData.get('databaseName'),\
+                                                          formData.get('accessToken'), formData.get('userID'), formData.get('hostID'),
+
+    config = (await session.execute(select(Config).where(Config.id == id))).scalars().first()
+
+    if name:
+        config.name = name
+    if database_name:
+        config.database_name = database_name
+    if access_token:
+        config.access_token = access_token
+    if user_id:
+        config.user_id = user_id
+    if host_id:
+        config.host_id = host_id
+
+    print(config.name)
+
+    await session.commit()
+
+    return {
+        "status": 200,
+        "message": f"Updated config with id: {id}",
+    }
+
+
+@router.delete("/config/{config_id}")
+async def delete_config(
+        request: Request,
+        config_id: int,
+        user=Depends(current_user),
+        session: AsyncSession = Depends(get_db_general),
+):
+    stmt = select(Config).where(Config.id==config_id)
+    config_obj = (await session.execute(stmt)).scalar()
+
+    if not config_obj:
+        raise HTTPException(status_code=404, detail="Config not found")
+
+    await session.delete(config_obj)
+    await session.commit()
+
+    return {
+        "status": 200,
+        "message": f"delete config ID: {config_id}"
+    }
+
 
 
 
