@@ -452,8 +452,7 @@ class UrlDAL:
         
         product_row = res.fetchall()
         
-        query = select(func.count()).select_from(Metrics
-                    ).join(sub, Metrics.url == sub.c.url).limit(1)
+        query = select(func.count()).filter(Url.url.like(f"%{search_text.strip()}%")).limit(1)
         total_records = await self.db_session.execute(query)
         #return {"total_records": total_records, "data": product_row}
         if len(product_row) != 0:   
@@ -491,7 +490,7 @@ class UrlDAL:
         res = await self.db_session.execute(query)
         product_row = res.fetchall()
 
-        query = select(func.count()).select_from(Metrics).limit(1)
+        query = select(func.count()).select_from(sub).limit(1)
         total_records = await self.db_session.execute(query)
         if len(product_row) != 0:   
             return product_row, total_records.first()
@@ -862,8 +861,7 @@ class QueryDAL:
         res = await self.db_session.execute(query)
         product_row = res.fetchall()
         
-        query = select(func.count()).select_from(MetricsQuery
-                    ).join(sub, MetricsQuery.query == sub.c.query).limit(1)
+        query = select(func.count()).filter(Query.query.like(f"%{search_text.strip()}%")).limit(1)
         total_records = await self.db_session.execute(query)
         #return {"total_records": total_records, "data": product_row}
         if len(product_row) != 0:   
@@ -878,7 +876,7 @@ class QueryDAL:
         res = await self.db_session.execute(query)
         product_row = res.fetchall()
         
-        query = select(func.count()).select_from(MetricsQuery).limit(1)
+        query = select(func.count()).select_from(Query).limit(1)
         total_records = await self.db_session.execute(query)
         #for i in total_records:
         #return {"total_records": total_records, "data": product_row}
