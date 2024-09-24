@@ -646,7 +646,7 @@ async def reset_query_limits(
     active_users = await session.execute(
         select(User).join(Role).where(
             User.is_active == True,
-            or_(Role.name == 'User', Role.name == 'Superuser')
+            or_(Role.name == 'Search', Role.name == 'Superuser')
         )
     )
     active_users_list = active_users.scalars().all()
