@@ -11,6 +11,9 @@ DB_HOST =os.environ.get( "DB_HOST")
 DB_PORT = os.environ.get("DB_PORT")
 SECRET = os.environ.get("SECRET")
 
+
+MONTHLY_REQUEST_LIMIT = os.environ.get("MONTHLY__REQUEST_LIMIT")
+
 DATABASE_GENERAL_NAME = os.environ.get("DATABASE_GENERAL_NAME")
 
 @dataclass

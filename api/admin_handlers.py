@@ -3,12 +3,12 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.templating import Jinja2Templates
 
-from sqlalchemy import and_, delete, select
+from sqlalchemy import and_, delete, select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.auth.auth_config import current_user, RoleChecker
 from api.auth.models import User
-from api.config.models import Config, Group, List, ListLrSearchSystem, ListURI, LiveSearchList, LiveSearchListQuery, UserQueryCount, YandexLr
+from api.config.models import Config, Group, List, ListLrSearchSystem, ListURI, LiveSearchList, LiveSearchListQuery, UserQueryCount, YandexLr, Role
 from api.config.utils import get_all_configs, get_all_groups, get_all_groups_for_user, get_all_roles, get_all_user, get_config_names, get_group_names, get_groups_names_dict, get_lists_names, get_live_search_lists_names
 from db.session import get_db_general
 
@@ -19,7 +19,7 @@ from api.merge_api.router import router as merge_router
 from api.live_search_api.router import router as live_search_router
 
 from sqlalchemy.exc import IntegrityError
-
+import config
 admin_router = APIRouter()
 
 admin_router.include_router(query_router, prefix="/query")
@@ -632,7 +632,34 @@ async def delete_lr_list(
         "status": 200,
         "message": f"Delete association for {list_id}:\nlr={region_code}\nsearch_system={search_system}"
     }
+@admin_router.put("/reset_query_limits/")
+async def reset_query_limits(
+    #request: Request,
+    session: AsyncSession = Depends(get_db_general),
+    #user=Depends(current_user),
+    #required: bool = Depends(RoleChecker(required_permissions={"Superuser"}))                      
+):
+    query_limit = int(config.MONTHLY_REQUEST_LIMIT)
+    active_users = await session.execute(
+        select(User).join(Role).where(
+            User.is_active == True,
+            or_(Role.name == 'User', Role.name == 'Superuser')
+        )
+    )
+    active_users_list = active_users.scalars().all()
 
+    for user in active_users_list:
+        user_query_count = await session.execute(
+            select(UserQueryCount).where(UserQueryCount.user_id == user.id)
+        )
+        user_query_count_record = user_query_count.scalars().first()
+        user_query_count_record.query_count = query_limit
+
+    await session.commit()
+    return {
+        "status": 200,
+        "message": f"Reset query limits successfully"
+    }
 
 @admin_router.get("/list_menu/regions")
 async def get_regions(
@@ -652,7 +679,7 @@ async def show_user_menu(
     user=Depends(current_user),
     session: AsyncSession = Depends(get_db_general),
     required: bool = Depends(RoleChecker(required_permissions={"Superuser"}))
-):
+):    
     group_name = request.session["group"].get("name", "")
     config_names = [elem[0] for elem in (await get_config_names(session, user, group_name))]
     group_names = await get_group_names(session, user)
