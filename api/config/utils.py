@@ -87,7 +87,6 @@ async def get_all_user(
     users_with_query_count = [
         (user, query_count) for user, query_count in users
     ]
-    with open('data_output.txt', 'w', encoding='utf-8') as f: f.write(str(users_with_query_count))    
 
     users_with_query_count.sort(key=lambda x: x[0].id)  # Сортируем по id пользователя
 
