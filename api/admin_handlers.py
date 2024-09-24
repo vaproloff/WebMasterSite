@@ -657,7 +657,8 @@ async def show_user_menu(
     config_names = [elem[0] for elem in (await get_config_names(session, user, group_name))]
     group_names = await get_group_names(session, user)
 
-    all_users = await get_all_user(session)
+    all_users = await get_all_user(session)   
+
 
     all_roles_dict = await get_all_roles(session)
 

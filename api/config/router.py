@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.auth.auth_config import current_user
 from api.auth.models import GroupUserAssociation, User
-from api.config.models import Config, GroupConfigAssociation, List, ListURI, Role, Group
+from api.config.models import Config, GroupConfigAssociation, List, ListURI, Role, Group, UserQueryCount
 from api.config.utils import get_config_info
 from config import DB_USER, DB_PASSWORD, DB_HOST, DB_PORT
 from db.session import get_db_general
@@ -291,10 +291,15 @@ async def edit_user(
     user=Depends(current_user),
     session: AsyncSession = Depends(get_db_general),
 ):
-    email, password, role, username, is_active = (formData.get('email'), formData.get('password'),
-                                                  int(formData.get('role')), formData.get('username'), formData.get('is_active'))
+    email, password, role, username, is_active, query_count = (
+        formData.get('email'), 
+        formData.get('password'),
+        int(formData.get('role')), 
+        formData.get('username'), 
+        formData.get('is_active'), 
+        int(formData.get('query_count')))
     user = (await session.execute(select(User).where(User.id == id))).scalars().first()
-
+    user_query_coount = (await session.execute(select(UserQueryCount).where(UserQueryCount.user_id == id))).scalars().first()
     if email:
         user.email = email
     if password:
@@ -305,7 +310,8 @@ async def edit_user(
     if username:
         user.username = username
     user.is_active = is_active
-
+    #if is_active:
+    user_query_coount.query_count = query_count
     await session.commit()
 
     return {

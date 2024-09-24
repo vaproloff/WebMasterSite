@@ -2,9 +2,8 @@ from sqlalchemy import case, exists, or_, select, and_, tuple_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from sqlalchemy.orm import aliased
-
 from api.auth.models import User, GroupUserAssociation
-from api.config.models import Config, Group, GroupConfigAssociation, List, LiveSearchList, Role
+from api.config.models import Config, Group, GroupConfigAssociation, List, LiveSearchList, Role, UserQueryCount
 
 
 async def get_config_names(session: AsyncSession, user: User, group_name):
@@ -77,11 +76,25 @@ async def get_live_search_lists_names(
 async def get_all_user(
     session: AsyncSession,
 ):
-    users = (await session.execute(select(User))).scalars().all()
+    users = (await session.execute(select(User,#.id,
+                                #User.email, 
+                                #User.username, 
+                                #User.role,
+                                #User.groups,
+                                UserQueryCount.query_count.label("query_count")
+                                ).join(UserQueryCount, UserQueryCount.user_id == User.id))
+                                ).all()
+    users_with_query_count = [
+        (user, query_count) for user, query_count in users
+    ]
+    with open('data_output.txt', 'w', encoding='utf-8') as f: f.write(str(users_with_query_count))    
 
-    users.sort(key=lambda x: x.id)
+    users_with_query_count.sort(key=lambda x: x[0].id)  # Сортируем по id пользователя
 
-    return users
+    return users_with_query_count
+
+    #users.sort(key=lambda x: x.id)
+    #return users
 
 
 async def get_all_groups(
