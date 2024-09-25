@@ -1,3 +1,12 @@
+from io import BytesIO
+from fastapi import UploadFile, Request
+from fastapi import status
+from api.auth.exceptions import InvalidEmail
+from api.auth.manager import get_user_manager, UserManager
+from api.auth.schemas import UserCreate
+from utils import CommaNewLineSeparatedValues, import_users_from_excel
+from sqlalchemy.exc import IntegrityError
+
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -764,5 +773,61 @@ async def show_group_menu(
                                     })
 
 
+@admin_router.post("/batch_register_excel")
+async def batch_register_excel(
+        request: Request,
+        file: UploadFile,
+        user_manager: AsyncSession = Depends(get_user_manager),
+        required: bool = Depends(RoleChecker({"Superuser"})),
+        status_code=status.HTTP_201_CREATED):
+    try:
+        file = await file.read()
+        await user_manager.batch_create(import_users_from_excel(BytesIO(file)))
+    except InvalidEmail as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.detail) 
+    except IntegrityError as e:
+        info = e.orig.args[0]
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=info[info.rfind("DETAIL"):]) 
 
+    return JSONResponse({
+        "status": "success",
+        "detail": "Users created successfully",
+    }, status_code)
+
+
+@admin_router.post("/batch_register")
+async def batch_register(
+        request: Request,
+        user: User = Depends(current_user),
+        user_manager: UserManager = Depends(get_user_manager),
+        required: bool = Depends(RoleChecker(required_permissions={"Superuser"})),
+        status_code=status.HTTP_201_CREATED):
+    body_bytes = await request.body()
+    raw_users = body_bytes.decode("UTF-8")
+    reader = CommaNewLineSeparatedValues().reader(raw_users)
+    try:
+        await user_manager.batch_create(
+            map(lambda user_create: 
+                    UserCreate(
+                        id=-1, 
+                        email=user_create[0],
+                        # username is None when it's empty string
+                        username=user_create[1] or None,
+                        password=user_create[2]),
+                    reader)
+                )
+    except InvalidEmail as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.detail) 
+    except IntegrityError as e:
+        info = e.orig.args[0]
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=info[info.rfind("DETAIL"):]) 
+
+    return JSONResponse({
+        "status": "success",
+        "detail": "Users created successfully",
+    }, status_code)
 

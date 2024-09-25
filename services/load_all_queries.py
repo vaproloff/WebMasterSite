@@ -123,7 +123,7 @@ async def get_all_data(request_session):
                                                       "Content-Type": "application/json; charset=UTF-8"})
 
     data = response.json()
-    count = data["count"]
+    count = data.get("count", 0)
     last_update_date = await get_last_update_date(async_session, MetricsQuery)
     print("last update date:", last_update_date)
     if not last_update_date:

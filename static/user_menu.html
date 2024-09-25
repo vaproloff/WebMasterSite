@@ -83,7 +83,9 @@
             background-color: darkgreen;
             transform: scale(1.05);
         }
-        #addUserForm {
+        #addUserForm,
+        #addListOfUsersForm,
+        #addUsersFromExcelForm {
             margin-bottom: 20px;
             padding: 10px;
             border: 1px solid #ddd;
@@ -92,11 +94,15 @@
             opacity: 0;
             transition: opacity 0.3s, margin-bottom 0.3s;
         }
-        #addUserForm.show {
+        #addUserForm.show,
+        #addListOfUsersForm.show,
+        #addUsersFromExcelForm.show {
             display: block;
             opacity: 1;
         }
-        #addUserForm input {
+        #addUserForm input,
+        #addListOfUsersForm input,
+        #addUsersFromExcelForm input {
             margin: 5px 0;
             padding: 8px;
             width: calc(100% - 16px);
@@ -105,11 +111,15 @@
             border-radius: 4px;
             transition: border-color 0.3s, box-shadow 0.3s;
         }
-        #addUserForm input:focus {
+        #addUserForm button,
+        #addListOfUsers button,
+        #addUsersFromExcelForm button {
             border-color: #007BFF;
             box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
         }
-        #addUserForm button {
+        #addUserForm button,
+        #addListOfUsers button,
+        #addUsersFromExcelForm button {
             background-color: #007BFF;
             color: white;
             border: none;
@@ -118,7 +128,9 @@
             cursor: pointer;
             transition: background-color 0.3s, transform 0.2s;
         }
-        #addUserForm button:hover {
+        #addUserForm button:hover,
+        #addListOfUsers button:hover,
+        #addUsersFromExcelForm button:hover {
             background-color: #0056b3;
             transform: scale(1.05);
         }
@@ -142,7 +154,8 @@
             display: block;
             opacity: 1;
         }
-        #editUserForm input, #editUserForm select {
+        #editUserForm input, 
+        #editUserForm select {
             margin: 5px 0;
             padding: 8px;
             width: calc(100% - 16px);
@@ -151,7 +164,8 @@
             border-radius: 4px;
             transition: border-color 0.3s, box-shadow 0.3s;
         }
-        #editUserForm input:focus, #editUserForm select:focus {
+        #editUserForm input:focus, 
+        #editUserForm select:focus {
             border-color: #007BFF;
             box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
         }
@@ -232,6 +246,8 @@
     
     <!-- Кнопка для добавления нового пользователя -->
     <button class="add-btn" onclick="toggleAddUserForm()">+ Add New User</button>
+    <button class="add-btn btn-primary" onclick="toggleAddListOfUsersForm()">+ Add List of Users</button>
+    <button class="add-btn" onclick="toggleAddUsersFromExcelForm()">+ Import Users From Excel</button>
     
     <!-- Форма для добавления нового пользователя -->
     <div id="addUserForm">
@@ -241,7 +257,8 @@
                 <label for="addEmail">Email:</label>
                 <input class="form-control item" type="email" id="addEmail" name="email" maxlength="320" minlength="5"
                     pattern="^[a-zA-Z0-9_.\-]+@[a-zA-Z0-9_.\-]+\.[a-zA-Z]{2,}$" required>
-                <small id="emailError" class="form-text text-danger" style="display: none;">Invalid email format.</small>
+                    <small id="emailError" class="form-text text-danger" style="display: none;">Invalid email
+                        format.</small>
             </div>
             <div class="form-group">
                 <label for="addPassword">Password:</label>
@@ -265,6 +282,52 @@
         </form>
     </div>
     
+    
+    <!-- Форма для добавления списка пользователей -->
+    <div id="addListOfUsersForm">
+        <h3>Add New Users</h3>
+        <div>
+            <p>
+                To add list of users use next format: <br>
+            <div style="border: black solid 1px;">
+                <code>
+                        &ltuser email 1&gt,<br>
+                        &ltusername 1&gt,<br>
+                        &ltpassword 1&gt,<br>
+                        <br>
+                        &ltuser email 2&gt,<br>
+                        &ltusername 2&gt,<br>
+                        &ltpassword 2&gt,<br>
+                        <br>
+                    </code>
+            </div>
+            <b>Note:</b> values must be separated by comma and new line<br>
+            <b>Note 2:</b> each group of values must be ended with the new line; <br>
+            <b>Note 3:</b> even if value is empty there must be comma on that place;
+            </p>
+        </div>
+        <form id="usersForm">
+            <div class="form-group">
+                <textarea name="user-list" id="addUsersList" cols="40" rows="10"></textarea>
+                <button class="btn btn-primary btn-block create-account" type="button"
+                    onclick="addUsers()">Submit</button>
+            </div>
+        </form>
+    </div>
+
+
+    <!-- Форма для добавления новых пользователей через excel -->
+    <div id="addUsersFromExcelForm">
+        <h3>Upload Excel file</h3>
+        <form id="usersExcelForm">
+            <div class="form-group">
+                <input type="file" id="usersExcelFile">
+                <button class="btn btn-primary btn-block create-account" type="button"
+                    onclick="addUsersFromExcel()">Submit</button>
+            </div>
+        </form>
+    </div>
+
     <div class="table-container" id="tableContainer">
         <div class="row header">
             <div class="cell">#</div>
@@ -284,9 +347,12 @@
             <div class="cell">{{ user.is_active }}</div>
             <div class="cell">{{ query_count }}</div>
             <div class="cell">
-                <button class="edit-btn" onclick="showEditUserForm({{ user.id }}, '{{ user.email }}', '{{ user.role }}', '{{ user.username }}', '{{ user.is_active }}', '{{ query_count}}')">Edit</button>
-                <button class="delete-btn" onclick="deleteUser('{{ url_for('delete_user', id=user.id) }}')">Delete</button>
-                <button class="group-list-btn" data-user-id="{{ user.id }}" data-user-email="{{ user.email }}" onclick="showGroupList(this)">Group List</button>
+                <button class="edit-btn" 
+                    onclick="showEditUserForm({{ user.id }}, '{{ user.email }}', '{{ user.role }}', '{{ user.username }}', '{{ user.is_active }}', '{{ query_count}}')">Edit</button>
+                <button class="delete-btn" 
+                    onclick="deleteUser('{{ url_for('delete_user', id=user.id) }}')">Delete</button>
+                <button class="group-list-btn" data-user-id="{{ user.id }}" data-user-email="{{ user.email }}" 
+                    onclick="showGroupList(this)">Group List</button>
             </div>
         </div>
         {% endfor %}
@@ -357,16 +423,100 @@
     </div>
     
     <script>
+
+
+function toggleAddListOfUsersForm() {
+            const addUserForm = document.getElementById('addUserForm');
+            const addListOfUsersFromExcelForm = document.getElementById('addUsersFromExcelForm');
+            const form = document.getElementById('addListOfUsersForm');
+            const tableContainer = document.getElementById('tableContainer');
+            if (form.classList.contains('show')) {
+                form.classList.remove('show');
+                tableContainer.style.marginTop = '20px'; // Возвращаем отступ
+                return
+            }
+            addUserForm.classList.remove('show');
+            addListOfUsersFromExcelForm.classList.remove('show');
+            form.classList.add('show');
+            tableContainer.style.marginTop = '180px'; // Увеличиваем отступ
+        }
+
+
         function toggleAddUserForm() {
+            const addListOfUsersForm = document.getElementById('addListOfUsersForm');
+            const addListOfUsersFromExcelForm = document.getElementById('addUsersFromExcelForm');
             const form = document.getElementById('addUserForm');
             const tableContainer = document.getElementById('tableContainer');
             if (form.classList.contains('show')) {
                 form.classList.remove('show');
                 tableContainer.style.marginTop = '20px'; // Возвращаем отступ
-            } else {
-                form.classList.add('show');
-                tableContainer.style.marginTop = '180px'; // Увеличиваем отступ
+                return
             }
+            addListOfUsersForm.classList.remove('show');
+            addListOfUsersFromExcelForm.classList.remove('show');
+            form.classList.add('show');
+            tableContainer.style.marginTop = '180px'; // Увеличиваем отступ
+        }
+
+        function toggleAddUsersFromExcelForm() {
+            const addUserForm = document.getElementById('addUserForm');
+            const addListOfUsersForm = document.getElementById('addListOfUsersForm');
+            const form = document.getElementById('addUsersFromExcelForm');
+
+            const tableContainer = document.getElementById('tableContainer');
+            if (form.classList.contains('show')) {
+                form.classList.remove('show');
+                tableContainer.style.marginTop = '20px'; // Возвращаем отступ
+                return
+            }
+            addListOfUsersForm.classList.remove('show');
+            addUserForm.classList.remove('show');
+            form.classList.add('show');
+            tableContainer.style.marginTop = '180px'; // Увеличиваем отступ
+        }
+
+        function addUsersFromExcel() {
+            const file = document.getElementById("usersExcelFile").files[0]
+            if (!file) {
+                alert("upload file");
+                return;
+            }
+            const formData = new FormData()
+            formData.append("file", file)
+            fetch('/admin/batch_register_excel', {
+                method: 'POST',
+                body: formData,
+            }).then(response => {
+                if (!response.ok) {
+                    response.json().then(err => alert(err.detail))
+                    return
+                }
+                location.reload()
+            });
+            return false;
+        }
+
+        function addUsers() {
+            usersListPlaiText = document.getElementById("addUsersList").value;
+            fetch('/admin/batch_register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'text/plain'
+                },
+                body: usersListPlaiText,
+            }).then(response => {
+                if (!response.ok) {
+                    response.json().then(err => alert(err.detail))
+                    return
+                }
+                location.reload()
+            });
+            return false;
+        }
+
+        function checkEmail(email) {
+            const emailPattern = /^[a-zA-Z0-9_.\-]+@[a-zA-Z0-9_.\-]+\.[a-zA-Z]{2,}$/;
+            return emailPattern.test(email);
         }
 
         function addUser() {
@@ -376,8 +526,7 @@
             const is_active = document.getElementById('addIsActive').checked;
             const query_count= document.getElementById('addQueryCount').value;
             // Проверяем email
-            const emailPattern = /^[a-zA-Z0-9_.\-]+@[a-zA-Z0-9_.\-]+\.[a-zA-Z]{2,}$/;
-            if (!emailPattern.test(email)) {
+            if (!checkEmail(email)) {
                 document.getElementById('emailError').style.display = 'block';
                 return false;
             }

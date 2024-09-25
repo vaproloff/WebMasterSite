@@ -1,5 +1,9 @@
 from datetime import datetime
-from typing import Optional
+from email_validator import validate_email
+from email_validator.exceptions_types import EmailSyntaxError, EmailNotValidError
+from typing import Optional, Iterable
+from sqlalchemy.exc import IntegrityError
+from .exceptions import InvalidEmail
 
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordRequestForm
@@ -23,6 +27,35 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
     reset_password_token_secret = SECRET
 
     verification_token_secret = SECRET
+
+    async def batch_create(self, users_create: Iterable[UserCreate], safe: bool = False):
+        """
+        Create users in db.
+        :raises InvalidEmail
+        :raises IntegrityError: when user with the same data already exists
+        """
+        users_dicts = []
+        for user_create in users_create:
+            try:
+                user_create.email = validate_email(user_create.email).email 
+                user_dict = (
+                    user_create.create_update_dict()
+                    if safe
+                    else user_create.create_update_dict_superuser()
+                )
+                password = user_dict.pop("password")
+                user_dict["hashed_password"] = self.password_helper.hash(password)
+                users_dicts.append(user_dict)
+            except (EmailSyntaxError, EmailNotValidError):
+                raise InvalidEmail(invalid_email=user_create.email)
+
+        async with async_session_general() as session:
+            try:
+                await session.run_sync(lambda session: session.bulk_insert_mappings(User, users_dicts))
+                await session.commit() 
+            except IntegrityError as e:
+                await session.rollback()
+                raise e
 
     async def create(
             self,
