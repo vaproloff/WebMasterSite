@@ -1,7 +1,7 @@
 import logging
 import re
 from typing import Dict
-
+from datetime import datetime
 from alembic import command
 from fastapi import APIRouter, Depends, Request, HTTPException
 from sqlalchemy import and_, delete, select
@@ -299,7 +299,9 @@ async def edit_user(
         formData.get('is_active'), 
         int(formData.get('query_count')))
     user = (await session.execute(select(User).where(User.id == id))).scalars().first()
-    user_query_coount = (await session.execute(select(UserQueryCount).where(UserQueryCount.user_id == id))).scalars().first()
+    user_query_count = (await session.execute(select(UserQueryCount).where(UserQueryCount.user_id == id))).scalars().first()
+     
+
     if email:
         user.email = email
     if password:
@@ -311,7 +313,16 @@ async def edit_user(
         user.username = username
     user.is_active = is_active
     #if is_active:
-    user_query_coount.query_count = query_count
+    if user_query_count:
+        user_query_count.query_count = query_count
+    else:
+        user_query_count = UserQueryCount(
+            user_id=user.id,
+            query_count=query_count, 
+            last_update_date=datetime.now()
+    )
+    session.add(user_query_count)
+
     await session.commit()
 
     return {

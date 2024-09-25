@@ -82,7 +82,7 @@ async def get_all_user(
                                 #User.role,
                                 #User.groups,
                                 UserQueryCount.query_count.label("query_count")
-                                ).join(UserQueryCount, UserQueryCount.user_id == User.id))
+                                ).outerjoin(UserQueryCount, UserQueryCount.user_id == User.id))
                                 ).all()
     users_with_query_count = [
         (user, query_count) for user, query_count in users
