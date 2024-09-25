@@ -28,7 +28,9 @@ from api.merge_api.router import router as merge_router
 from api.live_search_api.router import router as live_search_router
 
 from sqlalchemy.exc import IntegrityError
-import config
+from config import MONTHLY_REQUEST_LIMIT
+import const
+
 admin_router = APIRouter()
 
 admin_router.include_router(query_router, prefix="/query")
@@ -651,7 +653,8 @@ async def reset_query_limits(
     #user=Depends(current_user),
     #required: bool = Depends(RoleChecker(required_permissions={"Superuser"}))                      
 ):
-    query_limit = int(config.MONTHLY_REQUEST_LIMIT)
+
+    query_limit = const.query_limit
     active_users = await session.execute(
         select(User).join(Role).where(
             User.is_active == True,
