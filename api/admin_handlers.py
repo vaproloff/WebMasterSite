@@ -31,6 +31,9 @@ from sqlalchemy.exc import IntegrityError
 from config import MONTHLY_REQUEST_LIMIT
 import const
 
+from config import MONTHLY_REQUEST_LIMIT
+import const
+
 admin_router = APIRouter()
 
 admin_router.include_router(query_router, prefix="/query")
