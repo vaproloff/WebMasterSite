@@ -33,6 +33,48 @@ class Role(Base):
     id = Column(Integer, autoincrement=True, primary_key=True)
     name = Column(String, nullable=False)
 
+    access_queries = Column(Boolean, default=False)
+    access_queries_full = Column(Boolean, default=False)
+    access_queries_view = Column(Boolean, default=False)
+    access_queries_filter = Column(Boolean, default=False)
+    access_queries_export = Column(Boolean, default=False)
+    access_queries_update = Column(Boolean, default=False)
+    access_queries_sum = Column(Boolean, default=False)
+
+    access_url = Column(Boolean, default=False)
+    access_url_full = Column(Boolean, default=False)
+    access_url_filter = Column(Boolean, default=False)
+    access_url_export = Column(Boolean, default=False)
+    access_url_update = Column(Boolean, default=False)
+    access_url_sum = Column(Boolean, default=False)
+
+    access_history = Column(Boolean, default=False)
+    access_history_full = Column(Boolean, default=False)
+    access_history_view = Column(Boolean, default=False)
+    access_history_export = Column(Boolean, default=False)
+
+    access_url_query_merge = Column(Boolean, default=False)
+    access_url_query_merge_full = Column(Boolean, default=False)
+    access_url_query_merge_view = Column(Boolean, default=False)
+    access_url_query_merge_run = Column(Boolean, default=False)
+
+    access_list_panel = Column(Boolean, default=False)
+    access_list_panel_full = Column(Boolean, default=False)
+    access_list_panel_create = Column(Boolean, default=False)
+    access_list_panel_edit = Column(Boolean, default=False)
+    access_list_panel_share = Column(Boolean, default=False)
+
+    access_command_panel = Column(Boolean, default=False)
+    access_command_panel_full = Column(Boolean, default=False)
+    access_command_panel_own = Column(Boolean, default=False)
+
+    access_live_search = Column(Boolean, default=False)
+    access_live_search_full = Column(Boolean, default=False)
+    access_live_search_use = Column(Boolean, default=False)
+
+    access_user_menu = Column(Boolean, default=False)
+    access_group_menu = Column(Boolean, default=False)
+
 
 class Group(Base):
     __tablename__ = "group"

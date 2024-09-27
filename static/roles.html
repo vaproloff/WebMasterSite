@@ -1,0 +1,302 @@
+{% extends "base.html" %}
+{% block content %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editing Roles</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        header {
+            display: flex;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #ddd;
+        }
+        .dropdown-content a:hover {
+            background-color: #f1f1f1;
+        }
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            margin-left: auto;
+        }
+        .header-right .superuser-button {
+            margin-left: 10px;
+        }
+        h5 {
+            font-weight:600;
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Roles Menu</h1>
+        <form id="addRoleForm" method="POST">
+            <div class="form-group">
+                <input type="text" placeholder="Enter the name of the new role" class="form-control" id="role_name" name="role_name" required>
+            </div>
+            <button type="submit" class="btn btn-success">Add Role</button>
+        </form>
+
+        <h2 class="mt-5">Roles</h2>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Module Access</th>
+                    <th colspan="2" style="text-align: center;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for role in roles %}
+                <tr>
+                    <td>{{ role.id }}</td>
+                    <td id="role-name-{{ role.id }}">{{ role.name }}</td>
+                    <td>
+                        <!-- Кнопка для раскрытия модулей -->
+                        <button class="btn btn-info" type="button" data-toggle="collapse" data-target="#modules{{ role.id }}" aria-expanded="false" aria-controls="modules{{ role.id }}">
+                            Edit Modules
+                        </button>
+                    </td>
+                    <td>
+                        <button class="btn btn-info" type="button" data-toggle="collapse" data-target="#editRoleTr{{ role.id }}" aria-expanded="false" aria-controls="#editRoleTr{{ role.id }}">
+                            Edit
+                        </button>
+                    </td>                       
+                    <td>
+                        <button onclick="deleteRole('{{ url_for('delete_role', role_id=role.id) }}')"  class="btn btn-danger">Delete</button>
+                    </td>
+                </tr>
+                <tr class="collapse" id="editRoleTr{{ role.id }}">
+                    <td colspan="3">
+                        <div class="d-flex justify-content-between align-items-center" id="editRoleTr{{ role.id }}">
+                            <form id="editRoleFormContent" onsubmit="updateRole('{{role.id}}');return false;" class="form-inline">
+                                
+                                <input type="hidden" id="editRoleId{{ role.id }}" name="role_id" value="{{ role.id }}">
+                                
+                                <!-- Input field for Role Name -->
+                                <div class="form-group mr-3">
+                                    <label for="editRoleName" class="mr-2">Edit Name:</label>
+                                    <input value="{{role.name}}" class="form-control" type="text" id="editRoleName{{ role.id }}" name="name" maxlength="128" minlength="1" required>
+                                </div>
+                                
+                                <!-- Save button -->
+                                <div class="form-group mr-2">                            
+                                    <button class="btn btn-primary" type="submit">Save</button>
+                                </div>
+                                
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                <tr class="collapse" id="modules{{ role.id }}">
+                    <td colspan="5">
+                        <div class="collapse" id="modules{{ role.id }}">
+                            <!--onsubmit="updateRoleModules('{{role.id}}');return false;"-->
+                            <form id="modulesForm{{ role.id }}" onsubmit="updateRoleModules('{{role.id}}');return false;" class="mt-2">
+                                <div class="row">
+                                    <!-- Module query -->
+                                    <div class="col-md-3">
+                                        <h5><div><label><input type="checkbox" name="access_queries" {% if role.access_queries %}checked{% endif %}> Access to query</label></div></h5>
+                                        <div><label><input type="checkbox" name="access_queries_full" {% if role.access_queries_full %}checked{% endif %}> Full access</label></div>
+                                        <div><label><input type="checkbox" name="access_queries_view" {% if role.access_queries_view %}checked{% endif %}> View</label></div>
+                                        <div><label><input type="checkbox" name="access_queries_filter" {% if role.access_queries_filter %}checked{% endif %}> Filtering</label></div>
+                                        <div><label><input type="checkbox" name="access_queries_export" {% if role.access_queries_export %}checked{% endif %}> Export</label></div>
+                                        <div><label><input type="checkbox" name="access_queries_update" {% if role.access_queries_update %}checked{% endif %}> Update</label></div>
+                                        <div><label><input type="checkbox" name="access_queries_sum" {% if role.access_queries_sum %}checked{% endif %}> Summation</label></div>
+                                    </div>
+                    
+                                    <!-- Module url -->
+                                    <div class="col-md-3">
+                                        <h5><div><label><input type="checkbox" name="access_url" {% if role.access_url %}checked{% endif %}> Access to URL</label></div></h5>
+                                        <div><label><input type="checkbox" name="access_url_full" {% if role.access_url_full %}checked{% endif %}> Full access</label></div>
+                                        <div><label><input type="checkbox" name="access_url_filter" {% if role.access_url_filter %}checked{% endif %}> Filtering</label></div>
+                                        <div><label><input type="checkbox" name="access_url_export" {% if role.access_url_export %}checked{% endif %}> Export</label></div>
+                                        <div><label><input type="checkbox" name="access_url_update" {% if role.access_url_update %}checked{% endif %}> Update</label></div>
+                                        <div><label><input type="checkbox" name="access_url_sum" {% if role.access_url_sum %}checked{% endif %}> Summation</label></div>
+                                    </div>
+                    
+                                    <!-- History Module -->
+                                    <div class="col-md-3">
+                                        <h5><div><label><input type="checkbox" name="access_history" {% if role.access_history %}checked{% endif %}> Access to History</label></div></h5>
+                                        <div><label><input type="checkbox" name="access_history_full" {% if role.access_history_full %}checked{% endif %}> Full Access</label></div>
+                                        <div><label><input type="checkbox" name="access_history_view" {% if role.access_history_view %}checked{% endif %}> View</label></div>
+                                        <div><label><input type="checkbox" name="access_history_export" {% if role.access_history_export %}checked{% endif %}> Export</label></div>
+                                    </div>
+
+                                    <!-- URL Query Merge Module -->
+                                    <div class="col-md-3">
+                                        <h5><div><label><input type="checkbox" name="access_url_query_merge" {% if role.access_url_query_merge %}checked{% endif %}> Access to URL_Query_Merge</label></div></h5>
+                                        <div><label><input type="checkbox" name="access_url_query_merge_full" {% if role.access_url_query_merge_full %}checked{% endif %}> Full Access</label></div>
+                                        <div><label><input type="checkbox" name="access_url_query_merge_view" {% if role.access_url_query_merge_view %}checked{% endif %}> View</label></div>
+                                        <div><label><input type="checkbox" name="access_url_query_merge_run" {% if role.access_url_query_merge_run %}checked{% endif %}> Run</label></div>
+                                    </div>
+                                    </div>
+
+                                    <div class="row mt-3">
+                                        <!-- List Panel Module -->
+                                        <div class="col-md-3">
+                                            <h5><div><label><input type="checkbox" name="access_list_panel" {% if role.access_list_panel %}checked{% endif %}> Access to List Panel</label></div></h5>
+                                            <div><label><input type="checkbox" name="access_list_panel_full" {% if role.access_list_panel_full %}checked{% endif %}> Full Access</label></div>
+                                            <div><label><input type="checkbox" name="access_list_panel_create" {% if role.access_list_panel_create %}checked{% endif %}> Create</label></div>
+                                            <div><label><input type="checkbox" name="access_list_panel_edit" {% if role.access_list_panel_edit %}checked{% endif %}> Edit</label></div>
+                                            <div><label><input type="checkbox" name="access_list_panel_share" {% if role.access_list_panel_share %}checked{% endif %}> Share Access</label></div>
+                                        </div>
+
+                                        <!-- Command Panel Module -->
+                                        <div class="col-md-3">
+                                            <h5><div><label><input type="checkbox" name="access_command_panel" {% if role.access_command_panel %}checked{% endif %}> Access to Command Panel</label></div></h5>
+                                            <div><label><input type="checkbox" name="access_command_panel_full" {% if role.access_command_panel_full %}checked{% endif %}> Full Access</label></div>
+                                            <div><label><input type="checkbox" name="access_command_panel_own" {% if role.access_command_panel_own %}checked{% endif %}> Own Access</label></div>
+                                        </div>
+
+                                        <!-- Live Search Module -->
+                                        <div class="col-md-3">
+                                            <h5><div><label><input type="checkbox" name="access_live_search" {% if role.access_live_search %}checked{% endif %}> Access to Live Search</label></div></h5>
+                                            <div><label><input type="checkbox" name="access_live_search_full" {% if role.access_live_search_full %}checked{% endif %}> Full Access</label></div>
+                                            <div><label><input type="checkbox" name="access_live_search_use" {% if role.access_live_search_use %}checked{% endif %}> Use</label></div>
+                                        </div>
+
+                                        <!-- For Superuser Module -->
+                                        <div class="col-md-3">
+                                            <h5><div><label><input type="checkbox" name="access_user_menu" {% if role.access_user_menu %}checked{% endif %}> Access to User Menu</label></div></h5>
+                                            <h5><div><label><input type="checkbox" name="access_group_menu" {% if role.access_group_menu %}checked{% endif %}> Access to Group Menu</label></div></h5>
+                                        </div>
+                                    </div>
+                                <button type="submit" class="btn btn-success mt-3">Save Changes</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+    </div>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.1/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script>
+    function updateRoleModules(role_id) {
+        const form = document.getElementById(`modulesForm${role_id}`);
+        const formData = new FormData(form);
+        const url = `/config/roles/${role_id}/modules`;
+        const jsonData = {};
+        formData.forEach((value, key) => {
+            jsonData[key] = value;
+        });
+        console.log(jsonData);
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(jsonData)
+        }).then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                alert('Modules updated successfully!');
+                location.reload(); 
+            } else {
+                alert('Failed to update modules');
+            }
+        }).catch(error => {
+            console.error('Error updating modules:', error);
+            alert('An error occurred while updating modules.');
+        });
+
+        return false; // Prevents the default form behavior
+    }
+
+
+    function updateRole(role_id) {
+    const role_name = document.getElementById(`editRoleName${role_id}`).value;
+
+    // Correctly construct the URL using the role_id
+    const url = `/config/roles/${role_id}/edit`;
+
+    fetch(url, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json', // Указываем тип данных
+        },
+        body: JSON.stringify({ edit_role_name: role_name }) // Sending the correct key
+    }).then(response => response.json())
+    .then(data => {
+        if (data.status === 200) {
+            alert(data.message);
+            document.querySelector(`#role-name-${role_id}`).textContent = role_name;
+            // Optionally refresh the page if needed
+            // location.reload();
+        } else {
+            alert('Failed to update role');
+        }
+    }).catch(error => {
+        console.error('Error updating role:', error);
+        alert('An error occurred while updating the role.');
+    });
+
+    return false; // Prevent default form submission
+    }
+    function deleteRole(url) {
+            if (confirm('Are you sure you want to delete this role?')) {
+                fetch(url, {
+                    method: 'DELETE'
+                }).then(response => response.json())
+                  .then(data => {
+                      if (data.status === 200) {
+                          alert(data.message);
+                          location.reload(); // Перезагружаем страницу после удаления
+                      } else {
+                          alert('Failed to delete role');
+                      }
+                  });
+            }
+        }
+
+    document.getElementById('addRoleForm').addEventListener('submit', function(event) {
+        event.preventDefault(); // Предотвращаем стандартное поведение формы
+
+        const roleNameInput = document.getElementById('role_name');
+        const roleName = roleNameInput.value; // Получаем значение из поля ввода роли
+
+        const formData = {
+            role_name: roleName
+        };
+        console.log(formData); // Проверка, что данные отправлены
+        const url = `{{ url_for('add_role') }}`;
+
+        // Отправка данных на бэк
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json', // Указываем тип данных
+            },
+            body: JSON.stringify(formData) // Преобразуем объект в JSON
+        }).then(response => response.json())
+          .then(data => {
+              if (data.status === "success") {
+                  alert('Role added successfully!');
+                  location.reload(); // Перезагружаем страницу после добавления
+              } else {
+                  alert(data.message); // Показываем сообщение об ошибке
+              }
+          }).catch(error => {
+              console.error('Error adding role:', error);
+              alert('Failed to add role.');
+          });
+
+        return false; // Предотвращаем отправку формы по умолчанию
+    });
+</script>
+{% endblock %}

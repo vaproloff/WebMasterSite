@@ -30,7 +30,7 @@
         <select id="regionSelect" onchange="updateRegion()">
             <option value="">Select Region</option>
             {% for region in region_list %}
-                <option value="{{ url_for('get_live_search').include_query_params(list_id=list_id, search_system=search_system, lr_id=region.id) }}">{{ region_dict[region.lr] }}</option>
+                <option value="{{ url_for('get_live_search').include_query_params(list_id=list_id, search_system=search_system, lr_id=region.id) }}" }}>{{ region_dict[region.lr] }}</option>
             {% endfor %}
         </select>
 
