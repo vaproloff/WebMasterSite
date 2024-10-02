@@ -35,7 +35,9 @@
         </select>
 
         <span>Запросов осталось: {{ query_count }}</span>
-        <button onclick="updateQueryCount()">Обновить</button>
+        {% if role_accesses.live_search_full %}
+            <button onclick="updateQueryCount()">Обновить</button>
+        {% endif %}
     </div>
 
     <!-- Existing filters and buttons -->

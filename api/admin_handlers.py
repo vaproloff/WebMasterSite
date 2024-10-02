@@ -31,8 +31,7 @@ from sqlalchemy.exc import IntegrityError
 from config import MONTHLY_REQUEST_LIMIT
 import const
 
-from config import MONTHLY_REQUEST_LIMIT
-import const
+from const import ACCESS
 
 admin_router = APIRouter()
 
@@ -97,7 +96,7 @@ async def show_superuser(
         request: Request,
         user=Depends(current_user),
         session: AsyncSession = Depends(get_db_general),
-        required: bool = Depends(RoleChecker(required_roles={"Superuser"}))
+        required: bool = Depends(RoleChecker(required_accesses={ACCESS.COMMAND_PANEL_FULL}))
 ):
     group_name = request.session["group"].get("name", "")
     config_names = [elem[0] for elem in (await get_config_names(session, user, group_name))]
@@ -116,10 +115,12 @@ async def show_superuser(
 
 @admin_router.get("/list/{username}")
 async def show_list(
-    request: Request,
-    user=Depends(current_user),
-    session: AsyncSession = Depends(get_db_general),
-    required: bool = Depends(RoleChecker(required_roles={"User", "Administrator", "Superuser"}))
+        request: Request,
+        user=Depends(current_user),
+        session: AsyncSession = Depends(get_db_general),
+        required: bool = Depends(RoleChecker(
+            required_accesses={ACCESS.LIST_PANEL_FULL, ACCESS.LIST_PANEL_VIEW, ACCESS.LIST_PANEL_CREATE,
+                               ACCESS.LIST_PANEL_SHARE, ACCESS.LIST_PANEL_EDIT}))
 ):
     config_id = request.session["config"]["config_id"]
     group_id = request.session["group"]["group_id"]
@@ -150,13 +151,12 @@ async def show_list(
 
 @admin_router.post("/list")
 async def add_list(
-    request: Request,
-    data: dict,
-    user=Depends(current_user),
-    session: AsyncSession = Depends(get_db_general),
-    required: bool = Depends(RoleChecker(required_roles={"Administrator", "Superuser"}))
+        request: Request,
+        data: dict,
+        user=Depends(current_user),
+        session: AsyncSession = Depends(get_db_general),
+        required: bool = Depends(RoleChecker(required_accesses={ACCESS.LIST_PANEL_FULL, ACCESS.LIST_PANEL_CREATE}))
 ):
-
     group_name, config_name, list_name, uri_list, is_public = data.values()
 
     group_id = (await session.execute(select(Group.id).where(Group.name == group_name))).scalars().first()
@@ -198,13 +198,12 @@ async def add_list(
 
 @admin_router.put("/list")
 async def change_list_visibility(
-    request: Request,
-    data: dict,
-    user=Depends(current_user),
-    session: AsyncSession = Depends(get_db_general),
-    required: bool = Depends(RoleChecker(required_roles={"Administrator", "Superuser"}))
+        request: Request,
+        data: dict,
+        user=Depends(current_user),
+        session: AsyncSession = Depends(get_db_general),
+        required: bool = Depends(RoleChecker(required_accesses={ACCESS.LIST_PANEL_FULL, ACCESS.LIST_PANEL_SHARE}))
 ):
-    
     is_public = data["is_public"]
     list_name = data["name"]
 
@@ -231,11 +230,11 @@ async def change_list_visibility(
 
 @admin_router.delete("/list")
 async def delete_list(
-    request: Request,
-    data: dict,
-    user=Depends(current_user),
-    session: AsyncSession = Depends(get_db_general),
-    required: bool = Depends(RoleChecker(required_roles={"Administrator", "Superuser"}))
+        request: Request,
+        data: dict,
+        user=Depends(current_user),
+        session: AsyncSession = Depends(get_db_general),
+        required: bool = Depends(RoleChecker(required_accesses={ACCESS.LIST_PANEL_FULL, ACCESS.LIST_PANEL_EDIT}))
 ):
     list_name = data["name"]
 
@@ -264,13 +263,12 @@ async def delete_list(
 
 @admin_router.get("/list/{list_id}/edit")
 async def show_edit_list(
-    request: Request,
-    list_id: int,
-    user=Depends(current_user),
-    session: AsyncSession = Depends(get_db_general),
-    required: bool = Depends(RoleChecker(required_roles={"User", "Administrator", "Superuser"}))
+        request: Request,
+        list_id: int,
+        user=Depends(current_user),
+        session: AsyncSession = Depends(get_db_general),
+        required: bool = Depends(RoleChecker(required_accesses={ACCESS.LIST_PANEL_FULL, ACCESS.LIST_PANEL_EDIT}))
 ):
-
     group_name = request.session["group"].get("name", "")
     config_names = [elem[0] for elem in (await get_config_names(session, user, group_name))]
     group_names = await get_group_names(session, user)
@@ -296,12 +294,12 @@ async def show_edit_list(
 
 @admin_router.delete("/list/{list_id}/edit")
 async def delete_list_record(
-    request: Request,
-    list_id: int,
-    uri: dict,
-    user=Depends(current_user),
-    session: AsyncSession = Depends(get_db_general),
-    required: bool = Depends(RoleChecker(required_roles={"User", "Administrator", "Superuser"}))
+        request: Request,
+        list_id: int,
+        uri: dict,
+        user=Depends(current_user),
+        session: AsyncSession = Depends(get_db_general),
+        required: bool = Depends(RoleChecker(required_accesses={ACCESS.LIST_PANEL_FULL, ACCESS.LIST_PANEL_EDIT}))
 ):
     uri_model = (await session.execute(select(ListURI).where(and_(ListURI.uri == uri["uri"], ListURI.list_id == list_id)))).scalars().first()
 
@@ -317,12 +315,12 @@ async def delete_list_record(
 
 @admin_router.put("/list/{list_id}/edit")
 async def change_list_record(
-    request: Request,
-    list_id: int,
-    data: dict,
-    user=Depends(current_user),
-    session: AsyncSession = Depends(get_db_general),
-    required: bool = Depends(RoleChecker(required_roles={"User", "Administrator", "Superuser"}))
+        request: Request,
+        list_id: int,
+        data: dict,
+        user=Depends(current_user),
+        session: AsyncSession = Depends(get_db_general),
+        required: bool = Depends(RoleChecker(required_accesses={ACCESS.LIST_PANEL_FULL, ACCESS.LIST_PANEL_EDIT}))
 ):
     print(data)
 
@@ -342,12 +340,12 @@ async def change_list_record(
 
 @admin_router.post("/list/{list_id}/edit")
 async def add_uri(
-    request: Request,
-    list_id: int,   
-    data: dict,
-    user=Depends(current_user),
-    session: AsyncSession = Depends(get_db_general),
-    required: bool = Depends(RoleChecker(required_roles={"User", "Administrator", "Superuser"}))
+        request: Request,
+        list_id: int,
+        data: dict,
+        user=Depends(current_user),
+        session: AsyncSession = Depends(get_db_general),
+        required: bool = Depends(RoleChecker(required_accesses={ACCESS.LIST_PANEL_FULL, ACCESS.LIST_PANEL_EDIT}))
 ):
     record = ListURI(
         uri=data["uri"].strip(),
@@ -366,10 +364,10 @@ async def add_uri(
 
 @admin_router.get("/live_search/{username}")
 async def show_live_search(
-    request: Request,
-    user=Depends(current_user),
-    session: AsyncSession = Depends(get_db_general),
-    required: bool = Depends(RoleChecker(required_roles={"User", "Administrator", "Superuser", "Search"}))
+        request: Request,
+        user=Depends(current_user),
+        session: AsyncSession = Depends(get_db_general),
+        required: bool = Depends(RoleChecker(required_accesses={ACCESS.LIVE_SEARCH_FULL, ACCESS.LIVE_SEARCH_USE}))
 ):
     config_id = request.session["config"]["config_id"]
     group_id = request.session["group"]["group_id"]
@@ -390,13 +388,12 @@ async def show_live_search(
 
 @admin_router.post("/live_search")
 async def add_live_search_list(
-    request: Request,
-    data: dict,
-    user=Depends(current_user),
-    session: AsyncSession = Depends(get_db_general),
-    required: bool = Depends(RoleChecker(required_roles={"Administrator", "Superuser", "Search"}))
+        request: Request,
+        data: dict,
+        user=Depends(current_user),
+        session: AsyncSession = Depends(get_db_general),
+        required: bool = Depends(RoleChecker(required_accesses={ACCESS.LIVE_SEARCH_FULL, ACCESS.LIVE_SEARCH_USE}))
 ):
-
     main_domain, list_name, query_list = data.values()
 
     new_list = LiveSearchList(
@@ -439,11 +436,11 @@ async def add_live_search_list(
 
 @admin_router.delete("/live_search")
 async def delete_live_search_list(
-    request: Request,
-    data: dict,
-    user=Depends(current_user),
-    session: AsyncSession = Depends(get_db_general),
-    required: bool = Depends(RoleChecker(required_roles={"Administrator", "Superuser", "Search"}))
+        request: Request,
+        data: dict,
+        user=Depends(current_user),
+        session: AsyncSession = Depends(get_db_general),
+        required: bool = Depends(RoleChecker(required_accesses={ACCESS.LIVE_SEARCH_FULL, ACCESS.LIVE_SEARCH_USE}))
 ):
     list_name = data["name"]
 
@@ -469,13 +466,12 @@ async def delete_live_search_list(
 
 @admin_router.get("/live_search/{list_id}/edit")
 async def show_edit_live_search(
-    request: Request,
-    list_id: int,
-    user=Depends(current_user),
-    session: AsyncSession = Depends(get_db_general),
-    required: bool = Depends(RoleChecker(required_roles={"User", "Administrator", "Superuser", "Search"}))
+        request: Request,
+        list_id: int,
+        user=Depends(current_user),
+        session: AsyncSession = Depends(get_db_general),
+        required: bool = Depends(RoleChecker(required_accesses={ACCESS.LIVE_SEARCH_FULL, ACCESS.LIVE_SEARCH_USE}))
 ):
-
     group_name = request.session["group"].get("name", "")
     config_names = [elem[0] for elem in (await get_config_names(session, user, group_name))]
     group_names = await get_group_names(session, user)
@@ -494,15 +490,14 @@ async def show_edit_live_search(
                                        })
 
 
-
 @admin_router.delete("/live_search/{list_id}/edit")
 async def delete_live_search_record(
-    request: Request,
-    list_id: int,
-    query: dict,
-    user=Depends(current_user),
-    session: AsyncSession = Depends(get_db_general),
-    required: bool = Depends(RoleChecker(required_roles={"User", "Administrator", "Superuser", "Search"}))
+        request: Request,
+        list_id: int,
+        query: dict,
+        user=Depends(current_user),
+        session: AsyncSession = Depends(get_db_general),
+        required: bool = Depends(RoleChecker(required_accesses={ACCESS.LIVE_SEARCH_FULL, ACCESS.LIVE_SEARCH_USE}))
 ):
     query_model = (await session.execute(select(LiveSearchListQuery).where(and_(LiveSearchListQuery.query == query["query"], LiveSearchListQuery.list_id == list_id)))).scalars().first()
 
@@ -518,12 +513,12 @@ async def delete_live_search_record(
 
 @admin_router.put("/live_search/{list_id}/edit")
 async def change_live_search_record(
-    request: Request,
-    list_id: int,
-    data: dict,
-    user=Depends(current_user),
-    session: AsyncSession = Depends(get_db_general),
-    required: bool = Depends(RoleChecker(required_roles={"User", "Administrator", "Superuser", "Search"}))
+        request: Request,
+        list_id: int,
+        data: dict,
+        user=Depends(current_user),
+        session: AsyncSession = Depends(get_db_general),
+        required: bool = Depends(RoleChecker(required_accesses={ACCESS.LIVE_SEARCH_FULL, ACCESS.LIVE_SEARCH_USE}))
 ):
     print(data)
 
@@ -543,12 +538,12 @@ async def change_live_search_record(
 
 @admin_router.post("/live_search/{list_id}/edit")
 async def add_live_search_record(
-    request: Request,
-    list_id: int,   
-    data: dict,
-    user=Depends(current_user),
-    session: AsyncSession = Depends(get_db_general),
-    required: bool = Depends(RoleChecker(required_roles={"User", "Administrator", "Superuser", "Search"}))
+        request: Request,
+        list_id: int,
+        data: dict,
+        user=Depends(current_user),
+        session: AsyncSession = Depends(get_db_general),
+        required: bool = Depends(RoleChecker(required_accesses={ACCESS.LIVE_SEARCH_FULL, ACCESS.LIVE_SEARCH_USE}))
 ):
     record = LiveSearchListQuery(
         query=data["uri"].strip(),
@@ -567,11 +562,11 @@ async def add_live_search_record(
 
 @admin_router.get("/list_menu")
 async def show_list_menu(
-    request: Request,
-    list_id: int,
-    user=Depends(current_user),
-    session: AsyncSession = Depends(get_db_general),
-    required: bool = Depends(RoleChecker(required_roles={"User", "Administrator", "Superuser", "Search"}))
+        request: Request,
+        list_id: int,
+        user=Depends(current_user),
+        session: AsyncSession = Depends(get_db_general),
+        required: bool = Depends(RoleChecker(required_roles={"User", "Administrator", "Superuser", "Search"}))
 ):
     group_name = request.session["group"].get("name", "")
     config_names = [elem[0] for elem in (await get_config_names(session, user, group_name))]
@@ -600,11 +595,11 @@ async def show_list_menu(
 
 @admin_router.post("/list_menu")
 async def add_lr_list(
-    request: Request,
-    data: dict,
-    user=Depends(current_user),
-    session: AsyncSession = Depends(get_db_general),
-    required: bool = Depends(RoleChecker(required_roles={"User", "Administrator", "Superuser", "Search"}))
+        request: Request,
+        data: dict,
+        user=Depends(current_user),
+        session: AsyncSession = Depends(get_db_general),
+        required: bool = Depends(RoleChecker(required_roles={"User", "Administrator", "Superuser", "Search"}))
 ):
     list_id, region_code, search_system = data.values()
     list_id, region_code = int(list_id), int(region_code)
@@ -625,11 +620,11 @@ async def add_lr_list(
 
 @admin_router.delete("/list_menu")
 async def delete_lr_list(
-    request: Request,
-    data: dict,
-    user=Depends(current_user),
-    session: AsyncSession = Depends(get_db_general),
-    required: bool = Depends(RoleChecker(required_roles={"User", "Administrator", "Superuser", "Search"}))
+        request: Request,
+        data: dict,
+        user=Depends(current_user),
+        session: AsyncSession = Depends(get_db_general),
+        required: bool = Depends(RoleChecker(required_roles={"User", "Administrator", "Superuser", "Search"}))
 ):
     print(data)
     list_id, region_code, search_system = data.values()
@@ -649,14 +644,15 @@ async def delete_lr_list(
         "status": 200,
         "message": f"Delete association for {list_id}:\nlr={region_code}\nsearch_system={search_system}"
     }
+
+
 @admin_router.put("/reset_query_limits/")
 async def reset_query_limits(
-    request: Request,
-    session: AsyncSession = Depends(get_db_general),
-    user=Depends(current_user),
-    required: bool = Depends(RoleChecker(required_roles={"Superuser"}))
+        request: Request,
+        session: AsyncSession = Depends(get_db_general),
+        user=Depends(current_user),
+        required: bool = Depends(RoleChecker(required_accesses={ACCESS.LIVE_SEARCH_FULL}))
 ):
-
     query_limit = const.query_value
     active_users = await session.execute(
         select(User).join(Role).where(
@@ -679,12 +675,13 @@ async def reset_query_limits(
         "message": f"Reset query limits successfully"
     }
 
+
 @admin_router.get("/list_menu/regions")
 async def get_regions(
-    request: Request,
-    user=Depends(current_user),
-    session: AsyncSession = Depends(get_db_general),
-    required: bool = Depends(RoleChecker(required_roles={"User", "Administrator", "Superuser", "Search"}))
+        request: Request,
+        user=Depends(current_user),
+        session: AsyncSession = Depends(get_db_general),
+        required: bool = Depends(RoleChecker(required_roles={"User", "Administrator", "Superuser", "Search"}))
 ):
     regions = (await session.execute(select(YandexLr))).scalars().all()
     region_dict = {region.Geo: region.Geoid for region in regions}
@@ -693,17 +690,16 @@ async def get_regions(
 
 @admin_router.get("/user_menu")
 async def show_user_menu(
-    request: Request,
-    user=Depends(current_user),
-    session: AsyncSession = Depends(get_db_general),
-    required: bool = Depends(RoleChecker(required_roles={"Superuser"}))
-):    
+        request: Request,
+        user=Depends(current_user),
+        session: AsyncSession = Depends(get_db_general),
+        required: bool = Depends(RoleChecker(required_accesses={ACCESS.USER_FULL}))
+):
     group_name = request.session["group"].get("name", "")
     config_names = [elem[0] for elem in (await get_config_names(session, user, group_name))]
     group_names = await get_group_names(session, user)
 
     all_users = await get_all_user(session)   
-
 
     all_roles_dict = await get_all_roles(session)
 
@@ -732,13 +728,12 @@ async def show_user_menu(
                                     })
 
 
-
 @admin_router.get("/group_menu")
 async def show_group_menu(
-    request: Request,
-    user=Depends(current_user),
-    session: AsyncSession = Depends(get_db_general),
-    required: bool = Depends(RoleChecker(required_roles={"Superuser"}))
+        request: Request,
+        user=Depends(current_user),
+        session: AsyncSession = Depends(get_db_general),
+        required: bool = Depends(RoleChecker(required_accesses={ACCESS.GROUP_FULL}))
 ):
     group_name = request.session["group"].get("name", "")
     config_names = [elem[0] for elem in (await get_config_names(session, user, group_name))]
@@ -836,4 +831,3 @@ async def batch_register(
         "status": "success",
         "detail": "Users created successfully",
     }, status_code)
-

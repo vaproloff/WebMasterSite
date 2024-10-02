@@ -6,32 +6,33 @@ from fastapi.responses import JSONResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import and_, select
 from api.auth.models import User
-from api.config.models import ListLrSearchSystem, UserQueryCount, YandexLr
+from api.config.models import ListLrSearchSystem, UserQueryCount, YandexLr, RoleAccess
 from api.config.utils import get_config_names, get_group_names
-from api.live_search_api.db import get_urls_with_pagination, get_urls_with_pagination_and_like, get_urls_with_pagination_sort, get_urls_with_pagination_sort_and_like
+from api.live_search_api.db import get_urls_with_pagination, get_urls_with_pagination_and_like, \
+    get_urls_with_pagination_sort, get_urls_with_pagination_sort_and_like
 from db.session import get_db_general
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.auth.auth_config import current_user
+from api.auth.auth_config import current_user, RoleChecker
 
-from const import date_format_2, date_format, query_value
-
+from const import date_format_2, date_format, query_value, ACCESS
 
 templates = Jinja2Templates(directory="static")
 
-
 router = APIRouter()
+
 
 @router.get("/")
 async def get_live_search(
-    request: Request,
-    list_id: int = Query(None),
-    search_system: str = Query(None),
-    lr_id: int = Query(None),
-    user: User = Depends(current_user),
-    session: AsyncSession = Depends(get_db_general)
-):  
+        request: Request,
+        list_id: int = Query(None),
+        search_system: str = Query(None),
+        lr_id: int = Query(None),
+        user: User = Depends(current_user),
+        session: AsyncSession = Depends(get_db_general),
+        required: bool = Depends(RoleChecker(required_accesses={ACCESS.LIVE_SEARCH_FULL, ACCESS.LIVE_SEARCH_USE}))
+):
     if lr_id == -1:
         lr_id = (await session.execute(select(ListLrSearchSystem.id).where(and_(ListLrSearchSystem.list_id == list_id, ListLrSearchSystem.search_system == search_system)))).scalars().first()
         if lr_id is None:
@@ -55,9 +56,12 @@ async def get_live_search(
 
     print(current_region)
 
+    role_accesses = (await session.execute(select(RoleAccess).where(RoleAccess.role_id == user.role))).scalars().first()
+
     return templates.TemplateResponse("live_search-info.html",
                                       {"request": request,
                                        "user": user,
+                                       "role_accesses": role_accesses,
                                        "config_names": config_names,
                                        "group_names": group_names,
                                        "list_id": list_id,
@@ -67,17 +71,18 @@ async def get_live_search(
                                        "region_list": region_list,
                                        "region_dict": region_dict,
                                        "current_region": current_region,
-                                        }
-                                       )
+                                       }
+                                      )
 
 
 @router.post("/")
 async def get_live_search(
-    request: Request,
-    data_request: dict,
-    user: User = Depends(current_user),
-    session: AsyncSession = Depends(get_db_general)
-    ):
+        request: Request,
+        data_request: dict,
+        user: User = Depends(current_user),
+        session: AsyncSession = Depends(get_db_general),
+        required: bool = Depends(RoleChecker(required_accesses={ACCESS.LIVE_SEARCH_FULL, ACCESS.LIVE_SEARCH_USE}))
+):
     print(data_request)
     start_date = datetime.strptime(data_request["start_date"], date_format_2)
     end_date = datetime.strptime(data_request["end_date"], date_format_2)
@@ -170,7 +175,7 @@ async def get_live_search(
 
     if len(grouped_data) == 0:
         return JSONResponse({"data": []})
-    
+
     data = []
     current_query = set()
     for el in grouped_data:
@@ -216,15 +221,16 @@ async def get_live_search(
 
 @router.get("/update_query_count")
 async def update_query_count(
-    request: Request,
-    user: User = Depends(current_user),
-    session: AsyncSession = Depends(get_db_general)
+        request: Request,
+        user: User = Depends(current_user),
+        session: AsyncSession = Depends(get_db_general),
+        required: bool = Depends(RoleChecker(required_accesses={ACCESS.LIVE_SEARCH_FULL}))
 ):
     res = (await session.execute(select(UserQueryCount).where(UserQueryCount.user_id == user.id))).scalars().first()
 
     if res.last_update_date == datetime.strptime(datetime.now().strftime(date_format), date_format):
         raise HTTPException(status_code=400, detail="Сегодня запросы уже были обновлены")
-    
+
     res.query_count = query_value
     res.last_update_date = datetime.strptime(datetime.now().strftime(date_format), date_format)
 
