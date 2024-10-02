@@ -48,7 +48,7 @@ async def change_user_role(
         formData: dict,
         user=Depends(current_user),
         session: AsyncSession = Depends(get_db_general),
-        required: bool = Depends(RoleChecker(required_permissions={"Superuser"}))
+        required: bool = Depends(RoleChecker(required_roles={"Superuser"}))
 ):
     username = formData["username"]
     new_role = formData["new_role"]

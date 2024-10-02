@@ -7,8 +7,9 @@ from starlette import status
 
 from api.auth.manager import get_user_manager
 from api.auth.models import User
-from api.config.models import Role
+from api.config.models import Role, RoleAccess
 from config import SECRET
+from const import ACCESS
 from db.session import get_db_general
 
 cookie_transport = CookieTransport(cookie_name="bonds", cookie_secure=False, cookie_samesite="lax",
@@ -36,8 +37,9 @@ current_user = fastapi_users.current_user(active=True, optional=True)
 
 class RoleChecker:
 
-    def __init__(self, required_permissions: set[str]) -> None:
-        self.required_permissions = required_permissions
+    def __init__(self, required_roles: set[str] = None, required_accesses: set[ACCESS | str] = None) -> None:
+        self.required_roles = required_roles
+        self.required_accesses = required_accesses
 
     async def __call__(
             self,
@@ -50,9 +52,27 @@ class RoleChecker:
                 detail='not enough permissions'
             )
         user_role = ((await session.execute(select(Role.name).where(Role.id == user.role))).fetchone())[0]
-        if user_role not in self.required_permissions:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail='not enough permissions'
-            )
+
+        if self.required_roles:
+            if user_role not in self.required_roles:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail='not enough permissions'
+                )
+
+        if self.required_accesses:
+            role_access = ((await session.execute(select(RoleAccess).where(RoleAccess.role_id == user.role)))
+                           .scalars().first())
+            if not role_access:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="User role does not have any permissions configured",
+                )
+
+            if not any(getattr(role_access, str(access), False) for access in self.required_accesses):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="User does not have required permissions",
+                )
+
         return True

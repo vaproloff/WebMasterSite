@@ -7,10 +7,12 @@ from alembic import command
 from fastapi import APIRouter, Depends, Request, HTTPException
 from sqlalchemy import and_, delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
-from api.auth.auth_config import current_user
+from api.auth.auth_config import current_user, RoleChecker
 from api.auth.models import GroupUserAssociation, User
-from api.config.models import Config, GroupConfigAssociation, List, ListURI, Role, Group, UserQueryCount
+from api.config.models import Config, GroupConfigAssociation, List, ListURI, Role, Group, UserQueryCount, RoleAccess, \
+    RoleAccessUpdate
 from api.config.utils import get_config_info
 from config import DB_USER, DB_PASSWORD, DB_HOST, DB_PORT
 from db.session import get_db_general
@@ -85,8 +87,8 @@ async def set_config(request: Request,
                                  "access_token": result.access_token,
                                  "user_id": result.user_id,
                                  "host_id": result.host_id,
-                                }  
-    
+                                }
+
     return {"status": 200, "details": request.session}
 
 
@@ -100,10 +102,10 @@ async def set_group(
     # Получение group_id по имени группы
     result = await session.execute(select(Group.id).where(Group.name == group_name["group_name"]))
     group_id = result.scalars().first()
-    
+
     if group_id is None:
         raise HTTPException(status_code=404, detail="Group not found.")
-    
+
     # Получение первой конфигурации для группы
     config_association = (await session.execute(
         select(GroupConfigAssociation.config_id).where(GroupConfigAssociation.group_id == group_id).limit(1)
@@ -112,7 +114,7 @@ async def set_group(
     config_record = (await session.execute(select(Config).where(Config.id == config_association))).scalars().first()
 
     print(config_record)
-    
+
     # Установка значений конфигурации
     if config_record:
         request.session["group"] = {
@@ -139,7 +141,7 @@ async def set_group(
             "user_id": -1,
             "host_id": "",
         }
-    
+
     print(request.session)
     return {
         "status": 200,
@@ -150,36 +152,44 @@ async def set_group(
         }
     }
 
+
 @router.get("/roles")
 async def get_roles(
         request: Request,
         user=Depends(current_user),
         session: AsyncSession = Depends(get_db_general),
-) -> dict:
-    query = select(Role).order_by(Role.id)
-    result = (await session.execute(query)).scalars().all() 
-    return templates.TemplateResponse("roles.html", 
-                                    {"request": request, 
-                                    "user": user,
-                                    "roles": result,
-                                    })
-    #return {"roles": result}  # Возвращаем JSON объект с ключом "roles"
+        required: bool = Depends(RoleChecker(required_roles={"Superuser"}))
+) -> templates.TemplateResponse:
+    query = select(Role).order_by(Role.id).options(selectinload(Role.accesses))
+    result = (await session.execute(query)).scalars().all()
+    return templates.TemplateResponse("roles.html",
+                                      {"request": request,
+                                       "user": user,
+                                       "roles": result,
+                                       })
+    # return {"roles": result}  # Возвращаем JSON объект с ключом "roles"
+
 
 @router.post("/roles/add")
 async def add_role(
         request: Request,
         formData: dict,
-        user=Depends(current_user),
-        session: AsyncSession = Depends(get_db_general
-)):
+        session: AsyncSession = Depends(get_db_general),
+        required: bool = Depends(RoleChecker(required_roles={"Superuser"}))
+):
     new_role = Role(name=formData['role_name'])
     session.add(new_role)
     await session.commit()
     await session.refresh(new_role)
     return {"status": "success", "new_role": new_role}
 
+
 @router.delete("/roles/{role_id}")
-async def delete_role(role_id: int, session: AsyncSession = Depends(get_db_general)):
+async def delete_role(
+        role_id: int,
+        session: AsyncSession = Depends(get_db_general),
+        required: bool = Depends(RoleChecker(required_roles={"Superuser"}))
+):
     query = select(Role).where(Role.id == role_id)
     result = await session.execute(query)
     role = result.scalars().first()
@@ -190,8 +200,14 @@ async def delete_role(role_id: int, session: AsyncSession = Depends(get_db_gener
         return {"status": 200, "message": "Role deleted successfully"}
     raise HTTPException(status_code=404, detail="Role not found")
 
+
 @router.put("/roles/{role_id}/edit")
-async def edit_role(role_id: int, request: Request, session: AsyncSession = Depends(get_db_general)):
+async def edit_role(
+        role_id: int,
+        request: Request,
+        session: AsyncSession = Depends(get_db_general),
+        required: bool = Depends(RoleChecker(required_roles={"Superuser"}))
+):
     # Extracting JSON body data
     body = await request.json()
     edit_role_name = body.get("edit_role_name")
@@ -205,25 +221,35 @@ async def edit_role(role_id: int, request: Request, session: AsyncSession = Depe
         role.name = edit_role_name  # Update role name
         await session.commit()
         return {"status": 200, "message": "Role updated successfully"}
-    
+
     raise HTTPException(status_code=404, detail="Role not found")
 
-@router.post("/roles/{role_id}/modules")
-async def update_role_modules(role_id: int, request: Request, session: AsyncSession = Depends(get_db_general)):
-    json_data = await request.json()
-    with open('data_output.txt', 'w', encoding='utf-8') as f: f.write(str(json_data)) 
+
+@router.put("/roles/{role_id}/modules")
+async def update_role_modules(
+        role_id: int,
+        access_data: RoleAccessUpdate,
+        session: AsyncSession = Depends(get_db_general),
+        required: bool = Depends(RoleChecker(required_roles={"Superuser"}))
+):
     query = select(Role).where(Role.id == role_id)
     result = await session.execute(query)
     role = result.scalars().first()
     if not role:
         raise HTTPException(status_code=404, detail="Role not found")
-    
-    
-    for key, value in json_data.items():
-        with open('data_output.txt', 'w', encoding='utf-8') as f: f.write(str(key+" = "+value))        
-        setattr(role, key, value == "on") 
 
-    
+    access_query = select(RoleAccess).where(RoleAccess.role_id == role.id)
+    access_result = await session.execute(access_query)
+    role_access = access_result.scalars().first()
+
+    if not role_access:
+        role_access = RoleAccess(role_id=role.id)
+        session.add(role_access)
+
+    update_data = access_data.dict()
+    for key, value in update_data.items():
+        setattr(role_access, key, value)
+
     await session.commit()
     return {"message": "Role modules updated successfully"}
 
@@ -342,7 +368,7 @@ async def delete_user_from_group(
                 )
             )
         )
-        
+
         group.users.remove(user)
         await session.commit()
         return {
@@ -362,11 +388,11 @@ async def edit_user(
     session: AsyncSession = Depends(get_db_general),
 ):
     email, password, role, username, is_active, query_count = (
-        formData.get('email'), 
+        formData.get('email'),
         formData.get('password'),
-        int(formData.get('role')), 
-        formData.get('username'), 
-        formData.get('is_active'), 
+        int(formData.get('role')),
+        formData.get('username'),
+        formData.get('is_active'),
         formData.get('query_count'))
     user = (await session.execute(select(User).where(User.id == id))).scalars().first()
     user_query_count = (await session.execute(select(UserQueryCount).where(UserQueryCount.user_id == id))).scalars().first()
@@ -390,7 +416,7 @@ async def edit_user(
     else:
         user_query_count = UserQueryCount(
             user_id=user.id,
-            query_count=query_count, 
+            query_count=query_count,
             last_update_date=datetime.now()
     )
     session.add(user_query_count)
@@ -446,6 +472,7 @@ async def get_users_group(
 
     return [{"id": group.id, "name": group.name} for group in groups_data]
 
+
 @router.delete("/user_group/{user_id}/{group_id}")
 async def delete_group_for_user(
     request: Request,
@@ -457,7 +484,6 @@ async def delete_group_for_user(
     group_obj = (await session.execute(select(
         GroupUserAssociation).where(
             and_(GroupUserAssociation.group_id == group_id, GroupUserAssociation.user_id == user_id)))).scalars().first()
-    
 
     await session.delete(group_obj)
 
@@ -670,17 +696,3 @@ async def delete_config(
         "status": 200,
         "message": f"delete config ID: {config_id}"
     }
-
-
-
-
-
-
-
-
-    
-
-
-
-
-

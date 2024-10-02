@@ -1,3 +1,6 @@
+from typing import Any, Optional
+
+from pydantic import BaseModel
 from sqlalchemy import Boolean, Column, DateTime, String, Integer, ForeignKey
 from sqlalchemy.orm import DeclarativeBase, relationship
 
@@ -32,48 +35,99 @@ class Role(Base):
 
     id = Column(Integer, autoincrement=True, primary_key=True)
     name = Column(String, nullable=False)
+    accesses = relationship("RoleAccess", back_populates="role", uselist=False, cascade="all, delete-orphan")
 
-    access_queries = Column(Boolean, default=False)
-    access_queries_full = Column(Boolean, default=False)
-    access_queries_view = Column(Boolean, default=False)
-    access_queries_filter = Column(Boolean, default=False)
-    access_queries_export = Column(Boolean, default=False)
-    access_queries_update = Column(Boolean, default=False)
-    access_queries_sum = Column(Boolean, default=False)
+    def __init__(self, **kw: Any):
+        super().__init__(**kw)
+        self.accesses = RoleAccess()
 
-    access_url = Column(Boolean, default=False)
-    access_url_full = Column(Boolean, default=False)
-    access_url_filter = Column(Boolean, default=False)
-    access_url_export = Column(Boolean, default=False)
-    access_url_update = Column(Boolean, default=False)
-    access_url_sum = Column(Boolean, default=False)
 
-    access_history = Column(Boolean, default=False)
-    access_history_full = Column(Boolean, default=False)
-    access_history_view = Column(Boolean, default=False)
-    access_history_export = Column(Boolean, default=False)
+class RoleAccess(Base):
+    __tablename__ = "role_access"
 
-    access_url_query_merge = Column(Boolean, default=False)
-    access_url_query_merge_full = Column(Boolean, default=False)
-    access_url_query_merge_view = Column(Boolean, default=False)
-    access_url_query_merge_run = Column(Boolean, default=False)
+    id = Column(Integer, autoincrement=True, primary_key=True)
+    role_id = Column(Integer, ForeignKey("roles.id"), nullable=False)
+    role = relationship("Role", back_populates="accesses")
 
-    access_list_panel = Column(Boolean, default=False)
-    access_list_panel_full = Column(Boolean, default=False)
-    access_list_panel_create = Column(Boolean, default=False)
-    access_list_panel_edit = Column(Boolean, default=False)
-    access_list_panel_share = Column(Boolean, default=False)
+    queries_full = Column(Boolean, default=False)
+    queries_view = Column(Boolean, default=False)
+    queries_filter = Column(Boolean, default=False)
+    queries_export = Column(Boolean, default=False)
+    queries_update = Column(Boolean, default=False)
+    queries_sum = Column(Boolean, default=False)
 
-    access_command_panel = Column(Boolean, default=False)
-    access_command_panel_full = Column(Boolean, default=False)
-    access_command_panel_own = Column(Boolean, default=False)
+    url_full = Column(Boolean, default=False)
+    url_view = Column(Boolean, default=False)
+    url_filter = Column(Boolean, default=False)
+    url_export = Column(Boolean, default=False)
+    url_update = Column(Boolean, default=False)
+    url_sum = Column(Boolean, default=False)
 
-    access_live_search = Column(Boolean, default=False)
-    access_live_search_full = Column(Boolean, default=False)
-    access_live_search_use = Column(Boolean, default=False)
+    history_full = Column(Boolean, default=False)
+    history_view = Column(Boolean, default=False)
+    history_export = Column(Boolean, default=False)
 
-    access_user_menu = Column(Boolean, default=False)
-    access_group_menu = Column(Boolean, default=False)
+    url_query_merge_full = Column(Boolean, default=False)
+    url_query_merge_view = Column(Boolean, default=False)
+    url_query_merge_run = Column(Boolean, default=False)
+
+    list_panel_full = Column(Boolean, default=False)
+    list_panel_view = Column(Boolean, default=False)
+    list_panel_create = Column(Boolean, default=False)
+    list_panel_edit = Column(Boolean, default=False)
+    list_panel_share = Column(Boolean, default=False)
+
+    command_panel_full = Column(Boolean, default=False)
+    command_panel_own = Column(Boolean, default=False)
+
+    live_search_full = Column(Boolean, default=False)
+    live_search_use = Column(Boolean, default=False)
+
+    user_full = Column(Boolean, default=False)
+
+    group_full = Column(Boolean, default=False)
+
+
+class RoleAccessUpdate(BaseModel):
+    queries_full: Optional[bool] = False
+    queries_view: Optional[bool] = False
+    queries_filter: Optional[bool] = False
+    queries_export: Optional[bool] = False
+    queries_update: Optional[bool] = False
+    queries_sum: Optional[bool] = False
+
+    url_full: Optional[bool] = False
+    url_view: Optional[bool] = False
+    url_filter: Optional[bool] = False
+    url_export: Optional[bool] = False
+    url_update: Optional[bool] = False
+    url_sum: Optional[bool] = False
+
+    history_full: Optional[bool] = False
+    history_view: Optional[bool] = False
+    history_export: Optional[bool] = False
+
+    url_query_merge_full: Optional[bool] = False
+    url_query_merge_view: Optional[bool] = False
+    url_query_merge_run: Optional[bool] = False
+
+    list_panel_full: Optional[bool] = False
+    list_panel_view: Optional[bool] = False
+    list_panel_create: Optional[bool] = False
+    list_panel_edit: Optional[bool] = False
+    list_panel_share: Optional[bool] = False
+
+    command_panel_full: Optional[bool] = False
+    command_panel_own: Optional[bool] = False
+
+    live_search_full: Optional[bool] = False
+    live_search_use: Optional[bool] = False
+
+    user_full: Optional[bool] = False
+    group_full: Optional[bool] = False
+
+    class Config:
+        from_attributes = True
 
 
 class Group(Base):
@@ -93,17 +147,19 @@ class Group(Base):
                          lazy="selectin"
                          )
 
+
 class List(Base):
     __tablename__ = "list"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, nullable=False)
-    author = Column(Integer,ForeignKey("user.id"), nullable=False)
+    author = Column(Integer, ForeignKey("user.id"), nullable=False)
     group = Column(Integer, ForeignKey("group.id"), nullable=False)
     config = Column(Integer, ForeignKey("config.id"), nullable=False)
     is_public = Column(Boolean, nullable=False, default=False)
 
     uris = relationship("ListURI", back_populates="list")
+
 
 class ListURI(Base):
     __tablename__ = "list_uri"
@@ -122,7 +178,6 @@ class UserQueryCount(Base):
     user_id = Column(Integer, ForeignKey("user.id", ondelete='CASCADE'), nullable=False, primary_key=True)
     query_count = Column(Integer, nullable=False, default=3000)
     last_update_date = Column(DateTime, nullable=False)
-    
 
 
 class LiveSearchList(Base):
@@ -205,11 +260,9 @@ class QueryLiveSearchGoogle(Base):
     lr_list = relationship("ListLrSearchSystem", back_populates="google_results")
 
 
-
 class YandexLr(Base):
     __tablename__ = "yandex_lr"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     Geo = Column(String, nullable=False)
     Geoid = Column(Integer, nullable=False)
-    
