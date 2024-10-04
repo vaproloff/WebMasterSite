@@ -12,7 +12,9 @@
 <body>
     <div class="button-container">
         <a href="{{ url_for('show_profile', username=user.username) }}" class="back-to-menu">Back to profile</a>
-        <input type="button" value="Update Data Query" onclick="sendRequest('{{ url_for('load_queries_script') }}')">
+        {% if role_accesses.queries_full or role_accesses.queries_update %}
+            <input type="button" value="Update Data Query" onclick="sendRequest('{{ url_for('load_queries_script') }}')">
+        {% endif %}
         <label for="last_update_date">Last Update Date: {{ last_update_date }}</label>
         <label id="last_date" for="last_update_date" title={{last_date}}>Данные есть до: {{ last_date }}</label>
         <input type="number" id="days" placeholder="Days" min="1" max="13">
@@ -20,17 +22,28 @@
     </div>
 
     <!-- Existing filters and buttons -->
-    <input type="date" id="start_date">
-    <input type="date" id="end_date">
-    <input type="text" id="search_field" style="width: 250px">
-    <label for="input_sort">Отсортировать?</label>
-    <input type="checkbox" id="input_sort">
-    <label for="input_desc">По убыванию?</label>
-    <input type="checkbox" id="input_desc">
-    <input type="button" value="Отфильтровать" onclick="UpdateTable();">
-    <input type="button" value="Excel" onclick="generateExcel('{{ url_for('generate_excel_query')}}');">
-    <input type="button" value="Csv" onclick="generateCsv('{{ url_for('generate_csv_query')}}');">
-    <input type="button" value="Вычислить суммы" onclick="getTotalSum('{{ url_for('get_total_sum')}}');">
+    {% if role_accesses.queries_full or role_accesses.queries_view or role_accesses.queries_filter  %}
+        <input type="date" id="start_date">
+        <input type="date" id="end_date">
+    {% endif %}
+
+    {% if role_accesses.queries_full or role_accesses.queries_filter %}
+        <input type="text" id="search_field" style="width: 250px">
+        <label for="input_sort">Отсортировать?</label>
+        <input type="checkbox" id="input_sort">
+        <label for="input_desc">По убыванию?</label>
+        <input type="checkbox" id="input_desc">
+        <input type="button" value="Отфильтровать" onclick="UpdateTable();">
+    {% endif %}
+
+    {% if role_accesses.queries_full or role_accesses.queries_export %}
+        <input type="button" value="Excel" onclick="generateExcel('{{ url_for('generate_excel_query')}}');">
+        <input type="button" value="Csv" onclick="generateCsv('{{ url_for('generate_csv_query')}}');">
+    {% endif %}
+
+    {% if role_accesses.queries_full or role_accesses.queries_sum %}
+        <input type="button" value="Вычислить суммы" onclick="getTotalSum('{{ url_for('get_total_sum')}}');">
+    {% endif %}
     
     <table id="example" class="display nowrap" style="width:100%;">
         <thead id="thead_t">

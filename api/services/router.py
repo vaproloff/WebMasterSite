@@ -4,6 +4,7 @@ from sqlalchemy import select
 from api.auth.auth_config import RoleChecker
 from api.auth.models import User
 from api.config.models import ListLrSearchSystem, LiveSearchList, YandexLr
+from const import ACCESS
 from db.session import get_db_general
 from services.load_all_queries import get_all_data as get_all_data_queries
 
@@ -24,7 +25,7 @@ router = APIRouter()
 @router.get('/load-queries-script')
 async def load_queries_script(
         request: Request,
-        required: bool = Depends(RoleChecker(required_roles={"Administrator", "Superuser"}))
+        required: bool = Depends(RoleChecker(required_accesses={ACCESS.QUERIES_FULL, ACCESS.QUERIES_UPDATE}))
 ):
     request_session = request.session
     res = await get_all_data_queries(request_session)

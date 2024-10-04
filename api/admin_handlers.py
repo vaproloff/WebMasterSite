@@ -76,8 +76,7 @@ async def register(request: Request, user: User = Depends(current_user)):
 async def show_profile(request: Request,
                        username: str,
                        user=Depends(current_user),
-                       session: AsyncSession = Depends(get_db_general),
-                       required: bool = Depends(RoleChecker(required_roles={"User", "Administrator", "Superuser"}))
+                       session: AsyncSession = Depends(get_db_general)
                        ):
     group_name = request.session["group"].get("name", "")
     config_names = [elem[0] for elem in (await get_config_names(session, user, group_name))]

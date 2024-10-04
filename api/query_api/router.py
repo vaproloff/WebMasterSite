@@ -5,7 +5,7 @@ from cmath import inf
 from itertools import groupby
 import logging
 import sys
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
@@ -14,15 +14,16 @@ from sqlalchemy import delete, select
 from api.actions.actions import get_last_date, get_last_load_date
 from api.actions.queries import _get_urls_with_pagination_and_like_query, _get_urls_with_pagination_and_like_sort_query, _get_urls_with_pagination_query, _get_urls_with_pagination_sort_query, _get_metrics_daily_summary, _get_metrics_daily_summary_like, _get_not_void_count_daily_summary, _get_not_void_count_daily_summary_like
 from api.auth.models import User
+from api.config.models import RoleAccess
 from api.config.utils import get_config_names, get_group_names
 from db.models import LastUpdateDate, MetricsQuery
 from db.session import connect_db, get_db_general
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.auth.auth_config import current_user
+from api.auth.auth_config import current_user, RoleChecker
 
-from const import date_format_2, date_format_out
+from const import date_format_2, date_format_out, ACCESS
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -36,25 +37,28 @@ templates = Jinja2Templates(directory="static")
 
 router = APIRouter()
 
+
 @router.get("/")
-async def get_queries(request: Request, 
-                      user: User = Depends(current_user),
-                      session: AsyncSession = Depends(get_db_general)
-                      ):
+async def get_queries(
+        request: Request,
+        user: User = Depends(current_user),
+        session: AsyncSession = Depends(get_db_general),
+        required: bool = Depends(RoleChecker(required_accesses={ACCESS.QUERIES_FULL, ACCESS.QUERIES_VIEW}))
+):
     group_name = request.session["group"].get("name", "")
+    role_accesses = (await session.execute(select(RoleAccess).where(RoleAccess.role_id == user.role))).scalars().first()
 
     DATABASE_NAME = request.session['config'].get('database_name', "")
     
     config_names = [elem[0] for elem in (await get_config_names(session, user, group_name))]
 
+    last_load_time, last_date = None, None
     if DATABASE_NAME:
         async_session = await connect_db(DATABASE_NAME)
-
-    last_load_time = await get_last_load_date(async_session, "query")
+        last_load_time = await get_last_load_date(async_session, "query")
+        last_date = await get_last_date(async_session, MetricsQuery)
 
     group_names = await get_group_names(session, user)
-
-    last_date = await get_last_date(async_session, MetricsQuery)
 
     return templates.TemplateResponse("queries-info.html",
                                       {"request": request,
@@ -63,15 +67,18 @@ async def get_queries(request: Request,
                                        "group_names": group_names,
                                        "last_update_date": last_load_time,
                                        "last_date": last_date,
+                                       "role_accesses": role_accesses,
                                         }
                                        )
+
 
 @router.post("/")
 async def get_queries(
     request: Request, 
     data_request: dict, 
-    user: User = Depends(current_user)
-    ):
+    user: User = Depends(current_user),
+    required: bool = Depends(RoleChecker(required_accesses={ACCESS.QUERIES_FULL, ACCESS.QUERIES_UPDATE}))
+):
     DATABASE_NAME = request.session['config'].get('database_name', "")
     group = request.session['group'].get('name', '')
     async_session = await connect_db(DATABASE_NAME)
@@ -252,13 +259,16 @@ async def get_queries(
     # return JSONResponse({"data": json_data, "recordsTotal": limit, "recordsFiltered": 50000})
     return JSONResponse({"data": json_data,
                         })
+
+
 @router.post("/get_total_sum/")
 async def get_total_sum(
     request: Request, 
     data_request: dict, 
     user: User = Depends(current_user),
-    general_session: AsyncSession = Depends(get_db_general)
-    ):
+    general_session: AsyncSession = Depends(get_db_general),
+    required: bool = Depends(RoleChecker(required_accesses={ACCESS.QUERIES_FULL, ACCESS.QUERIES_SUM}))
+):
     DATABASE_NAME = request.session['config'].get('database_name', "")
     group = request.session['group'].get('name', '')
     async_session = await connect_db(DATABASE_NAME)
@@ -362,11 +372,14 @@ async def get_total_sum(
     # return JSONResponse({"data": json_data, "recordsTotal": limit, "recordsFiltered": 50000})
     return JSONResponse({"metricks_data": json_metricks_data, "total_records": json_total_records
                         })
+
+
 @router.delete("/")
 async def delete_query(
     request: Request,
     days: int,
     user: User = Depends(current_user),
+    required: bool = Depends(RoleChecker(required_accesses={ACCESS.QUERIES_FULL, ACCESS.QUERIES_VIEW}))
 ):
 
     DATABASE_NAME = request.session["config"]["database_name"]
@@ -397,7 +410,8 @@ async def generate_excel_query(
     data_request: dict, 
     user: User = Depends(current_user),
     general_session: AsyncSession = Depends(get_db_general),
-    ):
+    required: bool = Depends(RoleChecker(required_accesses={ACCESS.QUERIES_FULL, ACCESS.QUERIES_EXPORT}))
+):
     DATABASE_NAME = request.session['config'].get('database_name', "")
     group = request.session['group'].get('name', '')
     state_date = None
@@ -599,7 +613,8 @@ async def generate_csv_query(
     data_request: dict, 
     user: User = Depends(current_user),
     general_session: AsyncSession = Depends(get_db_general),
-    ):
+    required: bool = Depends(RoleChecker(required_accesses={ACCESS.QUERIES_FULL, ACCESS.QUERIES_EXPORT}))
+):
         DATABASE_NAME = request.session['config'].get('database_name', "")
         group = request.session['group'].get('name', '')
         async_session = await connect_db(DATABASE_NAME)
