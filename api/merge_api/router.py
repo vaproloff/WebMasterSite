@@ -11,11 +11,13 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 from openpyxl import Workbook
+from sqlalchemy import select
 
 from api.actions.query_url_merge import _get_merge_query, _get_merge_with_pagination, _get_merge_with_pagination_and_like, _get_merge_with_pagination_and_like_sort, _get_merge_with_pagination_sort
 from api.auth.models import User
 
 from api.auth.auth_config import current_user, RoleChecker
+from api.config.models import RoleAccess
 from api.config.utils import get_config_names, get_group_names
 from db.models import QueryUrlsMergeLogs
 from db.session import connect_db, get_db_general
@@ -47,6 +49,7 @@ async def show_menu_merge_page(
         session: AsyncSession = Depends(get_db_general),
         required: bool = Depends(RoleChecker(required_accesses={ACCESS.URL_QUERY_MERGE_FULL, ACCESS.URL_QUERY_MERGE_VIEW}))
 ):
+    role_accesses = (await session.execute(select(RoleAccess).where(RoleAccess.role_id == user.role))).scalars().first()
     DATABASE_NAME = request.session['config'].get('database_name', "")
     group = request.session['group'].get('name', '')
     async_session = await connect_db(DATABASE_NAME)
@@ -61,7 +64,8 @@ async def show_menu_merge_page(
                                        "user": user,
                                        "config_names": config_names,
                                        "group_names": group_names,
-                                       "all_dates": all_dates})
+                                       "all_dates": all_dates,
+                                       "role_accesses": role_accesses})
 
 
 @router.get("/")
@@ -71,6 +75,7 @@ async def get_merge(
         session: AsyncSession = Depends(get_db_general),
         required: bool = Depends(RoleChecker(required_accesses={ACCESS.URL_QUERY_MERGE_FULL, ACCESS.URL_QUERY_MERGE_VIEW}))
 ):
+    role_accesses = (await session.execute(select(RoleAccess).where(RoleAccess.role_id == user.role))).scalars().first()
     date = request.query_params.get("date")
     group_name = request.session["group"].get("name", "")
     config_names = [elem[0] for elem in (await get_config_names(session, user, group_name))]
@@ -93,6 +98,7 @@ async def get_merge(
                                        "group_names": group_names,
                                        "date": date,
                                        "last_update_date": last_update_date,
+                                       "role_accesses": role_accesses
                                        })
 
 

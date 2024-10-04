@@ -9,72 +9,94 @@
 <body>
     <header>
         {% if user is not none %}
-            {% if user.role == 4 %}
-                <button class="button superuser-button" onclick="superuser_button('{{ url_for('show_live_search', username=user.username) }}')">Live Search List Panel</button>
-                <div class="header-right">
-                    <button class="button" onclick="logout_button()">Logout</button>
-                </div>
-            {% else %}
-                <div class="dropdown">
-                    <a href="{{ url_for('show_profile', username=user.username) }}">
-                        <button class="button">{{ user.email }}</button>
-                    </a>
-                    <div class="dropdown-content">
+            <div class="dropdown">
+                <a href="{{ url_for('show_profile', username=user.username) }}">
+                    <button class="button">{{ user.email }}</button>
+                </a>
+                <div class="dropdown-content">
+                    {% if role_accesses.queries_full or role_accesses.queries_view %}
                         <a href="{{ url_for('get_queries') }}">Query Table</a>
+                    {% endif %}
+
+                    {% if role_accesses.url_full or role_accesses.url_view %}
                         <a href="{{ url_for('get_urls')}}">Url Table</a>
+                    {% endif %}
+
+                    {% if role_accesses.history_full or role_accesses.history_view %}
                         <a href="{{ url_for('get_history') }}">All history Table</a>
+                    {% endif %}
+
+                    {% if role_accesses.url_query_merge_full or role_accesses.url_query_merge_view %}
                         <a href="{{ url_for('show_menu_merge_page') }}">Query & Url Merge Table</a>
+                    {% endif %}
+
+                    {% if role_accesses.list_panel_full or role_accesses.list_panel_view %}
                         <a href="{{ url_for('show_list', username=user.username) }}">List Panel</a>
-                    </div>
+                    {% endif %}
                 </div>
+            </div>
+            {% if role_accesses.command_panel_full or role_accesses.command_panel_own %}
                 <button class="button superuser-button" onclick="superuser_button('{{ url_for('show_superuser', username=user.username) }}')">Command Panel</button>
-                <button class="button superuser-button" onclick="superuser_button('{{ url_for('show_live_search', username=user.username) }}')">Live Search List Panel</button>
-                <button class="button superuser-button" onclick="superuser_button('{{ url_for('show_user_menu') }}')">User Menu</button>
-                <button class="button superuser-button" onclick="superuser_button('{{ url_for('show_group_menu') }}')">Group Menu</button>
-                <button class="button superuser-button" onclick="superuser_button('{{ url_for('get_roles') }}')">Role Menu</button>
-                <button class="button main-page-button" onclick="main_page_button()">Main Page</button>
-                <div class="header-right">
-                    <div class="dropdown">
-                        <span class="dropdown-label">Проекты:</span>
-                        <button class="button dropbtn" id="dropdownButton">
-                            {% if config_names %}
-                                None
-                            {% else %}
-                                None
-                            {% endif %}
-                        </button>
-                        <div class="dropdown-content">
-                            {% if config_names %}
-                                {% for config in config_names %}
-                                <a href="#" onclick="selectConfig('{{ config }}')">{{ config }}</a>
-                                {% endfor %}
-                            {% else %}
-                                <div class="empty">None</div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="dropdown">
-                        <span class="dropdown-label">Группы:</span>
-                        <button class="button dropbtn" id="secondDropdownButton">
-                            {% if group_names %}
-                                Group
-                            {% else %}
-                                None
-                            {% endif %}
-                        </button>
-                        <div class="dropdown-content">
-                            {% if group_names %}
-                                {% for group in group_names %}
-                                <a href="#" onclick="selectGroup('{{ group }}')">{{ group }}</a>
-                                {% endfor %}
-                            {% else %}
-                                <div class="empty">None</div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <button class="button" onclick="logout_button()">Logout</button>
-                </div>
             {% endif %}
+
+            {% if role_accesses.live_search_full or role_accesses.live_search_use %}
+                <button class="button superuser-button" onclick="superuser_button('{{ url_for('show_live_search', username=user.username) }}')">Live Search List Panel</button>
+            {% endif %}
+
+            {% if role_accesses.user_full %}
+                <button class="button superuser-button" onclick="superuser_button('{{ url_for('show_user_menu') }}')">User Menu</button>
+            {% endif %}
+
+            {% if role_accesses.group_full %}
+                <button class="button superuser-button" onclick="superuser_button('{{ url_for('show_group_menu') }}')">Group Menu</button>
+            {% endif %}
+
+            {% if user.role == 3 %}
+                <button class="button superuser-button" onclick="superuser_button('{{ url_for('get_roles') }}')">Role Menu</button>
+            {% endif %}
+
+            <button class="button main-page-button" onclick="main_page_button()">Main Page</button>
+            <div class="header-right">
+                <div class="dropdown">
+                    <span class="dropdown-label">Проекты:</span>
+                    <button class="button dropbtn" id="dropdownButton">
+                        {% if config_names %}
+                            None
+                        {% else %}
+                            None
+                        {% endif %}
+                    </button>
+                    <div class="dropdown-content">
+                        {% if config_names %}
+                            {% for config in config_names %}
+                            <a href="#" onclick="selectConfig('{{ config }}')">{{ config }}</a>
+                            {% endfor %}
+                        {% else %}
+                            <div class="empty">None</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="dropdown">
+                    <span class="dropdown-label">Группы:</span>
+                    <button class="button dropbtn" id="secondDropdownButton">
+                        {% if group_names %}
+                            Group
+                        {% else %}
+                            None
+                        {% endif %}
+                    </button>
+                    <div class="dropdown-content">
+                        {% if group_names %}
+                            {% for group in group_names %}
+                            <a href="#" onclick="selectGroup('{{ group }}')">{{ group }}</a>
+                            {% endfor %}
+                        {% else %}
+                            <div class="empty">None</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <button class="button" onclick="logout_button()">Logout</button>
+            </div>
         {% else %}
             <button class="button" onclick="login_button()">Login</button>
         {% endif %}

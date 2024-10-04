@@ -5,7 +5,7 @@ from starlette.templating import Jinja2Templates
 
 from api.auth.auth_config import current_user, RoleChecker
 from api.auth.models import User
-from api.config.models import Role
+from api.config.models import Role, RoleAccess
 from api.config.utils import get_config_names, get_group_names
 from db.session import get_db_general
 
@@ -30,6 +30,8 @@ async def show_main_page(
                                            "user": user,
                                            "config_names": [],
                                            "group_names": []})
+
+    role_accesses = (await session.execute(select(RoleAccess).where(RoleAccess.role_id == user.role))).scalars().first()
     group_name = request.session["group"].get("name", "")
     config_names = [elem[0] for elem in (await get_config_names(session, user, group_name))]
 
@@ -39,7 +41,9 @@ async def show_main_page(
                                       {"request": request,
                                        "user": user,
                                        "config_names": config_names,
-                                       "group_names": group_names})
+                                       "group_names": group_names,
+                                       "role_accesses": role_accesses
+                                       })
 
 
 @router.post("/change_user_role")

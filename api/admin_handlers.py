@@ -102,6 +102,7 @@ async def show_superuser(
         required: bool = Depends(RoleChecker(required_accesses={ACCESS.COMMAND_PANEL_FULL, ACCESS.COMMAND_PANEL_OWN}))
 ):
     group_name = request.session["group"].get("name", "")
+    role_accesses = (await session.execute(select(RoleAccess).where(RoleAccess.role_id == user.role))).scalars().first()
     config_names = [elem[0] for elem in (await get_config_names(session, user, group_name))]
 
     all_configs = [elem for elem in (await get_all_configs(session, user))]
@@ -113,7 +114,9 @@ async def show_superuser(
                                        "user": user,
                                        "config_names": config_names,
                                        "group_names": group_names,
-                                       "all_configs": all_configs,})
+                                       "all_configs": all_configs,
+                                       "role_accesses": role_accesses,
+                                       })
 
 
 @admin_router.get("/list/{username}")
@@ -121,11 +124,10 @@ async def show_list(
         request: Request,
         user=Depends(current_user),
         session: AsyncSession = Depends(get_db_general),
-        required: bool = Depends(RoleChecker(
-            required_accesses={ACCESS.LIST_PANEL_FULL, ACCESS.LIST_PANEL_VIEW, ACCESS.LIST_PANEL_CREATE,
-                               ACCESS.LIST_PANEL_SHARE, ACCESS.LIST_PANEL_EDIT}))
+        required: bool = Depends(RoleChecker(required_accesses={ACCESS.LIST_PANEL_FULL, ACCESS.LIST_PANEL_VIEW}))
 ):
     config_id = request.session["config"]["config_id"]
+    role_accesses = (await session.execute(select(RoleAccess).where(RoleAccess.role_id == user.role))).scalars().first()
     group_id = request.session["group"]["group_id"]
 
     group_name = request.session["group"].get("name", "")
@@ -149,6 +151,7 @@ async def show_list(
                                        "group_dict": group_dict,
                                        "config_dict": config_dict,
                                        "name_dict": user_dict,
+                                       "role_accesses": role_accesses,
                                        })
 
 
@@ -273,6 +276,7 @@ async def show_edit_list(
         required: bool = Depends(RoleChecker(required_accesses={ACCESS.LIST_PANEL_FULL, ACCESS.LIST_PANEL_EDIT}))
 ):
     group_name = request.session["group"].get("name", "")
+    role_accesses = (await session.execute(select(RoleAccess).where(RoleAccess.role_id == user.role))).scalars().first()
     config_names = [elem[0] for elem in (await get_config_names(session, user, group_name))]
     group_names = await get_group_names(session, user)
 
@@ -292,6 +296,7 @@ async def show_edit_list(
                                        "config_dict": config_dict,
                                        "uri_list":uri_list,
                                        "list_id": list_id,
+                                       "role_accesses": role_accesses,
                                        })
 
 
@@ -372,6 +377,7 @@ async def show_live_search(
         session: AsyncSession = Depends(get_db_general),
         required: bool = Depends(RoleChecker(required_accesses={ACCESS.LIVE_SEARCH_FULL, ACCESS.LIVE_SEARCH_USE}))
 ):
+    role_accesses = (await session.execute(select(RoleAccess).where(RoleAccess.role_id == user.role))).scalars().first()
     config_id = request.session["config"]["config_id"]
     group_id = request.session["group"]["group_id"]
 
@@ -386,6 +392,7 @@ async def show_live_search(
                                        "config_names": config_names,
                                        "group_names": group_names,  
                                        "list_names": list_names,
+                                       "role_accesses": role_accesses,
                                        })
 
 
@@ -475,6 +482,7 @@ async def show_edit_live_search(
         session: AsyncSession = Depends(get_db_general),
         required: bool = Depends(RoleChecker(required_accesses={ACCESS.LIVE_SEARCH_FULL, ACCESS.LIVE_SEARCH_USE}))
 ):
+    role_accesses = (await session.execute(select(RoleAccess).where(RoleAccess.role_id == user.role))).scalars().first()
     group_name = request.session["group"].get("name", "")
     config_names = [elem[0] for elem in (await get_config_names(session, user, group_name))]
     group_names = await get_group_names(session, user)
@@ -490,6 +498,7 @@ async def show_edit_live_search(
                                        "group_names": group_names,
                                        "query_list":query_list,
                                        "list_id": list_id,
+                                       "role_accesses": role_accesses,
                                        })
 
 
@@ -571,6 +580,7 @@ async def show_list_menu(
         session: AsyncSession = Depends(get_db_general),
         required: bool = Depends(RoleChecker(required_roles={"User", "Administrator", "Superuser", "Search"}))
 ):
+    role_accesses = (await session.execute(select(RoleAccess).where(RoleAccess.role_id == user.role))).scalars().first()
     group_name = request.session["group"].get("name", "")
     config_names = [elem[0] for elem in (await get_config_names(session, user, group_name))]
     group_names = await get_group_names(session, user)
@@ -593,6 +603,7 @@ async def show_list_menu(
                                     "yandex_list": yandex_list,
                                     "google_list": google_list,
                                     "region_dict": region_dict,
+                                    "role_accesses": role_accesses,
                                     })
 
 
@@ -698,6 +709,7 @@ async def show_user_menu(
         session: AsyncSession = Depends(get_db_general),
         required: bool = Depends(RoleChecker(required_accesses={ACCESS.USER_FULL}))
 ):
+    role_accesses = (await session.execute(select(RoleAccess).where(RoleAccess.role_id == user.role))).scalars().first()
     group_name = request.session["group"].get("name", "")
     config_names = [elem[0] for elem in (await get_config_names(session, user, group_name))]
     group_names = await get_group_names(session, user)
@@ -727,7 +739,8 @@ async def show_user_menu(
                                     "all_roles_dict_reverse": all_roles_dict_reverse,
                                     "groups_dict_names": groups_dict_names,
                                     "groups_dict": groups_dict,
-                                    "groups_dict_reverse": groups_dict_reverse, 
+                                    "groups_dict_reverse": groups_dict_reverse,
+                                    "role_accesses": role_accesses,
                                     })
 
 
@@ -738,6 +751,7 @@ async def show_group_menu(
         session: AsyncSession = Depends(get_db_general),
         required: bool = Depends(RoleChecker(required_accesses={ACCESS.GROUP_FULL}))
 ):
+    role_accesses = (await session.execute(select(RoleAccess).where(RoleAccess.role_id == user.role))).scalars().first()
     group_name = request.session["group"].get("name", "")
     config_names = [elem[0] for elem in (await get_config_names(session, user, group_name))]
     group_names = await get_group_names(session, user)
@@ -774,6 +788,7 @@ async def show_group_menu(
                                     "groups_dict_reverse": groups_dict_reverse, 
                                     "all_groups": all_groups,
                                     "all_configs": all_configs,
+                                    "role_accesses": role_accesses,
                                     })
 
 

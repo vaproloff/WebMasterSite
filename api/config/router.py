@@ -162,12 +162,14 @@ async def get_roles(
         session: AsyncSession = Depends(get_db_general),
         required: bool = Depends(RoleChecker(required_roles={"Superuser"}))
 ) -> templates.TemplateResponse:
+    role_accesses = (await session.execute(select(RoleAccess).where(RoleAccess.role_id == user.role))).scalars().first()
     query = select(Role).order_by(Role.id).options(selectinload(Role.accesses))
     result = (await session.execute(query)).scalars().all()
     return templates.TemplateResponse("roles.html",
                                       {"request": request,
                                        "user": user,
                                        "roles": result,
+                                       "role_accesses": role_accesses,
                                        })
     # return {"roles": result}  # Возвращаем JSON объект с ключом "roles"
 
