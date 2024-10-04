@@ -108,19 +108,41 @@
     <div class="new-block">
         <h2>tables</h2>
         <div class="buttons">
-            <a href="{{ url_for('get_queries') }}">Query Table</a>
-            <a href="{{ url_for('get_urls') }}">Url Table</a>
-            <a href="{{ url_for('get_history') }}">All history Table</a>
-            <a href="{{ url_for('show_menu_merge_page') }}">Query & Url Merge Table</a>
+            {% if role_accesses.queries_full or role_accesses.queries_view %}
+                <a href="{{ url_for('get_queries') }}">Query Table</a>
+            {% endif %}
+
+            {% if role_accesses.url_full or role_accesses.url_view %}
+                <a href="{{ url_for('get_urls') }}">Url Table</a>
+            {% endif %}
+
+            {% if role_accesses.history_full or role_accesses.history_view %}
+                <a href="{{ url_for('get_history') }}">All history Table</a>
+            {% endif %}
+
+            {% if role_accesses.url_query_merge_full or role_accesses.url_query_merge_view %}
+                <a href="{{ url_for('show_menu_merge_page') }}">Query & Url Merge Table</a>
+            {% endif %}
         </div>
     </div>
     <div class="services">
         <h2>services</h2>
         <div class="buttons">
-            <button onclick="sendRequest('{{ url_for('load_queries_script') }}')">Load All Queries</button>
-            <button onclick="sendRequest('{{ url_for('load_urls_script') }}')">Load All URLs</button>
-            <button onclick="sendRequest('{{ url_for('load_history_script') }}')">Load All History</button>
-            <button onclick="sendRequest('{{ url_for('load_merge_script') }}')">Load Query URL Merge</button>
+            {% if role_accesses.queries_full or role_accesses.queries_update %}
+                <button onclick="sendRequest('{{ url_for('load_queries_script') }}')">Load All Queries</button>
+            {% endif %}
+
+            {% if role_accesses.url_full or role_accesses.url_update %}
+                <button onclick="sendRequest('{{ url_for('load_urls_script') }}')">Load All URLs</button>
+            {% endif %}
+
+            {% if role_accesses.history_full or role_accesses.history_view %}
+                <button onclick="sendRequest('{{ url_for('load_history_script') }}')">Load All History</button>
+            {% endif %}
+
+            {% if role_accesses.url_query_merge_full or role_accesses.url_query_merge_run %}
+                <button onclick="sendRequest('{{ url_for('load_merge_script') }}')">Load Query URL Merge</button>
+            {% endif %}
         </div>
     </div>
 </div>

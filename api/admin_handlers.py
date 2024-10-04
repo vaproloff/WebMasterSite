@@ -17,7 +17,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.auth.auth_config import current_user, RoleChecker
 from api.auth.models import User
-from api.config.models import Config, Group, List, ListLrSearchSystem, ListURI, LiveSearchList, LiveSearchListQuery, UserQueryCount, YandexLr, Role
+from api.config.models import Config, Group, List, ListLrSearchSystem, ListURI, LiveSearchList, LiveSearchListQuery, \
+    UserQueryCount, YandexLr, Role, RoleAccess
 from api.config.utils import get_all_configs, get_all_groups, get_all_groups_for_user, get_all_roles, get_all_user, get_config_names, get_group_names, get_groups_names_dict, get_lists_names, get_live_search_lists_names
 from db.session import get_db_general
 
@@ -79,6 +80,7 @@ async def show_profile(request: Request,
                        session: AsyncSession = Depends(get_db_general)
                        ):
     group_name = request.session["group"].get("name", "")
+    role_accesses = (await session.execute(select(RoleAccess).where(RoleAccess.role_id == user.role))).scalars().first()
     config_names = [elem[0] for elem in (await get_config_names(session, user, group_name))]
 
     group_names = await get_group_names(session, user)
@@ -87,7 +89,9 @@ async def show_profile(request: Request,
                                       {"request": request,
                                        "user": user,
                                        "config_names": config_names,
-                                       "group_names": group_names})
+                                       "group_names": group_names,
+                                       "role_accesses": role_accesses
+                                       })
 
 
 @admin_router.get("/superuser/{username}")
