@@ -12,9 +12,11 @@
 <body>
     <div class="button-container">
         <a href="{{ url_for('show_profile', username=user.username) }}" class="back-to-menu">Back to profile</a>
+
         {% if role_accesses.queries_full or role_accesses.queries_update %}
             <input type="button" value="Update Data Query" onclick="sendRequest('{{ url_for('load_queries_script') }}')">
         {% endif %}
+
         <label for="last_update_date">Last Update Date: {{ last_update_date }}</label>
         <label id="last_date" for="last_update_date" title={{last_date}}>Данные есть до: {{ last_date }}</label>
         <input type="number" id="days" placeholder="Days" min="1" max="13">
@@ -22,10 +24,8 @@
     </div>
 
     <!-- Existing filters and buttons -->
-    {% if role_accesses.queries_full or role_accesses.queries_view or role_accesses.queries_filter  %}
-        <input type="date" id="start_date">
-        <input type="date" id="end_date">
-    {% endif %}
+    <input type="date" id="start_date">
+    <input type="date" id="end_date">
 
     {% if role_accesses.queries_full or role_accesses.queries_filter %}
         <input type="text" id="search_field" style="width: 250px">

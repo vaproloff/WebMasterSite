@@ -22,6 +22,7 @@ from api.auth.auth_config import current_user
 
 router = APIRouter()
 
+
 @router.get('/load-queries-script')
 async def load_queries_script(
         request: Request,
@@ -37,7 +38,7 @@ async def load_queries_script(
 @router.get('/load-urls-script')
 async def load_urls_script(
         request: Request,
-        required: bool = Depends(RoleChecker(required_roles={"Administrator", "Superuser"}))
+        required: bool = Depends(RoleChecker(required_accesses={ACCESS.URL_FULL, ACCESS.URL_UPDATE}))
 ):
     request_session = request.session
     res = await get_all_data_urls(request_session)
@@ -78,7 +79,7 @@ async def load_live_search_list(
     data: dict,
     session: AsyncSession = Depends(get_db_general),
     user: User = Depends(current_user),
-    required: bool = Depends(RoleChecker(required_roles={"Administrator", "Superuser", "Search"}))
+    required: bool = Depends(RoleChecker(required_accesses={ACCESS.LIVE_SEARCH_FULL, ACCESS.LIVE_SEARCH_USE}))
 ):
     list_lr_id = int(data["list_lr_id"])
     print(list_lr_id)
