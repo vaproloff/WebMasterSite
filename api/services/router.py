@@ -63,7 +63,7 @@ async def load_history_script(
 @router.get('/load-merge-script')
 async def load_merge_script(
         request: Request,
-        required: bool = Depends(RoleChecker(required_roles={"Administrator", "Superuser"}))
+        required: bool = Depends(RoleChecker(required_accesses={ACCESS.URL_QUERY_MERGE_FULL, ACCESS.URL_QUERY_MERGE_RUN}))
 ) -> dict:
     try:
         request_session = request.session
