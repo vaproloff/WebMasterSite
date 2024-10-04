@@ -17,10 +17,14 @@
 <input type="date" id="start_date">
 <input type="date" id="end_date">
 <input type="button" value="Отфильтровать" onclick="UpdateTable();">
-<input type="button" value="Excel" onclick="generateExcel();">
-<input type="button" value="Excel Top" onclick="generateExcelTop();">
-<input type="button" value="Csv" onclick="generateCsv();">
-<input type="button" value="Csv Top" onclick="generateCsvTop();">
+
+{% if role_accesses.history_full or role_accesses.history_export %}
+    <input type="button" value="Excel" onclick="generateExcel();">
+    <input type="button" value="Excel Top" onclick="generateExcelTop();">
+    <input type="button" value="Csv" onclick="generateCsv();">
+    <input type="button" value="Csv Top" onclick="generateCsvTop();">
+{% endif %}
+
 <table id="example" class="display nowrap" style="width:100%;">
 
     <thead>

@@ -11,21 +11,22 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 from openpyxl import Workbook
+from sqlalchemy import select
 
 from api.actions.actions import get_last_load_date
 from api.actions.indicators import _get_indicators_from_db, _get_top_query, _get_top_url
 from api.actions.utils import get_day_of_week
 from api.auth.models import User
 
-from api.auth.auth_config import current_user
+from api.auth.auth_config import current_user, RoleChecker
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from api.config.models import RoleAccess
 from api.config.utils import get_config_names, get_group_names
 from db.session import connect_db, get_db_general
 
-from const import date_format, date_format_2, date_format_out
-
+from const import date_format, date_format_2, date_format_out, ACCESS
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -39,13 +40,16 @@ templates = Jinja2Templates(directory="static")
 
 router = APIRouter()
 
+
 @router.get("/")
 async def get_history(
         request: Request,
         user: User = Depends(current_user),
-        session: AsyncSession = Depends(get_db_general)
-        ):
+        session: AsyncSession = Depends(get_db_general),
+        required: bool = Depends(RoleChecker(required_accesses={ACCESS.HISTORY_FULL, ACCESS.HISTORY_VIEW}))
+):
     group_name = request.session["group"].get("name", "")
+    role_accesses = (await session.execute(select(RoleAccess).where(RoleAccess.role_id == user.role))).scalars().first()
     config_names = [elem[0] for elem in (await get_config_names(session, user, group_name))]
 
     group_names = await get_group_names(session, user)
@@ -63,13 +67,15 @@ async def get_history(
                                        "config_names": config_names,
                                        "group_names": group_names,
                                        "last_update_date": last_load_time,
+                                       "role_accesses": role_accesses,
                                        })
 
 
 @router.post("/")
 async def get_history(
         request: Request, data_request: dict,
-        user: User = Depends(current_user)
+        user: User = Depends(current_user),
+        required: bool = Depends(RoleChecker(required_accesses={ACCESS.HISTORY_FULL, ACCESS.HISTORY_VIEW}))
 ):
     DATABASE_NAME = request.session['config'].get('database_name', "")
     group = request.session['group'].get('name', '')
@@ -210,7 +216,12 @@ async def get_history(
 
 
 @router.post("/generate_excel_history")
-async def generate_excel_history(request: Request, data_request: dict, user: User = Depends(current_user)):
+async def generate_excel_history(
+        request: Request,
+        data_request: dict,
+        user: User = Depends(current_user),
+        required: bool = Depends(RoleChecker(required_accesses={ACCESS.HISTORY_FULL, ACCESS.HISTORY_EXPORT}))
+):
     DATABASE_NAME = request.session['config'].get('database_name', "")
     group = request.session['group'].get('name', '')
     async_session = await connect_db(DATABASE_NAME)
@@ -284,7 +295,12 @@ async def generate_excel_history(request: Request, data_request: dict, user: Use
 
 
 @router.post("/generate_excel_top")
-async def generate_excel_top(request: Request, data_request: dict, user: User = Depends(current_user)):
+async def generate_excel_top(
+        request: Request,
+        data_request: dict,
+        user: User = Depends(current_user),
+        required: bool = Depends(RoleChecker(required_accesses={ACCESS.HISTORY_FULL, ACCESS.HISTORY_EXPORT}))
+):
     DATABASE_NAME = request.session['config'].get('database_name', "")
     group = request.session['group'].get('name', '')
     async_session = await connect_db(DATABASE_NAME)
@@ -378,7 +394,12 @@ async def generate_excel_top(request: Request, data_request: dict, user: User = 
 
 
 @router.post("/generate_csv_history/")
-async def generate_csv_history(request: Request, data_request: dict, user: User = Depends(current_user)):
+async def generate_csv_history(
+        request: Request,
+        data_request: dict,
+        user: User = Depends(current_user),
+        required: bool = Depends(RoleChecker(required_accesses={ACCESS.HISTORY_FULL, ACCESS.HISTORY_EXPORT}))
+):
     DATABASE_NAME = request.session['config'].get('database_name', "")
     group = request.session['group'].get('name', '')
     async_session = await connect_db(DATABASE_NAME)
@@ -449,7 +470,12 @@ async def generate_csv_history(request: Request, data_request: dict, user: User 
 
 
 @router.post("/generate_csv_top")
-async def generate_csv_top(request: Request, data_request: dict, user: User = Depends(current_user)):
+async def generate_csv_top(
+        request: Request,
+        data_request: dict,
+        user: User = Depends(current_user),
+        required: bool = Depends(RoleChecker(required_accesses={ACCESS.HISTORY_FULL, ACCESS.HISTORY_EXPORT}))
+):
     DATABASE_NAME = request.session['config'].get('database_name', "")
     group = request.session['group'].get('name', '')
     async_session = await connect_db(DATABASE_NAME)

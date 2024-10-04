@@ -50,7 +50,7 @@ async def load_urls_script(
 @router.get('/load-history-script')
 async def load_history_script(
         request: Request,
-        required: bool = Depends(RoleChecker(required_roles={"Administrator", "Superuser"}))
+        required: bool = Depends(RoleChecker(required_accesses={ACCESS.HISTORY_FULL, ACCESS.HISTORY_VIEW}))
 ) -> dict:
     try:
         request_session = request.session
