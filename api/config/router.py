@@ -50,7 +50,9 @@ async def add_config(request: Request,
                     database_name=database_name,
                     access_token=access_token,
                     user_id=user_id,
-                    host_id=host_id)
+                    host_id=host_id,
+                    author_id=user.id,
+                    author=user)
 
     session.add(config)
     await session.commit()
@@ -393,7 +395,7 @@ async def edit_user(
         int(formData.get('role')),
         formData.get('username'),
         formData.get('is_active'),
-        formData.get('query_count'))
+        int(formData.get('query_count')))
     user = (await session.execute(select(User).where(User.id == id))).scalars().first()
     user_query_count = (await session.execute(select(UserQueryCount).where(UserQueryCount.user_id == id))).scalars().first()
 

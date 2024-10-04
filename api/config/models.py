@@ -29,6 +29,9 @@ class Config(Base):
     # Используем строку для связи с Group
     groups = relationship("Group", secondary='group_config_association', back_populates="configs")
 
+    author_id = Column(Integer, ForeignKey("user.id"), nullable=True)
+    author = relationship("User", back_populates="configs")
+
 
 class Role(Base):
     __tablename__ = "roles"

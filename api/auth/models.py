@@ -25,3 +25,5 @@ class User(SQLAlchemyBaseUserTable[int], Base):
         ForeignKey("roles.id"), nullable=False, default=1
     )
     groups = relationship("Group", secondary='group_user_association', back_populates="users")
+
+    configs = relationship("Config", back_populates="author", cascade="all, delete-orphan")

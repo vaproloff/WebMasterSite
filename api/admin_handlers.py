@@ -96,12 +96,12 @@ async def show_superuser(
         request: Request,
         user=Depends(current_user),
         session: AsyncSession = Depends(get_db_general),
-        required: bool = Depends(RoleChecker(required_accesses={ACCESS.COMMAND_PANEL_FULL}))
+        required: bool = Depends(RoleChecker(required_accesses={ACCESS.COMMAND_PANEL_FULL, ACCESS.COMMAND_PANEL_OWN}))
 ):
     group_name = request.session["group"].get("name", "")
     config_names = [elem[0] for elem in (await get_config_names(session, user, group_name))]
 
-    all_configs = [elem for elem in (await get_all_configs(session))]
+    all_configs = [elem for elem in (await get_all_configs(session, user))]
 
     group_names = await get_group_names(session, user)
 
@@ -755,7 +755,7 @@ async def show_group_menu(
 
     all_groups = await get_all_groups(session)
 
-    all_configs = await get_all_configs(session)
+    all_configs = await get_all_configs(session, user)
 
     return templates.TemplateResponse("group_menu.html",
                                     {"request": request,

@@ -1,9 +1,11 @@
+from fastapi import HTTPException
 from sqlalchemy import case, exists, or_, select, and_, tuple_
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from sqlalchemy.orm import aliased
+from sqlalchemy.orm import aliased, selectinload
 from api.auth.models import User, GroupUserAssociation
-from api.config.models import Config, Group, GroupConfigAssociation, List, LiveSearchList, Role, UserQueryCount
+from api.config.models import Config, Group, GroupConfigAssociation, List, LiveSearchList, Role, UserQueryCount, \
+    RoleAccess
 
 
 async def get_config_names(session: AsyncSession, user: User, group_name):
@@ -130,7 +132,20 @@ async def get_all_groups_for_user(
 
 async def get_all_configs(
     session: AsyncSession,
+    user: User
 ):
-    configs = (await session.execute(select(Config))).scalars().all()
+    role_accesses = (await session.execute(select(RoleAccess).where(RoleAccess.role_id == user.role))).scalars().first()
+
+    if not role_accesses:
+        raise HTTPException(status_code=404, detail="User role accesses not found")
+
+    if role_accesses.command_panel_full:
+        configs = (await session.execute(select(Config).options(selectinload(Config.author)))).scalars().all()
+    elif role_accesses.command_panel_own:
+        configs = (await session.execute(
+            select(Config).where(Config.author_id == user.id).options(selectinload(Config.author))
+        )).scalars().all()
+    else:
+        configs = []
 
     return configs
