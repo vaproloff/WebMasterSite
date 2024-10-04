@@ -109,37 +109,37 @@
                                     <div class="col-md-3">
                                         <h5>Access to query</h5>
                                         <div><label><input type="checkbox" name="queries_full" {% if role.accesses.queries_full %}checked{% endif %}> Full access</label></div>
-                                        <div><label><input type="checkbox" name="queries_view" {% if role.accesses.queries_view %}checked{% endif %}> View</label></div>
+                                        <div><label><input type="checkbox" name="queries_view" {% if role.accesses.queries_view %}checked{% endif %}> View only</label></div>
                                         <div><label><input type="checkbox" name="queries_filter" {% if role.accesses.queries_filter %}checked{% endif %}> Filtering</label></div>
                                         <div><label><input type="checkbox" name="queries_export" {% if role.accesses.queries_export %}checked{% endif %}> Export</label></div>
-                                        <div><label><input type="checkbox" name="queries_update" {% if role.accesses.queries_update %}checked{% endif %}> Update</label></div>
-                                        <div><label><input type="checkbox" name="queries_sum" {% if role.accesses.queries_sum %}checked{% endif %}> Summation</label></div>
+                                        <div><label><input type="checkbox" name="queries_update" {% if role.accesses.queries_update %}checked{% endif %}> Data update</label></div>
+                                        <div><label><input type="checkbox" name="queries_sum" {% if role.accesses.queries_sum %}checked{% endif %}> Sum calculation</label></div>
                                     </div>
 
                                     <!-- Module url -->
                                     <div class="col-md-3">
                                         <h5>Access to URL</h5>
                                         <div><label><input type="checkbox" name="url_full" {% if role.accesses.url_full %}checked{% endif %}> Full access</label></div>
-                                        <div><label><input type="checkbox" name="url_view" {% if role.accesses.url_view %}checked{% endif %}> View</label></div>
+                                        <div><label><input type="checkbox" name="url_view" {% if role.accesses.url_view %}checked{% endif %}> View only</label></div>
                                         <div><label><input type="checkbox" name="url_filter" {% if role.accesses.url_filter %}checked{% endif %}> Filtering</label></div>
                                         <div><label><input type="checkbox" name="url_export" {% if role.accesses.url_export %}checked{% endif %}> Export</label></div>
-                                        <div><label><input type="checkbox" name="url_update" {% if role.accesses.url_update %}checked{% endif %}> Update</label></div>
-                                        <div><label><input type="checkbox" name="url_sum" {% if role.accesses.url_sum %}checked{% endif %}> Summation</label></div>
+                                        <div><label><input type="checkbox" name="url_update" {% if role.accesses.url_update %}checked{% endif %}> Data update</label></div>
+                                        <div><label><input type="checkbox" name="url_sum" {% if role.accesses.url_sum %}checked{% endif %}> Sum calculation</label></div>
                                     </div>
 
                                     <!-- History Module -->
                                     <div class="col-md-3">
                                         <h5>Access to History</h5>
-                                        <div><label><input type="checkbox" name="history_full" {% if role.accesses.history_full %}checked{% endif %}> Full Access</label></div>
-                                        <div><label><input type="checkbox" name="history_view" {% if role.accesses.history_view %}checked{% endif %}> View</label></div>
+                                        <div><label><input type="checkbox" name="history_full" {% if role.accesses.history_full %}checked{% endif %}> Full access</label></div>
+                                        <div><label><input type="checkbox" name="history_view" {% if role.accesses.history_view %}checked{% endif %}> View only</label></div>
                                         <div><label><input type="checkbox" name="history_export" {% if role.accesses.history_export %}checked{% endif %}> Export</label></div>
                                     </div>
 
                                     <!-- URL Query Merge Module -->
                                     <div class="col-md-3">
                                         <h5>Access to URL_Query_Merge</h5>
-                                        <div><label><input type="checkbox" name="url_query_merge_full" {% if role.accesses.url_query_merge_full %}checked{% endif %}> Full Access</label></div>
-                                        <div><label><input type="checkbox" name="url_query_merge_view" {% if role.accesses.url_query_merge_view %}checked{% endif %}> View</label></div>
+                                        <div><label><input type="checkbox" name="url_query_merge_full" {% if role.accesses.url_query_merge_full %}checked{% endif %}> Full access</label></div>
+                                        <div><label><input type="checkbox" name="url_query_merge_view" {% if role.accesses.url_query_merge_view %}checked{% endif %}> View only</label></div>
                                         <div><label><input type="checkbox" name="url_query_merge_run" {% if role.accesses.url_query_merge_run %}checked{% endif %}> Run</label></div>
                                     </div>
                                     </div>
@@ -148,40 +148,40 @@
                                         <!-- List Panel Module -->
                                         <div class="col-md-3">
                                             <h5>Access to List Panel</h5>
-                                            <div><label><input type="checkbox" name="list_panel_full" {% if role.accesses.list_panel_full %}checked{% endif %}> Full Access</label></div>
-                                            <div><label><input type="checkbox" name="list_panel_view" {% if role.accesses.list_panel_view %}checked{% endif %}> View</label></div>
+                                            <div><label><input type="checkbox" name="list_panel_full" {% if role.accesses.list_panel_full %}checked{% endif %}> Full access</label></div>
+                                            <div><label><input type="checkbox" name="list_panel_view" {% if role.accesses.list_panel_view %}checked{% endif %}> View only</label></div>
                                             <div><label><input type="checkbox" name="list_panel_create" {% if role.accesses.list_panel_create %}checked{% endif %}> Create</label></div>
                                             <div><label><input type="checkbox" name="list_panel_edit" {% if role.accesses.list_panel_edit %}checked{% endif %}> Edit</label></div>
-                                            <div><label><input type="checkbox" name="list_panel_share" {% if role.accesses.list_panel_share %}checked{% endif %}> Share Access</label></div>
+                                            <div><label><input type="checkbox" name="list_panel_share" {% if role.accesses.list_panel_share %}checked{% endif %}> Share</label></div>
                                         </div>
 
                                         <!-- Command Panel Module -->
                                         <div class="col-md-3">
                                             <h5>Access to Command Panel</h5>
-                                            <div><label><input type="checkbox" name="command_panel_full" {% if role.accesses.command_panel_full %}checked{% endif %}> Full Access</label></div>
-                                            <div><label><input type="checkbox" name="command_panel_own" {% if role.accesses.command_panel_own %}checked{% endif %}> Own Access</label></div>
+                                            <div><label><input type="checkbox" name="command_panel_full" {% if role.accesses.command_panel_full %}checked{% endif %}> Full access</label></div>
+                                            <div><label><input type="checkbox" name="command_panel_own" {% if role.accesses.command_panel_own %}checked{% endif %}> Own projects only</label></div>
                                         </div>
 
                                         <!-- Live Search Module -->
                                         <div class="col-md-3">
                                             <h5>Access to Live Search</h5>
-                                            <div><label><input type="checkbox" name="live_search_full" {% if role.accesses.live_search_full %}checked{% endif %}> Full Access</label></div>
-                                            <div><label><input type="checkbox" name="live_search_use" {% if role.accesses.live_search_use %}checked{% endif %}> Use</label></div>
+                                            <div><label><input type="checkbox" name="live_search_full" {% if role.accesses.live_search_full %}checked{% endif %}> Full access</label></div>
+                                            <div><label><input type="checkbox" name="live_search_use" {% if role.accesses.live_search_use %}checked{% endif %}> Use only</label></div>
                                         </div>
 
                                         <!-- For Superuser Module -->
                                         <div class="col-md-3">
                                             <h5>Access to User Menu</h5>
-                                            <div><label><input type="checkbox" name="user_full" {% if role.accesses.user_full %}checked{% endif %}> Full Access</label></div>
+                                            <div><label><input type="checkbox" name="user_full" {% if role.accesses.user_full %}checked{% endif %}> Full access</label></div>
                                         </div>
 
                                         <!-- For Superuser Module -->
                                         <div class="col-md-3">
                                             <h5>Access to Group Menu</h5>
-                                            <div><label><input type="checkbox" name="group_full" {% if role.accesses.group_full %}checked{% endif %}> Full Access</label></div>
+                                            <div><label><input type="checkbox" name="group_full" {% if role.accesses.group_full %}checked{% endif %}> Full access</label></div>
                                         </div>
                                     </div>
-                                <button type="submit" class="btn btn-success mt-3">Save Changes</button>
+                                <button type="submit" class="btn btn-success mt-3">Save changes</button>
                             </form>
                         </div>
                     </td>
